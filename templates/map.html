@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live GPS Tracker</title>
+  <meta charset="utf-8" />
+  <style>
+    #map { height: 100vh; }
+    #sidebar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    .timestamp-popup { font-size: 14px; line-height: 1.4; }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="sidebar">
+    <h3>📡 Incoming GPS</h3>
+    <p><strong>🆔 Device:</strong> SIM7600-GH (Demo)</p>
+    <p><strong>📶 Signal:</strong> <span id="signal-strength">–</span></p>
+    <p><strong>⏰ Last Update:</strong> <span id="last-update">–</span></p>
+    <ul id="payload-list" style="padding-left: 15px;"></ul>
+  </div>
+
+  <script>
+    const map = L.map('map').setView([-33.86, 151.20], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const socket = io();
+    let trail = [];
+    let polyline = null;
+    const payloadList = document.getElementById("payload-list");
+
+    socket.on('gps_update', data => {
+      const { latitude, longitude, timestamp, satellites } = data;
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      const point = [lat, lon];
+
+      // 🧭 Add permanent marker with timestamp
+      L.marker(point)
+        .addTo(map)
+        .bindPopup(`<div class="timestamp-popup">🕒 ${timestamp}<br>📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}</div>`)
+        .openPopup();
+
+      // 🔵 Update trail
+      trail.push(point);
+      if (polyline) map.removeLayer(polyline);
+      polyline = L.polyline(trail, { color: 'blue' }).addTo(map);
+      map.panTo(point);
+
+      // 📋 Log in sidebar
+      const li = document.createElement("li");
+      li.textContent = `🕒 ${timestamp} → 📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      payloadList.prepend(li);
+
+      // 🧮 Update dashboard info
+      document.getElementById("last-update").textContent = timestamp;
+      document.getElementById("signal-strength").textContent = `${satellites} satellites`;
+    });
+  </script>
+</body>
+</html>
