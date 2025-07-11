@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL="https://gps-tracker.onrender.com/gps"
+URL="https://gps-tracker-69gb.onrender.com/gps"
 
 declare -a LATLONS=(
   "-33.8700,151.2100"
