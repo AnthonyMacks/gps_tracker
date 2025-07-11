@@ -3,7 +3,10 @@
 <head>
   <title>Live GPS Tracker</title>
   <meta charset="utf-8" />
-  <style>#map { height: 100vh; }</style>
+  <style>
+    #map { height: 100vh; }
+    .timestamp-popup { font-size: 14px; line-height: 1.4; }
+  </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -15,9 +18,7 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const socket = io();
-
     let trail = [];
-    let liveMarker = null;
     let polyline = null;
 
     socket.on('gps_update', data => {
@@ -26,26 +27,18 @@
       const lon = parseFloat(longitude);
       const point = [lat, lon];
 
-      // Add marker with timestamp popup
-      L.marker(point)
-        .addTo(map)
-        .bindPopup(`📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>🕒 ${timestamp}`)
-        .openPopup();
+      // 📍 Add a new marker at each point with timestamp
+      const marker = L.marker(point).addTo(map);
+      marker.bindPopup(`<div class="timestamp-popup">🕒 ${timestamp}<br>📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}</div>`).openPopup();
 
-      // Drop point in trail
+      // 🔵 Append to trail
       trail.push(point);
 
-      // Draw breadcrumb trail
+      // 🖍️ Redraw breadcrumb trail
       if (polyline) map.removeLayer(polyline);
       polyline = L.polyline(trail, { color: 'blue' }).addTo(map);
 
-      // Animate the live marker position
-      if (!liveMarker) {
-        liveMarker = L.marker(point, { opacity: 0.8 }).addTo(map);
-      } else {
-        liveMarker.setLatLng(point);
-      }
-
+      // 🧭 Center map on newest point
       map.panTo(point);
     });
   </script>
