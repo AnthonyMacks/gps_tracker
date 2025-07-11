@@ -5,35 +5,40 @@
   <meta charset="utf-8" />
   <style>
     body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-#map {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100vh;
-}
-
-#sidebar {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 300px;
-  max-height: 90vh;
-  z-index: 999;
-  overflow-y: auto;
-  background: rgba(255,255,255,0.95);
-  padding: 10px;
-  border-radius: 5px;
-  font-family: sans-serif;
-  box-shadow: 0 0 5px rgba(0,0,0,0.3);
-}
-    .timestamp-popup { font-size: 14px; line-height: 1.4; }
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100vh;
+    }
+    #sidebar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 300px;
+      max-height: 90vh;
+      z-index: 999;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    .timestamp-popup {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    #device-selector {
+      width: 100%;
+      margin-bottom: 10px;
+    }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
@@ -42,8 +47,21 @@
 <body>
   <div id="map"></div>
   <div id="sidebar">
-    <h3>📡 Incoming GPS</h3>
-    <p><strong>🆔 Device:</strong> SIM7600-GH (Demo)</p>
+    <h3>📡 GPS Dashboard</h3>
+    <select id="device-selector">
+      <option value="all">All Devices</option>
+      <option value="I">Device I</option>
+      <option value="II">Device II</option>
+      <option value="III">Device III</option>
+      <option value="IV">Device IV</option>
+      <option value="V">Device V</option>
+      <option value="VI">Device VI</option>
+      <option value="VII">Device VII</option>
+      <option value="VIII">Device VIII</option>
+      <option value="IX">Device IX</option>
+      <option value="X">Device X</option>
+    </select>
+    <p><strong>🆔 Device:</strong> <span id="device-id">–</span></p>
     <p><strong>📶 Signal:</strong> <span id="signal-strength">–</span></p>
     <p><strong>⏰ Last Update:</strong> <span id="last-update">–</span></p>
     <ul id="payload-list" style="padding-left: 15px;"></ul>
@@ -56,36 +74,51 @@
     const socket = io();
     let trail = [];
     let polyline = null;
+    let firstFix = true;
+
     const payloadList = document.getElementById("payload-list");
+    const deviceIdEl = document.getElementById("device-id");
+    const signalEl = document.getElementById("signal-strength");
+    const lastUpdateEl = document.getElementById("last-update");
+    const deviceSelector = document.getElementById("device-selector");
 
     socket.on('gps_update', data => {
-      const { latitude, longitude, timestamp, satellites } = data;
+      const { latitude, longitude, timestamp, satellites, device_id } = data;
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
       const point = [lat, lon];
+      const label = device_id ? `Device ${device_id}` : 'Unknown';
 
-      // 🧭 Add permanent marker with timestamp
+      // Apply filter based on dropdown selection
+      const selected = deviceSelector.value;
+      if (selected !== "all" && device_id !== selected) return;
+
+      // 📍 Add marker with label
       L.marker(point)
         .addTo(map)
-        .bindPopup(`<div class="timestamp-popup">🕒 ${timestamp}<br>📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}</div>`)
+        .bindPopup(`<strong>${label}</strong><br>🕒 ${timestamp}<br>📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`)
         .openPopup();
 
       // 🔵 Update trail
       trail.push(point);
       if (polyline) map.removeLayer(polyline);
       polyline = L.polyline(trail, { color: 'blue' }).addTo(map);
-      
-      // Fit map view to the new point with dynamic zoom
-      map.setView(point, 16); // 16 is a good zoom for street-level detail
 
-      // 📋 Log in sidebar
+      // 🧭 Center / Zoom Logic
+      if (firstFix) {
+        map.setView(point, 16);
+        firstFix = false;
+      } else {
+        map.panTo(point);
+      }
+
+      // 📋 Update sidebar
       const li = document.createElement("li");
-      li.textContent = `🕒 ${timestamp} → 📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      li.textContent = `${label} @ ${timestamp} → 📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
       payloadList.prepend(li);
-
-      // 🧮 Update dashboard info
-      document.getElementById("last-update").textContent = timestamp;
-      document.getElementById("signal-strength").textContent = `${satellites} satellites`;
+      deviceIdEl.textContent = label;
+      signalEl.textContent = `${satellites} satellites`;
+      lastUpdateEl.textContent = timestamp;
     });
   </script>
 </body>
