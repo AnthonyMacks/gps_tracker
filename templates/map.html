@@ -74,7 +74,9 @@
       trail.push(point);
       if (polyline) map.removeLayer(polyline);
       polyline = L.polyline(trail, { color: 'blue' }).addTo(map);
-      map.panTo(point);
+      
+      // Fit map view to the new point with dynamic zoom
+      map.setView(point, 16); // 16 is a good zoom for street-level detail
 
       // 📋 Log in sidebar
       const li = document.createElement("li");
