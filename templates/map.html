@@ -72,8 +72,11 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const socket = io();
-    let trail = [];
-    let polyline = null;
+
+    // Device-specific trails
+    const deviceTrails = {};
+    const devicePolylines = {};
+
     let firstFix = true;
 
     const payloadList = document.getElementById("payload-list");
@@ -82,29 +85,42 @@
     const lastUpdateEl = document.getElementById("last-update");
     const deviceSelector = document.getElementById("device-selector");
 
+    const deviceColors = {
+      "I": "#e6194b", "II": "#3cb44b", "III": "#ffe119",
+      "IV": "#4363d8", "V": "#f58231", "VI": "#911eb4",
+      "VII": "#46f0f0", "VIII": "#f032e6", "IX": "#bcf60c", "X": "#fabebe"
+    };
+
     socket.on('gps_update', data => {
       const { latitude, longitude, timestamp, satellites, device_id } = data;
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
       const point = [lat, lon];
-      const label = device_id ? `Device ${device_id}` : 'Unknown';
+      const label = device_id ? `Device ${device_id}` : "Unknown";
 
-      // Apply filter based on dropdown selection
       const selected = deviceSelector.value;
       if (selected !== "all" && device_id !== selected) return;
 
-      // 📍 Add marker with label
+      // Marker with label
       L.marker(point)
         .addTo(map)
         .bindPopup(`<strong>${label}</strong><br>🕒 ${timestamp}<br>📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`)
         .openPopup();
 
-      // 🔵 Update trail
-      trail.push(point);
-      if (polyline) map.removeLayer(polyline);
-      polyline = L.polyline(trail, { color: 'blue' }).addTo(map);
+      // Initialize trail array
+      if (!deviceTrails[device_id]) {
+        deviceTrails[device_id] = [];
+      }
+      deviceTrails[device_id].push(point);
 
-      // 🧭 Center / Zoom Logic
+      // Remove and redraw polyline
+      if (devicePolylines[device_id]) {
+        map.removeLayer(devicePolylines[device_id]);
+      }
+      const color = deviceColors[device_id] || 'gray';
+      devicePolylines[device_id] = L.polyline(deviceTrails[device_id], { color }).addTo(map);
+
+      // Zoom once, then pan
       if (firstFix) {
         map.setView(point, 16);
         firstFix = false;
@@ -112,7 +128,7 @@
         map.panTo(point);
       }
 
-      // 📋 Update sidebar
+      // Sidebar updates
       const li = document.createElement("li");
       li.textContent = `${label} @ ${timestamp} → 📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
       payloadList.prepend(li);
