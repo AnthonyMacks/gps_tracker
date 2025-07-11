@@ -13,16 +13,40 @@
   <script>
     const map = L.map('map').setView([-33.86, 151.20], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    let marker = null;
 
     const socket = io();
+
+    let trail = [];
+    let liveMarker = null;
+    let polyline = null;
+
     socket.on('gps_update', data => {
-      const { latitude, longitude } = data;
+      const { latitude, longitude, timestamp } = data;
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
-      if (marker) marker.setLatLng([lat, lon]);
-      else marker = L.marker([lat, lon]).addTo(map);
-      map.panTo([lat, lon]);
+      const point = [lat, lon];
+
+      // Add marker with timestamp popup
+      L.marker(point)
+        .addTo(map)
+        .bindPopup(`📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>🕒 ${timestamp}`)
+        .openPopup();
+
+      // Drop point in trail
+      trail.push(point);
+
+      // Draw breadcrumb trail
+      if (polyline) map.removeLayer(polyline);
+      polyline = L.polyline(trail, { color: 'blue' }).addTo(map);
+
+      // Animate the live marker position
+      if (!liveMarker) {
+        liveMarker = L.marker(point, { opacity: 0.8 }).addTo(map);
+      } else {
+        liveMarker.setLatLng(point);
+      }
+
+      map.panTo(point);
     });
   </script>
 </body>
