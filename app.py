@@ -13,6 +13,9 @@ def gps():
     data = request.get_json()
     socketio.emit('gps_update', data)
     return {'status': 'received'}
+@socketio.on('gps_update')
+def handle_gps(data):
+    print("Received GPS via Socket:", data)
 
 if __name__ == '__main__':
     socketio.run(app)
