@@ -1,155 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker</title>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
+  <title>Fleet Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
     #map {
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      width: 100%;
       height: 100vh;
-    }
-    #sidebar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 300px;
-      max-height: 90vh;
-      z-index: 999;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.95);
-      padding: 10px;
-      border-radius: 5px;
-      font-family: sans-serif;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
-    }
-    .timestamp-popup {
-      font-size: 14px;
-      line-height: 1.4;
-    }
-    #device-selector {
       width: 100%;
-      margin-bottom: 10px;
     }
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
   <div id="map"></div>
-  <div id="sidebar">
-    <h3>📡 GPS Dashboard</h3>
-    <select id="device-selector">
-      <option value="all">All Devices</option>
-      <option value="I">Device I</option>
-      <option value="II">Device II</option>
-      <option value="III">Device III</option>
-      <option value="IV">Device IV</option>
-      <option value="V">Device V</option>
-      <option value="VI">Device VI</option>
-      <option value="VII">Device VII</option>
-      <option value="VIII">Device VIII</option>
-      <option value="IX">Device IX</option>
-      <option value="X">Device X</option>
-    </select>
-    <p><strong>🆔 Device:</strong> <span id="device-id">–</span></p>
-    <p><strong>📶 Signal:</strong> <span id="signal-strength">–</span></p>
-    <p><strong>⏰ Last Update:</strong> <span id="last-update">–</span></p>
-    <ul id="payload-list" style="padding-left: 15px;"></ul>
-  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
   <script>
-    const map = L.map('map').setView([-33.86, 151.20], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    // Initialize the map centered on Sydney
+    const map = L.map("map").setView([-33.87, 151.21], 12);
 
+    // Add a tile layer (OpenStreetMap)
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors"
+    }).addTo(map);
+
+    // Store markers per device_id
+    const devices = {};
+
+    // Connect to Flask server WebSocket
     const socket = io();
 
-    // Device-specific trails
-    const deviceTrails = {};
-    const devicePolylines = {};
+    socket.on("gps_update", (data) => {
+      const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
 
-    let firstFix = true;
-
-    const payloadList = document.getElementById("payload-list");
-    const deviceIdEl = document.getElementById("device-id");
-    const signalEl = document.getElementById("signal-strength");
-    const lastUpdateEl = document.getElementById("last-update");
-    const deviceSelector = document.getElementById("device-selector");
-
-    const deviceColors = {
-      "I": "#e6194b", "II": "#3cb44b", "III": "#ffe119",
-      "IV": "#4363d8", "V": "#f58231", "VI": "#911eb4",
-      "VII": "#46f0f0", "VIII": "#f032e6", "IX": "#bcf60c", "X": "#fabebe"
-    };
-
-    socket.on('gps_update', data => {
-      const { latitude, longitude, timestamp, satellites, device_id } = data;
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
-      const point = [lat, lon];
-      const label = device_id ? `Device ${device_id}` : "Unknown";
+      const latlng = [lat, lon];
 
-      const selected = deviceSelector.value;
-      if (selected !== "all" && device_id !== selected) return;
+      // Format popup content
+      const popupContent = `
+        <strong>Device:</strong> ${device_id}<br>
+        <strong>Time:</strong> ${timestamp}<br>
+        <strong>Speed:</strong> ${speed} km/h<br>
+        <strong>Sats:</strong> ${satellites}
+      `;
 
-      // Marker with label
-      L.marker(point)
-        .addTo(map)
-        .bindPopup(`<strong>${label}</strong><br>🕒 ${timestamp}<br>📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`)
-        .openPopup();
-
-      // Initialize trail array
-      if (!deviceTrails[device_id]) {
-        deviceTrails[device_id] = [];
-      }
-      deviceTrails[device_id].push(point);
-
-      // Remove and redraw polyline
-      if (devicePolylines[device_id]) {
-        map.removeLayer(devicePolylines[device_id]);
-      }
-      const color = deviceColors[device_id] || 'gray';
-      devicePolylines[device_id] = L.polyline(deviceTrails[device_id], { color }).addTo(map);
-
-      // Zoom once to all markers, then expand bounds as needed
-      if (firstFix) {
-         firstFix = false;
-         updateMapBounds();
+      if (devices[device_id]) {
+        // Move existing marker
+        devices[device_id].setLatLng(latlng);
+        devices[device_id].getPopup().setContent(popupContent);
       } else {
-         updateMapBounds(); // Keep fitting map to full trail
+        // Create a new marker
+        const marker = L.marker(latlng).addTo(map);
+        marker.bindPopup(popupContent).openPopup();
+        devices[device_id] = marker;
       }
-
-      // 🔹 ✅ Place this function AFTER the socket handler:
-      function updateMapBounds() {
-        let allPoints = [];
-
-        for (let id in deviceTrails) {
-         allPoints = allPoints.concat(deviceTrails[id]);
-        }
-
-        if (allPoints.length > 0) {
-         const bounds = L.latLngBounds(allPoints);
-         map.fitBounds(bounds.pad(0.2)); // Adds margin
-        }
-      }
-
-      
-      // Sidebar updates
-      const li = document.createElement("li");
-      li.textContent = `${label} @ ${timestamp} → 📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-      payloadList.prepend(li);
-      deviceIdEl.textContent = label;
-      signalEl.textContent = `${satellites} satellites`;
-      lastUpdateEl.textContent = timestamp;
     });
   </script>
 </body>
