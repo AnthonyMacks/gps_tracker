@@ -14,6 +14,8 @@
     #map {
       height: 100vh;
       width: 100%;
+      position: relative;
+      z-index: 0;
     }
     #panel {
       position: absolute;
@@ -74,11 +76,17 @@
 
   <script>
     const map = L.map("map").setView([-33.87, 151.21], 13);
+
+    // ✅ Add map tiles
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+      maxZoom: 19
+    }).addTo(map);
+
     const socket = io();
     const logbox = document.getElementById("logbox");
     const selector = document.getElementById("deviceSelector");
-
-    const markers = []; // stores all markers dropped on map
+    const markers = [];
 
     function hashColor(deviceId) {
       let hash = 0;
@@ -131,9 +139,8 @@
       const lon = parseFloat(longitude);
       const latlng = [lat, lon];
 
-      // ✅ This line logs the incoming GPS packet to the browser console
       console.log("Received:", device_id, latlng);
-      
+
       const popupContent = `
         📍 <strong>${device_id}</strong><br>
         🕒 ${timestamp}<br>
@@ -152,7 +159,6 @@
         updateLog(device_id, lat, lon, timestamp, speed, satellites);
       }
 
-      // Fit map to all markers in view
       const bounds = L.latLngBounds(markers.map(m => m.getLatLng()));
       map.fitBounds(bounds, { padding: [40, 40] });
     });
