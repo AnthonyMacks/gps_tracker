@@ -120,14 +120,29 @@
       const color = deviceColors[device_id] || 'gray';
       devicePolylines[device_id] = L.polyline(deviceTrails[device_id], { color }).addTo(map);
 
-      // Zoom once, then pan
+      // Zoom once to all markers, then expand bounds as needed
       if (firstFix) {
-        map.setView(point, 16);
-        firstFix = false;
+         firstFix = false;
+         updateMapBounds();
       } else {
-        map.panTo(point);
+         updateMapBounds(); // Keep fitting map to full trail
       }
 
+      // 🔹 ✅ Place this function AFTER the socket handler:
+      function updateMapBounds() {
+        let allPoints = [];
+
+        for (let id in deviceTrails) {
+         allPoints = allPoints.concat(deviceTrails[id]);
+        }
+
+        if (allPoints.length > 0) {
+         const bounds = L.latLngBounds(allPoints);
+         map.fitBounds(bounds.pad(0.2)); // Adds margin
+        }
+      }
+
+      
       // Sidebar updates
       const li = document.createElement("li");
       li.textContent = `${label} @ ${timestamp} → 📍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
