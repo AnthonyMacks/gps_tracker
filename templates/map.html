@@ -12,58 +12,126 @@
       height: 100vh;
       width: 100%;
     }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      font-family: sans-serif;
+      z-index: 1000;
+    }
+    .toggle-btn {
+      display: block;
+      margin: 4px 0;
+      padding: 4px 8px;
+      background-color: #f0f0f0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<div id="map"></div>
+<div id="controls">
+  <strong>Trail Toggles</strong>
+  <div id="toggleButtons"></div>
+</div>
 
-  <!-- Socket.IO Client -->
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <script>
-    // Initialize the map centered on Sydney
-    const map = L.map("map").setView([-33.87, 151.21], 12);
+<!-- Socket.IO Client -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-    // Add a tile layer (OpenStreetMap)
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors"
-    }).addTo(map);
+<script>
+  const map = L.map("map").setView([-33.87, 151.21], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors"
+  }).addTo(map);
 
-    // Store markers per device_id
-    const devices = {};
+  const devices = {};      // device_id → marker
+  const trails = {};       // device_id → list of [lat, lon]
+  const polylines = {};    // device_id → Leaflet polyline
+  const trailVisibility = {}; // device_id → true/false
 
-    // Connect to Flask server WebSocket
-    const socket = io();
+  const socket = io();
 
-    socket.on("gps_update", (data) => {
-      const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
+  function hashColor(deviceId) {
+    // Simple hash → color string generator
+    let hash = 0;
+    for (let i = 0; i < deviceId.length; i++) {
+      hash = deviceId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 50%)`;
+  }
 
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      const latlng = [lat, lon];
-
-      // Format popup content
-      const popupContent = `
-        <strong>Device:</strong> ${device_id}<br>
-        <strong>Time:</strong> ${timestamp}<br>
-        <strong>Speed:</strong> ${speed} km/h<br>
-        <strong>Sats:</strong> ${satellites}
-      `;
-
-      if (devices[device_id]) {
-        // Move existing marker
-        devices[device_id].setLatLng(latlng);
-        devices[device_id].getPopup().setContent(popupContent);
+  function toggleTrail(deviceId) {
+    trailVisibility[deviceId] = !trailVisibility[deviceId];
+    const polyline = polylines[deviceId];
+    if (polyline) {
+      if (trailVisibility[deviceId]) {
+        polyline.addTo(map);
       } else {
-        // Create a new marker
-        const marker = L.marker(latlng).addTo(map);
-        marker.bindPopup(popupContent).openPopup();
-        devices[device_id] = marker;
+        map.removeLayer(polyline);
       }
-    });
-  </script>
+    }
+  }
+
+  socket.on("gps_update", (data) => {
+    const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
+    const lat = parseFloat(latitude);
+    const lon = parseFloat(longitude);
+    const latlng = [lat, lon];
+
+    // Initialize trail
+    if (!trails[device_id]) {
+      trails[device_id] = [];
+    }
+    trails[device_id].push(latlng);
+
+    // Create polyline if needed
+    if (!polylines[device_id]) {
+      const color = hashColor(device_id);
+      polylines[device_id] = L.polyline(trails[device_id], {
+        color: color,
+        weight: 3
+      }).addTo(map);
+      trailVisibility[device_id] = true;
+
+      // Create toggle button
+      const btn = document.createElement("button");
+      btn.className = "toggle-btn";
+      btn.innerText = `Toggle ${device_id}`;
+      btn.onclick = () => toggleTrail(device_id);
+      document.getElementById("toggleButtons").appendChild(btn);
+    } else {
+      polylines[device_id].setLatLngs(trails[device_id]);
+    }
+
+    // Create or move marker
+    const popupContent = `
+      <strong>Device:</strong> ${device_id}<br>
+      <strong>Time:</strong> ${timestamp}<br>
+      <strong>Speed:</strong> ${speed} km/h<br>
+      <strong>Sats:</strong> ${satellites}
+    `;
+
+    if (devices[device_id]) {
+      devices[device_id].setLatLng(latlng);
+      devices[device_id].getPopup().setContent(popupContent);
+    } else {
+      const marker = L.marker(latlng).addTo(map);
+      marker.bindPopup(popupContent).openPopup();
+      devices[device_id] = marker;
+    }
+  });
+</script>
+
 </body>
 </html>
