@@ -73,7 +73,7 @@
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
   <script>
-    const map = L.map("map");
+    const map = L.map("map").setView([-33.87, 151.21], 13);
     let isFirstPing = true;
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
