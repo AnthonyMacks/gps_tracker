@@ -12,6 +12,10 @@
       height: 100vh;
       width: 100%;
     }
+    .leaflet-div-icon.custom-pin {
+      background: transparent;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -19,12 +23,11 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <!-- Socket.IO Client -->
+  <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
   <script>
-    const map = L.map("map").setView([-33.87, 151.21], 18);
+    const map = L.map("map").setView([-33.87, 151.21], 12);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors"
@@ -32,6 +35,37 @@
 
     const devices = {};
     const socket = io();
+
+    function hashColor(deviceId) {
+      let hash = 0;
+      for (let i = 0; i < deviceId.length; i++) {
+        hash = deviceId.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const hue = hash % 360;
+      return `hsl(${hue}, 70%, 50%)`;
+    }
+
+    function createPinIcon(label, color = "#d00") {
+      return L.divIcon({
+        className: "custom-pin",
+        html: `
+          <div style="
+            background: ${color};
+            color: white;
+            padding: 4px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+          ">
+            ${label}
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24]
+      });
+    }
 
     socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
@@ -41,17 +75,21 @@
       const latlng = [lat, lon];
 
       const popupContent = `
-        <strong>Device:</strong> ${device_id}<br>
-        <strong>Time:</strong> ${timestamp}<br>
-        <strong>Speed:</strong> ${speed} km/h<br>
-        <strong>Sats:</strong> ${satellites}
+        📍 <strong>${device_id}</strong><br>
+        🕒 ${timestamp}<br>
+        🚀 ${speed} km/h<br>
+        🛰️ ${satellites} sats
       `;
+
+      const color = hashColor(device_id);
+      const pinIcon = createPinIcon(device_id, color);
 
       if (devices[device_id]) {
         devices[device_id].setLatLng(latlng);
+        devices[device_id].setIcon(pinIcon);
         devices[device_id].getPopup().setContent(popupContent);
       } else {
-        const marker = L.marker(latlng).addTo(map);
+        const marker = L.marker(latlng, { icon: pinIcon }).addTo(map);
         marker.bindPopup(popupContent).openPopup();
         devices[device_id] = marker;
       }
