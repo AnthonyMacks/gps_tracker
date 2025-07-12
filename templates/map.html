@@ -131,6 +131,9 @@
       const lon = parseFloat(longitude);
       const latlng = [lat, lon];
 
+      // ✅ This line logs the incoming GPS packet to the browser console
+      console.log("Received:", device_id, latlng);
+      
       const popupContent = `
         📍 <strong>${device_id}</strong><br>
         🕒 ${timestamp}<br>
