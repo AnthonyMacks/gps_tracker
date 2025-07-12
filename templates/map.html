@@ -8,9 +8,37 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    body {
+      margin: 0;
+    }
     #map {
       height: 100vh;
       width: 100%;
+    }
+    #panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 250px;
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: sans-serif;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    #deviceSelector {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    #logbox {
+      font-size: 12px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px;
+      max-height: 300px;
+      overflow-y: auto;
     }
     .leaflet-div-icon.custom-pin {
       background: transparent;
@@ -21,22 +49,41 @@
 <body>
   <div id="map"></div>
 
+  <div id="panel">
+    <label><strong>Select Device</strong></label><br>
+    <select id="deviceSelector">
+      <option value="all">All Devices</option>
+      <option value="I">Device I</option>
+      <option value="II">Device II</option>
+      <option value="III">Device III</option>
+      <option value="IV">Device IV</option>
+      <option value="V">Device V</option>
+      <option value="VI">Device VI</option>
+      <option value="VII">Device VII</option>
+      <option value="VIII">Device VIII</option>
+      <option value="IX">Device IX</option>
+      <option value="X">Device X</option>
+    </select>
+    <div id="logbox"><em>Waiting for GPS data...</em></div>
+  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Socket.IO Client -->
+  <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
   <script>
     const map = L.map("map");
-    const devices = {};
     let isFirstPing = true;
 
-    // Add map tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
     const socket = io();
+    const devices = {};
+    const logbox = document.getElementById("logbox");
+    const selector = document.getElementById("deviceSelector");
 
     function hashColor(deviceId) {
       let hash = 0;
@@ -69,6 +116,36 @@
       });
     }
 
+    function updateLog(device_id, lat, lon, timestamp, speed, satellites) {
+      const html = `
+        <p>
+          <strong>${device_id}</strong><br>
+          Lat: ${lat.toFixed(5)}<br>
+          Lon: ${lon.toFixed(5)}<br>
+          Speed: ${speed} km/h<br>
+          Sats: ${satellites}<br>
+          Time: ${timestamp}
+        </p>
+      `;
+      logbox.innerHTML = html;
+    }
+
+    function updateVisibility(selectedDeviceId) {
+      Object.entries(devices).forEach(([id, marker]) => {
+        const show = selectedDeviceId === "all" || selectedDeviceId === id;
+        if (show) {
+          if (!map.hasLayer(marker)) map.addLayer(marker);
+        } else {
+          map.removeLayer(marker);
+        }
+      });
+    }
+
+    selector.addEventListener("change", () => {
+      const selected = selector.value;
+      updateVisibility(selected);
+    });
+
     socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
       const lat = parseFloat(latitude);
@@ -83,14 +160,14 @@
       `;
 
       const color = hashColor(device_id);
-      const pinIcon = createPinIcon(device_id, color);
+      const icon = createPinIcon(device_id, color);
 
       if (devices[device_id]) {
         devices[device_id].setLatLng(latlng);
-        devices[device_id].setIcon(pinIcon);
+        devices[device_id].setIcon(icon);
         devices[device_id].getPopup().setContent(popupContent);
       } else {
-        const marker = L.marker(latlng, { icon: pinIcon }).addTo(map);
+        const marker = L.marker(latlng, { icon: icon }).addTo(map);
         marker.bindPopup(popupContent).openPopup();
         devices[device_id] = marker;
 
@@ -100,11 +177,17 @@
         }
       }
 
-      // Fit map to all pins
-      const bounds = L.latLngBounds(
-        Object.values(devices).map(marker => marker.getLatLng())
-      );
-      map.fitBounds(bounds, { padding: [30, 30] });
+      // Fit map to all visible markers
+      const visibleMarkers = Object.values(devices).filter(m => map.hasLayer(m));
+      const bounds = L.latLngBounds(visibleMarkers.map(m => m.getLatLng()));
+      if (visibleMarkers.length > 0) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      }
+
+      const selected = selector.value;
+      if (selected === "all" || selected === device_id) {
+        updateLog(device_id, lat, lon, timestamp, speed, satellites);
+      }
     });
   </script>
 </body>
