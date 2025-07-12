@@ -23,17 +23,19 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Socket.IO -->
+  <!-- Socket.IO Client -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
   <script>
-    const map = L.map("map").setView([-33.87, 151.21], 12);
+    const map = L.map("map");
+    const devices = {};
+    let isFirstPing = true;
 
+    // Add map tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
-    const devices = {};
     const socket = io();
 
     function hashColor(deviceId) {
@@ -69,7 +71,6 @@
 
     socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
-
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
       const latlng = [lat, lon];
@@ -92,7 +93,18 @@
         const marker = L.marker(latlng, { icon: pinIcon }).addTo(map);
         marker.bindPopup(popupContent).openPopup();
         devices[device_id] = marker;
+
+        if (isFirstPing) {
+          map.setView(latlng, 14);
+          isFirstPing = false;
+        }
       }
+
+      // Fit map to all pins
+      const bounds = L.latLngBounds(
+        Object.values(devices).map(marker => marker.getLatLng())
+      );
+      map.fitBounds(bounds, { padding: [30, 30] });
     });
   </script>
 </body>
