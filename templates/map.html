@@ -150,8 +150,8 @@
 
       const color = hashColor(device_id);
       const icon = createPinIcon(device_id, color);
-
       const selected = selector.value;
+      
       if (selected === "all" || selected === device_id) {
         const marker = L.marker(latlng, { icon }).addTo(map);
         marker.bindPopup(popupContent);
@@ -159,6 +159,10 @@
         updateLog(device_id, lat, lon, timestamp, speed, satellites);
       }
 
+      // 🔄 Center map on latest point
+      map.setView(latlng, map.getZoom());
+
+      // 🗺️ Expand bounds to include all markers
       const bounds = L.latLngBounds(markers.map(m => m.getLatLng()));
       map.fitBounds(bounds, { padding: [40, 40] });
     });
