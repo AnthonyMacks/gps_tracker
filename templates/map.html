@@ -4,13 +4,9 @@
   <meta charset="utf-8">
   <title>Fleet Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
-      margin: 0;
-    }
+    body { margin: 0; }
     #map {
       height: 100vh;
       width: 100%;
@@ -50,7 +46,6 @@
 </head>
 <body>
   <div id="map"></div>
-
   <div id="panel">
     <label><strong>Select Device</strong></label><br>
     <select id="deviceSelector">
@@ -69,14 +64,11 @@
     <div id="logbox"><em>Waiting for GPS data...</em></div>
   </div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
   <script>
     const map = L.map("map").setView([-33.87, 151.21], 13);
-
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
       maxZoom: 19
@@ -87,6 +79,9 @@
     const selector = document.getElementById("deviceSelector");
     const markers = [];
     const recentLogs = [];
+
+    let lastPlotTime = 0;
+    const throttleInterval = 5000; // milliseconds
 
     function hashColor(deviceId) {
       let hash = 0;
@@ -100,20 +95,16 @@
     function createPinIcon(label, color = "#d00") {
       return L.divIcon({
         className: "custom-pin",
-        html: `
-          <div style="
-            background: ${color};
-            color: white;
-            padding: 4px 6px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 0 0 2px rgba(0,0,0,0.5);
-          ">
-            ${label}
-          </div>
-        `,
+        html: `<div style="
+          background: ${color};
+          color: white;
+          padding: 4px 6px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: bold;
+          text-align: center;
+          box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        ">${label}</div>`,
         iconSize: [24, 24],
         iconAnchor: [12, 24]
       });
@@ -134,12 +125,14 @@
     }
 
     socket.on("gps_update", (data) => {
+      const now = Date.now();
+      if (now - lastPlotTime < throttleInterval) return;
+      lastPlotTime = now;
+
       const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
       const latlng = [lat, lon];
-
-      console.log("Received:", device_id, latlng);
 
       const popupContent = `
         📍 <strong>${device_id}</strong><br>
@@ -160,7 +153,6 @@
       }
 
       map.setView(latlng, map.getZoom());
-
       const bounds = L.latLngBounds(markers.map(m => m.getLatLng()));
       map.fitBounds(bounds, { padding: [40, 40] });
     });
