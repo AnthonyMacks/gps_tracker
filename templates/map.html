@@ -74,16 +74,11 @@
 
   <script>
     const map = L.map("map").setView([-33.87, 151.21], 13);
-    let isFirstPing = true;
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors"
-    }).addTo(map);
-
     const socket = io();
-    const devices = {};
     const logbox = document.getElementById("logbox");
     const selector = document.getElementById("deviceSelector");
+
+    const markers = []; // stores all markers dropped on map
 
     function hashColor(deviceId) {
       let hash = 0;
@@ -130,22 +125,6 @@
       logbox.innerHTML = html;
     }
 
-    function updateVisibility(selectedDeviceId) {
-      Object.entries(devices).forEach(([id, marker]) => {
-        const show = selectedDeviceId === "all" || selectedDeviceId === id;
-        if (show) {
-          if (!map.hasLayer(marker)) map.addLayer(marker);
-        } else {
-          map.removeLayer(marker);
-        }
-      });
-    }
-
-    selector.addEventListener("change", () => {
-      const selected = selector.value;
-      updateVisibility(selected);
-    });
-
     socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
       const lat = parseFloat(latitude);
@@ -162,32 +141,17 @@
       const color = hashColor(device_id);
       const icon = createPinIcon(device_id, color);
 
-      if (devices[device_id]) {
-        devices[device_id].setLatLng(latlng);
-        devices[device_id].setIcon(icon);
-        devices[device_id].getPopup().setContent(popupContent);
-      } else {
-        const marker = L.marker(latlng, { icon: icon }).addTo(map);
-        marker.bindPopup(popupContent).openPopup();
-        devices[device_id] = marker;
-
-        if (isFirstPing) {
-          map.setView(latlng, 14);
-          isFirstPing = false;
-        }
-      }
-
-      // Fit map to all visible markers
-      const visibleMarkers = Object.values(devices).filter(m => map.hasLayer(m));
-      const bounds = L.latLngBounds(visibleMarkers.map(m => m.getLatLng()));
-      if (visibleMarkers.length > 0) {
-        map.fitBounds(bounds, { padding: [40, 40] });
-      }
-
       const selected = selector.value;
       if (selected === "all" || selected === device_id) {
+        const marker = L.marker(latlng, { icon }).addTo(map);
+        marker.bindPopup(popupContent);
+        markers.push(marker);
         updateLog(device_id, lat, lon, timestamp, speed, satellites);
       }
+
+      // Fit map to all markers in view
+      const bounds = L.latLngBounds(markers.map(m => m.getLatLng()));
+      map.fitBounds(bounds, { padding: [40, 40] });
     });
   </script>
 </body>
