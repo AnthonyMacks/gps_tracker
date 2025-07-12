@@ -8,12 +8,12 @@ socketio = SocketIO(app)
 def index():
     return render_template('map.html')
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 @app.route('/gps', methods=['POST'])
 def gps():
     data = request.get_json()
-    print("📡 Received GPS:", data)
+    logging.info("📡 Received GPS: %s", data)
     socketio.emit('gps_update', data)
     return {'status': 'received'}
-
-if __name__ == '__main__':
-    socketio.run(app)
