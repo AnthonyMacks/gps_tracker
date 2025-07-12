@@ -77,7 +77,6 @@
   <script>
     const map = L.map("map").setView([-33.87, 151.21], 13);
 
-    // ✅ Add map tiles
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "© OpenStreetMap contributors",
       maxZoom: 19
@@ -87,6 +86,7 @@
     const logbox = document.getElementById("logbox");
     const selector = document.getElementById("deviceSelector");
     const markers = [];
+    const recentLogs = [];
 
     function hashColor(deviceId) {
       let hash = 0;
@@ -119,18 +119,18 @@
       });
     }
 
-    function updateLog(device_id, lat, lon, timestamp, speed, satellites) {
-      const html = `
+    function updateLog(device_id, lat, lon, timestamp) {
+      const entry = `
         <p>
           <strong>${device_id}</strong><br>
           Lat: ${lat.toFixed(5)}<br>
           Lon: ${lon.toFixed(5)}<br>
-          Speed: ${speed} km/h<br>
-          Sats: ${satellites}<br>
           Time: ${timestamp}
         </p>
       `;
-      logbox.innerHTML = html;
+      recentLogs.unshift(entry);
+      if (recentLogs.length > 10) recentLogs.pop();
+      logbox.innerHTML = recentLogs.join("<hr>");
     }
 
     socket.on("gps_update", (data) => {
@@ -151,18 +151,16 @@
       const color = hashColor(device_id);
       const icon = createPinIcon(device_id, color);
       const selected = selector.value;
-      
+
       if (selected === "all" || selected === device_id) {
         const marker = L.marker(latlng, { icon }).addTo(map);
         marker.bindPopup(popupContent);
         markers.push(marker);
-        updateLog(device_id, lat, lon, timestamp, speed, satellites);
+        updateLog(device_id, lat, lon, timestamp);
       }
 
-      // 🔄 Center map on latest point
       map.setView(latlng, map.getZoom());
 
-      // 🗺️ Expand bounds to include all markers
       const bounds = L.latLngBounds(markers.map(m => m.getLatLng()));
       map.fitBounds(bounds, { padding: [40, 40] });
     });
