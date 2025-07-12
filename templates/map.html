@@ -8,107 +8,54 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body {
-      margin: 0;
-    }
     #map {
       height: 100vh;
-      width: 100%;
-    }
-    #controls {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: white;
-      padding: 10px;
-      border-radius: 6px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.3);
-      font-family: sans-serif;
-      z-index: 1000;
-      width: 180px;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    #logbox {
-      margin-top: 10px;
-      font-size: 12px;
-      background: #f9f9f9;
-      padding: 6px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-    .toggle-btn {
-      display: block;
-      margin: 6px 0;
-      padding: 5px 8px;
-      background-color: #eee;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
       width: 100%;
     }
   </style>
 </head>
 <body>
+  <div id="map"></div>
 
-<div id="map"></div>
-<div id="controls">
-  <strong>Trail Controls</strong>
-  <div id="toggleButtons"></div>
-  <div id="logbox"><em>Awaiting GPS data...</em></div>
-</div>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<!-- Socket.IO -->
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-<script>
-  const map = L.map("map");
-  let isCentered = false;
+  <script>
+    const map = L.map("map").setView([-33.87, 151.21], 12);
 
-  // Add OpenStreetMap tiles
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors"
-  }).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors"
+    }).addTo(map);
 
-  const socket = io();
-  const devices = {};
-  const trails = {};
-  const polylines = {};
-  const trailVisibility = {};
-  const toggleButtons = document.getElementById("toggleButtons");
-  const logbox = document.getElementById("logbox");
+    const devices = {};
+    const socket = io();
 
-  function hashColor(deviceId) {
-    let hash = 0;
-    for (let i = 0; i < deviceId.length; i++) {
-      hash = deviceId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = hash % 360;
-    return `hsl(${hue}, 70%, 50%)`;
-  }
+    socket.on("gps_update", (data) => {
+      const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
 
-  function toggleTrail(deviceId) {
-    trailVisibility[deviceId] = !trailVisibility[deviceId];
-    const polyline = polylines[deviceId];
-    if (polyline) {
-      if (trailVisibility[deviceId]) {
-        polyline.addTo(map);
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      const latlng = [lat, lon];
+
+      const popupContent = `
+        <strong>Device:</strong> ${device_id}<br>
+        <strong>Time:</strong> ${timestamp}<br>
+        <strong>Speed:</strong> ${speed} km/h<br>
+        <strong>Sats:</strong> ${satellites}
+      `;
+
+      if (devices[device_id]) {
+        devices[device_id].setLatLng(latlng);
+        devices[device_id].getPopup().setContent(popupContent);
       } else {
-        map.removeLayer(polyline);
+        const marker = L.marker(latlng).addTo(map);
+        marker.bindPopup(popupContent).openPopup();
+        devices[device_id] = marker;
       }
-    }
-  }
-
-  function updateLog(deviceId, lat, lon, timestamp, speed, sats) {
-    const line = `<strong>${deviceId}</strong>: (${lat.toFixed(5)}, ${lon.toFixed(5)}) @ ${timestamp}, speed: ${speed}, sats: ${sats}`;
-    const p = document.createElement("p");
-    p.innerHTML = line;
-    logbox.prepend(p);
-  }
-
-  socket.on("gps_update", (data) => {
-    const { latitude
+    });
+  </script>
+</body>
+</html>
