@@ -1,160 +1,119 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Fleet Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live GPS Tracker</title>
+  <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { margin: 0; }
-    #map {
-      height: 100vh;
-      width: 100%;
-      position: relative;
-      z-index: 0;
-    }
-    #panel {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 250px;
-      background: white;
-      border-radius: 8px;
-      padding: 10px;
-      font-family: sans-serif;
-      box-shadow: 0 0 6px rgba(0,0,0,0.3);
-      z-index: 1000;
-    }
-    #deviceSelector {
-      width: 100%;
-      margin-bottom: 8px;
-    }
-    #logbox {
-      font-size: 12px;
-      background: #f9f9f9;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 8px;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    .leaflet-div-icon.custom-pin {
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; width: 100%; }
+    .device-label {
       background: transparent;
-      border: none;
+      color: #154360;
+      font-weight: bold;
+      text-align: center;
+      line-height: 24px;
+      font-size: 11px;
+    }
+    .arrow-icon {
+      color: #2874A6;
+      font-weight: bold;
+      font-size: 20px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div id="panel">
-    <label><strong>Select Device</strong></label><br>
-    <select id="deviceSelector">
-      <option value="all">All Devices</option>
-      <option value="I">Device I</option>
-      <option value="II">Device II</option>
-      <option value="III">Device III</option>
-      <option value="IV">Device IV</option>
-      <option value="V">Device V</option>
-      <option value="VI">Device VI</option>
-      <option value="VII">Device VII</option>
-      <option value="VIII">Device VIII</option>
-      <option value="IX">Device IX</option>
-      <option value="X">Device X</option>
-    </select>
-    <div id="logbox"><em>Waiting for GPS data...</em></div>
-  </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const map = L.map("map").setView([-33.87, 151.21], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
-      maxZoom: 19
+      maxZoom: 19,
+      attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
     const socket = io();
-    const logbox = document.getElementById("logbox");
-    const selector = document.getElementById("deviceSelector");
-    const markers = [];
-    const recentLogs = [];
 
-    let lastPlotTime = 0;
-    const throttleInterval = 5000; // milliseconds
+    const gpsTrails = {}; // Trails per device_id
 
-    function hashColor(deviceId) {
-      let hash = 0;
-      for (let i = 0; i < deviceId.length; i++) {
-        hash = deviceId.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const hue = hash % 360;
-      return `hsl(${hue}, 70%, 50%)`;
-    }
+    function addLabeledCircle(point) {
+      const lat = parseFloat(point.latitude);
+      const lon = parseFloat(point.longitude);
 
-    function createPinIcon(label, color = "#d00") {
-      return L.divIcon({
-        className: "custom-pin",
-        html: `<div style="
-          background: ${color};
-          color: white;
-          padding: 4px 6px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: bold;
-          text-align: center;
-          box-shadow: 0 0 2px rgba(0,0,0,0.5);
-        ">${label}</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 24]
+      L.circleMarker([lat, lon], {
+        radius: 12,
+        color: '#2E86C1',
+        fillColor: '#AED6F1',
+        fillOpacity: 0.9,
+        weight: 2
+      }).addTo(map);
+
+      const label = L.divIcon({
+        html: `<div>${point.device_id}</div>`,
+        className: 'device-label',
+        iconSize: [24, 24]
       });
+
+      L.marker([lat, lon], { icon: label, interactive: false }).addTo(map);
     }
 
-    function updateLog(device_id, lat, lon, timestamp) {
-      const entry = `
-        <p>
-          <strong>${device_id}</strong><br>
-          Lat: ${lat.toFixed(5)}<br>
-          Lon: ${lon.toFixed(5)}<br>
-          Time: ${timestamp}
-        </p>
-      `;
-      recentLogs.unshift(entry);
-      if (recentLogs.length > 10) recentLogs.pop();
-      logbox.innerHTML = recentLogs.join("<hr>");
+    function drawTrail(device_id) {
+      const trail = gpsTrails[device_id];
+      if (trail.length < 2) return;
+
+      L.polyline(trail, {
+        color: '#1ABC9C',
+        weight: 3,
+        opacity: 0.7
+      }).addTo(map);
+    }
+
+    function addArrow(p1, p2) {
+      const latMid = (p1[0] + p2[0]) / 2;
+      const lonMid = (p1[1] + p2[1]) / 2;
+
+      const angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+      const angleDeg = angleRad * (180 / Math.PI);
+
+      const arrowIcon = L.divIcon({
+        html: `<div style="transform: rotate(${angleDeg}deg);">➤</div>`,
+        className: 'arrow-icon',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
     }
 
     socket.on("gps_update", (data) => {
-      const now = Date.now();
-      if (now - lastPlotTime < throttleInterval) return;
-      lastPlotTime = now;
+      const { latitude, longitude, device_id } = data;
+      if (!latitude || !longitude || !device_id) return;
 
-      const { latitude, longitude, device_id, speed, satellites, timestamp } = data;
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
-      const latlng = [lat, lon];
 
-      const popupContent = `
-        📍 <strong>${device_id}</strong><br>
-        🕒 ${timestamp}<br>
-        🚀 ${speed} km/h<br>
-        🛰️ ${satellites} sats
-      `;
+      addLabeledCircle(data);
 
-      const color = hashColor(device_id);
-      const icon = createPinIcon(device_id, color);
-      const selected = selector.value;
-
-      if (selected === "all" || selected === device_id) {
-        const marker = L.marker(latlng, { icon }).addTo(map);
-        marker.bindPopup(popupContent);
-        markers.push(marker);
-        updateLog(device_id, lat, lon, timestamp);
+      if (!gpsTrails[device_id]) {
+        gpsTrails[device_id] = [];
       }
 
-      map.setView(latlng, map.getZoom());
-      const bounds = L.latLngBounds(markers.map(m => m.getLatLng()));
-      map.fitBounds(bounds, { padding: [40, 40] });
+      const trail = gpsTrails[device_id];
+      trail.push([lat, lon]);
+
+      if (trail.length > 100) trail.shift();
+
+      drawTrail(device_id);
+
+      if (trail.length >= 2) {
+        const p1 = trail[trail.length - 2];
+        const p2 = trail[trail.length - 1];
+        addArrow(p1, p2);
+      }
+
+      console.log(`📍 ${device_id} → (${lat}, ${lon})`);
     });
   </script>
 </body>
