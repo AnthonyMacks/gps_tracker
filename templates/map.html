@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.6.1</title>
+  <title>Live GPS Tracker v1.7</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -12,7 +12,7 @@
       position: absolute;
       z-index: 1000;
       top: 10px;
-      left: 10px;
+      right: 10px;
       max-height: 70%;
       overflow-y: auto;
       background: rgba(255,255,255,0.85);
@@ -97,6 +97,7 @@
     const gpsTrails = {};
     const packetCounts = {};
     const latestPackets = {};
+    const allPointsBounds = L.latLngBounds();
 
     function addLabeledCircle(point) {
       const lat = parseFloat(point.latitude);
@@ -183,12 +184,12 @@
       const lon = parseFloat(longitude);
 
       addLabeledCircle(data);
+      allPointsBounds.extend([lat, lon]);
+      map.fitBounds(allPointsBounds, { padding: [20, 20] });
 
       if (!gpsTrails[device_id]) {
         gpsTrails[device_id] = [];
-        map.setView([lat, lon], 16);
       }
-      map.panTo([lat, lon]);
 
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
