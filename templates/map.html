@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.4</title>
+  <title>Live GPS Tracker v1.5</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -76,7 +76,7 @@
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
 
-      L.circleMarker([lat, lon], {
+      const circle = L.circleMarker([lat, lon], {
         radius: 12,
         color: '#2E86C1',
         fillColor: '#AED6F1',
@@ -84,6 +84,16 @@
         weight: 2
       }).addTo(map);
 
+      // 📋 Add popup on click
+      const popupContent = `
+        <strong>Device ID:</strong> ${point.device_id}<br>
+        <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+        <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+        <strong>Timestamp:</strong> ${point.timestamp}
+      `;
+      circle.bindPopup(popupContent);
+
+      // 🔤 Add label marker
       const label = L.divIcon({
         html: `<div>${point.device_id}</div>`,
         className: 'device-label',
@@ -142,9 +152,9 @@
 
       if (!gpsTrails[device_id]) {
         gpsTrails[device_id] = [];
-        map.setView([lat, lon], 16); // Zoom in on first ping
+        map.setView([lat, lon], 16);
       }
-      map.panTo([lat, lon]); // Focus on latest position
+      map.panTo([lat, lon]);
 
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
