@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.3</title>
+  <title>Live GPS Tracker v1.4</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100%; width: 100%; }
+    #info {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #2C3E50;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    }
     .device-label {
       background: transparent;
       color: #154360;
@@ -35,6 +47,14 @@
 </head>
 <body>
   <div id="map"></div>
+  <div id="info">
+    <strong>📡 Device Status</strong><br>
+    ID: <span id="device-id">—</span><br>
+    Lat: <span id="latitude">—</span><br>
+    Lon: <span id="longitude">—</span><br>
+    Time: <span id="timestamp">—</span><br>
+    Packets: <span id="packet-count">0</span>
+  </div>
   <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
   </footer>
@@ -50,6 +70,7 @@
 
     const socket = io({ transports: ['websocket'] });
     const gpsTrails = {};
+    const packetCounts = {};
 
     function addLabeledCircle(point) {
       const lat = parseFloat(point.latitude);
@@ -100,6 +121,16 @@
       L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
     }
 
+    function updateInfoPanel(data) {
+      document.getElementById("device-id").textContent = data.device_id;
+      document.getElementById("latitude").textContent = data.latitude;
+      document.getElementById("longitude").textContent = data.longitude;
+      document.getElementById("timestamp").textContent = data.timestamp;
+
+      const count = packetCounts[data.device_id] || 0;
+      document.getElementById("packet-count").textContent = count;
+    }
+
     socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id } = data;
       if (!latitude || !longitude || !device_id) return;
@@ -111,19 +142,24 @@
 
       if (!gpsTrails[device_id]) {
         gpsTrails[device_id] = [];
+        map.setView([lat, lon], 16); // Zoom in on first ping
       }
+      map.panTo([lat, lon]); // Focus on latest position
 
-      const trail = gpsTrails[device_id];
-      trail.push([lat, lon]);
-      if (trail.length > 100) trail.shift();
+      gpsTrails[device_id].push([lat, lon]);
+      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
       drawTrail(device_id);
 
-      if (trail.length >= 2) {
+      if (gpsTrails[device_id].length >= 2) {
+        const trail = gpsTrails[device_id];
         const p1 = trail[trail.length - 2];
         const p2 = trail[trail.length - 1];
         addArrow(p1, p2);
       }
+
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+      updateInfoPanel(data);
 
       console.log(`📍 ${device_id} → (${lat}, ${lon})`);
     });
