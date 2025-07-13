@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.5</title>
+  <title>Live GPS Tracker v1.6</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -10,14 +10,29 @@
     #info {
       position: absolute;
       top: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.8);
+      left: 10px;
+      max-height: 70%;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.85);
       padding: 10px;
       border-radius: 8px;
       font-family: sans-serif;
       font-size: 13px;
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    }
+    #info table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    #info th, #info td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+    }
+    #info th {
+      background: #f2f2f2;
+      font-weight: bold;
     }
     .device-label {
       background: transparent;
@@ -48,12 +63,21 @@
 <body>
   <div id="map"></div>
   <div id="info">
-    <strong>📡 Device Status</strong><br>
-    ID: <span id="device-id">—</span><br>
-    Lat: <span id="latitude">—</span><br>
-    Lon: <span id="longitude">—</span><br>
-    Time: <span id="timestamp">—</span><br>
-    Packets: <span id="packet-count">0</span>
+    <strong>📡 Latest GPS Data</strong>
+    <table id="device-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Lat</th>
+          <th>Lon</th>
+          <th>Time</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Live rows inserted here -->
+      </tbody>
+    </table>
   </div>
   <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
@@ -71,6 +95,7 @@
     const socket = io({ transports: ['websocket'] });
     const gpsTrails = {};
     const packetCounts = {};
+    const latestPackets = {};
 
     function addLabeledCircle(point) {
       const lat = parseFloat(point.latitude);
@@ -84,7 +109,6 @@
         weight: 2
       }).addTo(map);
 
-      // 📋 Add popup on click
       const popupContent = `
         <strong>Device ID:</strong> ${point.device_id}<br>
         <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
@@ -93,7 +117,6 @@
       `;
       circle.bindPopup(popupContent);
 
-      // 🔤 Add label marker
       const label = L.divIcon({
         html: `<div>${point.device_id}</div>`,
         className: 'device-label',
@@ -131,14 +154,24 @@
       L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
     }
 
-    function updateInfoPanel(data) {
-      document.getElementById("device-id").textContent = data.device_id;
-      document.getElementById("latitude").textContent = data.latitude;
-      document.getElementById("longitude").textContent = data.longitude;
-      document.getElementById("timestamp").textContent = data.timestamp;
+    function updateTable() {
+      const tbody = document.querySelector("#device-table tbody");
+      tbody.innerHTML = "";
 
-      const count = packetCounts[data.device_id] || 0;
-      document.getElementById("packet-count").textContent = count;
+      for (const id in latestPackets) {
+        const packet = latestPackets[id];
+        const count = packetCounts[id] || 0;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${id}</td>
+          <td>${parseFloat(packet.latitude).toFixed(6)}</td>
+          <td>${parseFloat(packet.longitude).toFixed(6)}</td>
+          <td>${packet.timestamp}</td>
+          <td>${count}</td>
+        `;
+        tbody.appendChild(row);
+      }
     }
 
     socket.on("gps_update", (data) => {
@@ -169,7 +202,8 @@
       }
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-      updateInfoPanel(data);
+      latestPackets[device_id] = data;
+      updateTable();
 
       console.log(`📍 ${device_id} → (${lat}, ${lon})`);
     });
