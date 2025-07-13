@@ -6,7 +6,7 @@ import sys
 import requests  # Add to existing imports
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")  # Allow broadcast to dashboard
+socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")  # Allow broadcast to dashboard
 logging.basicConfig(level=logging.INFO)
 
 # 🧠 In-memory buffer for GPS data during shutdown
