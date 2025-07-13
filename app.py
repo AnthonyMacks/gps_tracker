@@ -5,11 +5,6 @@ import signal
 import sys
 import requests  # Add to existing imports
 
-def forward_to_render(data):
-    requests.post("https://gps-tracker-69gb.onrender.com/gps",
-        json=data,
-        headers={"Content-Type": "application/json"})
-
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")  # Allow broadcast to dashboard
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +22,6 @@ def index():
 def gps():
     global last_gps_packet
     data = request.get_json()
-    forward_to_render(data)  # forward data to external render deployer
     last_gps_packet = data  # 📌 Update latest packet
 
     logging.info("📡 Received GPS via Fly relay: %s", data)
