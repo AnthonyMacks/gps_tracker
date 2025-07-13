@@ -34,7 +34,7 @@
       attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
-    const socket = io();
+    const socket = io({ transports: ['websocket'] });
 
     const gpsTrails = {}; // Trails per device_id
 
