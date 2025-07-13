@@ -1,60 +1,70 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
 import logging
 import signal
 import sys
-import requests  # Add to existing imports
+import os
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")  # Allow broadcast to dashboard
-logging.basicConfig(level=logging.INFO)
+socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
-# 🧠 In-memory buffer for GPS data during shutdown
+# 📜 Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+# 🧠 State management
 buffer = []
 flush_buffer = True
-last_gps_packet = None  # 🔍 Store most recent GPS ping for diagnostics
+last_gps_packet = None
 
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('map.html')  # Could be gps-map.html if renamed
+    return render_template("map.html")
 
-@app.route('/gps', methods=['POST'])
+@app.route("/gps", methods=["POST"])
 def gps():
     global last_gps_packet
     data = request.get_json()
-    last_gps_packet = data  # 📌 Update latest packet
 
+    if not data or "latitude" not in data or "longitude" not in data or "device_id" not in data:
+        logging.warning("⚠️ Invalid GPS payload: %s", data)
+        return jsonify({"error": "Invalid GPS data"}), 400
+
+    last_gps_packet = data
     logging.info("📡 Received GPS via Fly relay: %s", data)
 
     if flush_buffer:
-        socketio.emit('gps_update', data)
+        socketio.emit("gps_update", data)
     else:
         buffer.append(data)
         logging.info("⏸️ Buffering GPS packet (shutdown in progress)")
 
-    return {'status': 'received'}
+    return jsonify({"status": "received"}), 200
 
-@app.route('/last', methods=['GET'])
+@app.route("/last", methods=["GET"])
 def last():
     if last_gps_packet:
-        return last_gps_packet
-    return {'status': 'no data received'}
+        return jsonify(last_gps_packet)
+    return jsonify({"status": "no data received"}), 200
 
-# 🧹 Graceful shutdown: flush GPS buffer
+# 🧹 Graceful shutdown
 def handle_sigterm(*args):
     global flush_buffer
     flush_buffer = False
     logging.info("🛑 SIGTERM received: flushing buffered GPS data")
 
     for entry in buffer:
-        socketio.emit('gps_update', entry)
+        socketio.emit("gps_update", entry)
 
     logging.info(f"✅ Flushed {len(buffer)} buffered entries before exit")
     sys.exit(0)
 
-# Register SIGTERM handler
 signal.signal(signal.SIGTERM, handle_sigterm)
 
-# 🚀 Launch the app
-if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000)
+# 🚀 Launch with correct Render port
+if __name__ == "__main__":
+    PORT = int(os.environ.get("PORT", 10000))  # Render binds to $PORT
+    socketio.run(app, host="0.0.0.0", port=PORT)
