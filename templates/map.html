@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.8</title>
+  <title>Live GPS Tracker v1.9</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -31,17 +31,28 @@
       width: 100%;
     }
 
-    #info th, #info td {
+    #info thead th {
+      position: sticky;
+      top: 0;
+      background: #f2f2f2;
+      font-weight: bold;
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+      z-index: 1;
+    }
+
+    #info tbody td {
       padding: 6px 8px;
       text-align: left;
       border-bottom: 1px solid #ccc;
       cursor: pointer;
     }
 
-    #info th {
-      background: #f2f2f2;
-      font-weight: bold;
-    }
+    #info tr:hover { background-color: #eef; }
+    .row-active { background-color: #D5F5E3; } /* green */
+    .row-warm   { background-color: #FCF3CF; } /* yellow */
+    .row-stale  { background-color: #FADBD8; } /* orange */
 
     .device-label {
       background: transparent;
@@ -82,7 +93,7 @@
           <th>ID</th>
           <th>Lat</th>
           <th>Lon</th>
-          <th>Time</th>
+          <th>Age</th>
           <th>Count</th>
         </tr>
       </thead>
@@ -140,7 +151,6 @@
     function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
       if (trail.length < 2) return;
-
       L.polyline(trail, {
         color: '#1ABC9C',
         weight: 3,
@@ -151,34 +161,55 @@
     function addArrow(p1, p2) {
       const latMid = (p1[0] + p2[0]) / 2;
       const lonMid = (p1[1] + p2[1]) / 2;
-
       const angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
       const angleDeg = angleRad * (180 / Math.PI);
-
       const arrowIcon = L.divIcon({
         html: `<div style="transform: rotate(${angleDeg}deg);">➤</div>`,
         className: 'arrow-icon',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
       });
-
       L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
+    }
+
+    function getAgeLabel(ts) {
+      const pingTime = new Date(ts);
+      const now = new Date();
+      const diff = Math.floor((now - pingTime) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      return `${Math.floor(diff / 3600)}h ago`;
+    }
+
+    function getRowClass(ts) {
+      const pingTime = new Date(ts);
+      const now = new Date();
+      const diff = (now - pingTime) / 1000;
+      if (diff <= 180) return "row-active";    // ≤ 3 min → green
+      if (diff <= 360) return "row-warm";      // ≤ 6 min → yellow
+      return "row-stale";                       // > 6 min → orange
     }
 
     function updateTable() {
       const tbody = document.querySelector("#device-table tbody");
       tbody.innerHTML = "";
 
-      for (const id in latestPackets) {
+      const sortedIDs = Object.keys(latestPackets).sort((a, b) => {
+        return a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true });
+      });
+
+      for (const id of sortedIDs) {
         const packet = latestPackets[id];
         const count = packetCounts[id] || 0;
 
+        const ageLabel = getAgeLabel(packet.timestamp);
         const row = document.createElement("tr");
+        row.className = getRowClass(packet.timestamp);
         row.innerHTML = `
           <td>${id}</td>
           <td>${parseFloat(packet.latitude).toFixed(6)}</td>
           <td>${parseFloat(packet.longitude).toFixed(6)}</td>
-          <td>${packet.timestamp}</td>
+          <td>${ageLabel}</td>
           <td>${count}</td>
         `;
         row.addEventListener("click", () => {
@@ -190,50 +221,4 @@
     }
 
     socket.on("gps_update", (data) => {
-      const { latitude, longitude, device_id } = data;
-      if (!latitude || !longitude || !device_id) return;
-
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-
-      addLabeledCircle(data);
-      allPointsBounds.extend([lat, lon]);
-      map.fitBounds(allPointsBounds, { padding: [20, 20] });
-
-      if (!gpsTrails[device_id]) {
-        gpsTrails[device_id] = [];
-      }
-
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
-
-      drawTrail(device_id);
-
-      if (gpsTrails[device_id].length >= 2) {
-        const trail = gpsTrails[device_id];
-        const p1 = trail[trail.length - 2];
-        const p2 = trail[trail.length - 1];
-        addArrow(p1, p2);
-      }
-
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-      latestPackets[device_id] = data;
-      updateTable();
-
-      console.log(`📍 ${device_id} → (${lat}, ${lon})`);
-    });
-
-    document.getElementById("build-time").textContent =
-      new Date().toLocaleString("en-AU", {
-        timeZone: "Australia/Sydney",
-        hour12: false,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-  </script>
-</body>
-</html>
+      const { latitude, longitude, device
