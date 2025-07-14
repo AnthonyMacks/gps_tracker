@@ -9,7 +9,6 @@
     #map { height: 100%; width: 100%; z-index: 0; }
 
     #info {
-      display: block;
       position: absolute;
       top: 10px;
       right: 10px;
@@ -26,33 +25,9 @@
       z-index: 1001;
     }
 
-    #info table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    #info thead th {
-      position: sticky;
-      top: 0;
-      background: #f2f2f2;
-      font-weight: bold;
-      padding: 6px 8px;
-      text-align: left;
-      border-bottom: 1px solid #ccc;
-      z-index: 1;
-    }
-
-    #info tbody td {
-      padding: 6px 8px;
-      text-align: left;
-      border-bottom: 1px solid #ccc;
-      cursor: pointer;
-    }
-
-    #info tr:hover { background-color: #eef; }
-    .row-active { background-color: #D5F5E3; } /* green */
-    .row-warm   { background-color: #FCF3CF; } /* yellow */
-    .row-stale  { background-color: #FADBD8; } /* orange */
+    .row-active { background-color: #D5F5E3; }
+    .row-warm   { background-color: #FCF3CF; }
+    .row-stale  { background-color: #FADBD8; }
 
     .device-label {
       background: transparent;
@@ -64,7 +39,6 @@
     }
 
     .arrow-icon {
-      color: #2874A6;
       font-weight: bold;
       font-size: 20px;
     }
@@ -119,14 +93,22 @@
     const latestPackets = {};
     const allPointsBounds = L.latLngBounds();
 
+    const deviceColors = {
+      "I": "#E74C3C",    // red
+      "II": "#2ECC71",   // green
+      "III": "#3498DB",  // blue
+      "IV": "#F1C40F"    // yellow
+    };
+
     function addLabeledCircle(point) {
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
+      const color = deviceColors[point.device_id] || "#7F8C8D";
 
       const circle = L.circleMarker([lat, lon], {
         radius: 12,
-        color: '#2E86C1',
-        fillColor: '#AED6F1',
+        color: color,
+        fillColor: color,
         fillOpacity: 0.9,
         weight: 2
       }).addTo(map);
@@ -151,8 +133,10 @@
     function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
       if (trail.length < 2) return;
+      const color = deviceColors[device_id] || "#7F8C8D";
+
       L.polyline(trail, {
-        color: '#1ABC9C',
+        color: color,
         weight: 3,
         opacity: 0.7
       }).addTo(map);
@@ -161,25 +145,22 @@
     function addArrow(p1, p2, device_id) {
       const latMid = (p1[0] + p2[0]) / 2;
       const lonMid = (p1[1] + p2[1]) / 2;
-      const dy = p2[0] - p1[0]; // delta latitude
-      const dx = p2[1] - p1[1]; // delta longitude
+      const dy = p2[0] - p1[0];
+      const dx = p2[1] - p1[1];
       const angleRad = Math.atan2(dy, dx);
       const angleDeg = angleRad * (180 / Math.PI);
-
-  // Optional tweak if arrows still look perpendicular
-      const adjustedDeg = angleDeg - 90;
 
       const color = deviceColors[device_id] || "#7F8C8D";
 
       const arrowIcon = L.divIcon({
-        html: `<div style="transform: rotate(${adjustedDeg}deg); color:${color};">➤</div>`,
+        html: `<div style="transform: rotate(${angleDeg}deg); color:${color};">➤</div>`,
         className: 'arrow-icon',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
-     });
+      });
 
-     L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
-   }
+      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
+    }
 
     function getAgeLabel(ts) {
       const pingTime = new Date(ts);
@@ -194,9 +175,9 @@
       const pingTime = new Date(ts);
       const now = new Date();
       const diff = (now - pingTime) / 1000;
-      if (diff <= 180) return "row-active";    // ≤ 3 min → green
-      if (diff <= 360) return "row-warm";      // ≤ 6 min → yellow
-      return "row-stale";                       // > 6 min → orange
+      if (diff <= 180) return "row-active";
+      if (diff <= 360) return "row-warm";
+      return "row-stale";
     }
 
     function updateTable() {
@@ -210,7 +191,6 @@
       for (const id of sortedIDs) {
         const packet = latestPackets[id];
         const count = packetCounts[id] || 0;
-
         const ageLabel = getAgeLabel(packet.timestamp);
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp);
@@ -223,13 +203,12 @@
         `;
         row.addEventListener("click", () => {
           map.setView([parseFloat(packet.latitude), parseFloat(packet.longitude)], 16, { animate: true });
-          console.log(`🖱️ Zoomed to ${id}`);
         });
         tbody.appendChild(row);
       }
     }
 
-        socket.on("gps_update", (data) => {
+    socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id } = data;
       if (!latitude || !longitude || !device_id) return;
 
@@ -240,10 +219,7 @@
       allPointsBounds.extend([lat, lon]);
       map.fitBounds(allPointsBounds, { padding: [20, 20] });
 
-      if (!gpsTrails[device_id]) {
-        gpsTrails[device_id] = [];
-      }
-
+      if (!gpsTrails[device_id]) gpsTrails[device_id] = [];
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
@@ -253,7 +229,7 @@
         const trail = gpsTrails[device_id];
         const p1 = trail[trail.length - 2];
         const p2 = trail[trail.length - 1];
-        addArrow(p1, p2);
+        addArrow(p1, p2, device_id);
       }
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
