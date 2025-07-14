@@ -170,14 +170,19 @@
       const dx = p2[1] - p1[1];
       const angleRad = Math.atan2(dy, dx);
       const angleDeg = angleRad * (180 / Math.PI);
-
       const color = deviceColors[device_id] || "#7F8C8D";
 
+      const arrowSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-12 -12 24 24">
+          <polygon points="0,-10 5,0 0,3 -5,0" fill="${color}" transform="rotate(${angleDeg})"/>
+        </svg>
+  `   ';
+
       const arrowIcon = L.divIcon({
-        html: `<div style="transform: rotate(${angleDeg}deg); color:${color};">➤</div>`,
+        html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        iconSize: [12, 12],
+        iconAnchor: [12, 12]
       });
 
       L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
