@@ -159,9 +159,9 @@
     }
 
     function addArrow(p1, p2) {
-      const latMid = (p1[0] + p2[0]) / 2;
-      const lonMid = (p1[1] + p2[1]) / 2;
-      const angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+      const dy = p2[0] - p1[0];  // Δlat
+      const dx = p2[1] - p1[1];  // Δlon
+      const angleRad = Math.atan2(dy,dx);
       const angleDeg = angleRad * (180 / Math.PI);
       const arrowIcon = L.divIcon({
         html: `<div style="transform: rotate(${angleDeg}deg);">➤</div>`,
