@@ -88,13 +88,6 @@
   <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
   </footer>
-
-  const deviceColors = {
-   "I": "#E74C3C",    // red
-   "II": "#2ECC71",   // green
-   "III": "#3498DB",  // blue
-   "IV": "#F1C40F"    // yellow
-  };
   
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -249,10 +242,6 @@
         const p2 = trail[trail.length - 1];
         addArrow(p1, p2, device_id);
       }
-
-      setInterval(() => {
-        updateTable();
-      }, 10000); // every 10 seconds
       
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
       latestPackets[device_id] = data;
@@ -261,6 +250,9 @@
       console.log(`📍 ${device_id} → (${lat}, ${lon})`);
     });
 
+// 🔁 Refresh age and row color even without new packets
+    setInterval(updateTable, 10000);
+    
     document.getElementById("build-time").textContent =
       new Date().toLocaleString("en-AU", {
         timeZone: "Australia/Sydney",
