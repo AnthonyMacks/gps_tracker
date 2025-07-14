@@ -6,9 +6,10 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
-    #map { height: 100%; width: 100%; }
+    #map { height: 100%; width: 100%; z-index: 0; }
 
     #info {
+      display: block;
       position: absolute;
       top: 10px;
       right: 10px;
@@ -25,9 +26,33 @@
       z-index: 1001;
     }
 
-    .row-active { background-color: #D5F5E3; }
-    .row-warm   { background-color: #FCF3CF; }
-    .row-stale  { background-color: #FADBD8; }
+    #info table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    #info thead th {
+      position: sticky;
+      top: 0;
+      background: #f2f2f2;
+      font-weight: bold;
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+      z-index: 1;
+    }
+
+    #info tbody td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+      cursor: pointer;
+    }
+
+    #info tr:hover { background-color: #eef; }
+    .row-active { background-color: #D5F5E3; } /* green */
+    .row-warm   { background-color: #FCF3CF; } /* yellow */
+    .row-stale  { background-color: #FADBD8; } /* orange */
 
     .device-label {
       background: transparent;
@@ -39,9 +64,9 @@
     }
 
     .arrow-icon {
+      color: #2874A6;
       font-weight: bold;
       font-size: 20px;
-      color: inherit;
     }
 
     footer {
@@ -94,25 +119,25 @@
     const latestPackets = {};
     const allPointsBounds = L.latLngBounds();
 
-    const deviceColors = {
-      "I": "#E74C3C",
-      "II": "#2ECC71",
-      "III": "#3498DB",
-      "IV": "#F1C40F"
-    };
-
     function addLabeledCircle(point) {
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
-      const color = deviceColors[point.device_id] || "#7F8C8D";
 
       const circle = L.circleMarker([lat, lon], {
         radius: 12,
-        color: color,
-        fillColor: color,
+        color: '#2E86C1',
+        fillColor: '#AED6F1',
         fillOpacity: 0.9,
         weight: 2
       }).addTo(map);
+
+      const popupContent = `
+        <strong>Device ID:</strong> ${point.device_id}<br>
+        <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+        <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+        <strong>Timestamp:</strong> ${point.timestamp}
+      `;
+      circle.bindPopup(popupContent);
 
       const label = L.divIcon({
         html: `<div>${point.device_id}</div>`,
@@ -126,29 +151,24 @@
     function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
       if (trail.length < 2) return;
-      const color = deviceColors[device_id] || "#7F8C8D";
-
       L.polyline(trail, {
-        color: color,
+        color: '#1ABC9C',
         weight: 3,
         opacity: 0.7
       }).addTo(map);
     }
 
-    function addArrow(p1, p2, device_id) {
+    function addArrow(p1, p2) {
       const latMid = (p1[0] + p2[0]) / 2;
       const lonMid = (p1[1] + p2[1]) / 2;
-      const angleRad = Math.atan2(p2[0] - p1[0], p2[1] - p1[1]); // corrected orientation
+      const angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
       const angleDeg = angleRad * (180 / Math.PI);
-      const color = deviceColors[device_id] || "#7F8C8D";
-
       const arrowIcon = L.divIcon({
-        html: `<div style="transform: rotate(${angleDeg}deg); color:${color};">➤</div>`,
+        html: `<div style="transform: rotate(${angleDeg}deg);">➤</div>`,
         className: 'arrow-icon',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
       });
-
       L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
     }
 
@@ -165,9 +185,9 @@
       const pingTime = new Date(ts);
       const now = new Date();
       const diff = (now - pingTime) / 1000;
-      if (diff <= 180) return "row-active";
-      if (diff <= 360) return "row-warm";
-      return "row-stale";
+      if (diff <= 180) return "row-active";    // ≤ 3 min → green
+      if (diff <= 360) return "row-warm";      // ≤ 6 min → yellow
+      return "row-stale";                       // > 6 min → orange
     }
 
     function updateTable() {
@@ -181,6 +201,7 @@
       for (const id of sortedIDs) {
         const packet = latestPackets[id];
         const count = packetCounts[id] || 0;
+
         const ageLabel = getAgeLabel(packet.timestamp);
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp);
@@ -193,12 +214,13 @@
         `;
         row.addEventListener("click", () => {
           map.setView([parseFloat(packet.latitude), parseFloat(packet.longitude)], 16, { animate: true });
+          console.log(`🖱️ Zoomed to ${id}`);
         });
         tbody.appendChild(row);
       }
     }
 
-    socket.on("gps_update", (data) => {
+        socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id } = data;
       if (!latitude || !longitude || !device_id) return;
 
@@ -222,12 +244,14 @@
         const trail = gpsTrails[device_id];
         const p1 = trail[trail.length - 2];
         const p2 = trail[trail.length - 1];
-        addArrow(p1, p2, device_id);
+        addArrow(p1, p2);
       }
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
       latestPackets[device_id] = data;
       updateTable();
+
+      console.log(`📍 ${device_id} → (${lat}, ${lon})`);
     });
 
     document.getElementById("build-time").textContent =
@@ -239,20 +263,8 @@
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        second: '
-
-<script>
-  document.getElementById("build-time").textContent =
-    new Date().toLocaleString("en-AU", {
-      timeZone: "Australia/Sydney",
-      hour12: false,
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-</script>
+        second: '2-digit'
+      });
+  </script>
 </body>
 </html>
