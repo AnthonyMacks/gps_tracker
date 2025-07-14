@@ -220,5 +220,51 @@
       }
     }
 
-    socket.on("gps_update", (data) => {
-      const { latitude, longitude, device
+        socket.on("gps_update", (data) => {
+      const { latitude, longitude, device_id } = data;
+      if (!latitude || !longitude || !device_id) return;
+
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+
+      addLabeledCircle(data);
+      allPointsBounds.extend([lat, lon]);
+      map.fitBounds(allPointsBounds, { padding: [20, 20] });
+
+      if (!gpsTrails[device_id]) {
+        gpsTrails[device_id] = [];
+      }
+
+      gpsTrails[device_id].push([lat, lon]);
+      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
+
+      drawTrail(device_id);
+
+      if (gpsTrails[device_id].length >= 2) {
+        const trail = gpsTrails[device_id];
+        const p1 = trail[trail.length - 2];
+        const p2 = trail[trail.length - 1];
+        addArrow(p1, p2);
+      }
+
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+      latestPackets[device_id] = data;
+      updateTable();
+
+      console.log(`📍 ${device_id} → (${lat}, ${lon})`);
+    });
+
+    document.getElementById("build-time").textContent =
+      new Date().toLocaleString("en-AU", {
+        timeZone: "Australia/Sydney",
+        hour12: false,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+  </script>
+</body>
+</html>
