@@ -29,6 +29,15 @@
     .row-warm   { background-color: #FCF3CF; }
     .row-stale  { background-color: #FADBD8; }
 
+    .row-low-sats {
+      background-color: #F5B7B1 !important;  /* light red */
+      animation: blink 1s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% { background-color: #FADBD8; }
+    }
+
     .device-label {
       background: transparent;
       color: #154360;
@@ -80,6 +89,7 @@
           <th>Lon</th>
           <th>Age</th>
           <th>Count</th>
+          <th>Sats</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -182,10 +192,13 @@
       return `${Math.floor(diff / 3600)}h ago`;
     }
 
-    function getRowClass(ts) {
+    function getRowClass(ts, sats) {
       const pingTime = new Date(ts);
       const now = new Date();
       const diff = (now - pingTime) / 1000;
+
+      if (sats !== undefined && sats < 4) return "row-low-sats";
+
       if (diff <= 180) return "row-active";
       if (diff <= 360) return "row-warm";
       return "row-stale";
@@ -204,13 +217,14 @@
         const count = packetCounts[id] || 0;
         const ageLabel = getAgeLabel(packet.timestamp);
         const row = document.createElement("tr");
-        row.className = getRowClass(packet.timestamp);
+        row.className = getRowClass(packet.timestamp, packet.satellites);
         row.innerHTML = `
           <td>${id}</td>
           <td>${parseFloat(packet.latitude).toFixed(6)}</td>
           <td>${parseFloat(packet.longitude).toFixed(6)}</td>
           <td>${ageLabel}</td>
           <td>${count}</td>
+          <td>${packet.satellites ?? "—"}</td>
         `;
         row.addEventListener("click", () => {
           map.setView([parseFloat(packet.latitude), parseFloat(packet.longitude)], 16, { animate: true });
