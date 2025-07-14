@@ -55,6 +55,17 @@
       border-radius: 6px;
       z-index: 1001;
     }
+
+    @keyframes pulse {
+      0%   { background-color: #D5F5E3; }
+      50%  { background-color: #ABEBC6; }
+      100% { background-color: #D5F5E3; }
+    }
+
+.row-active {
+  animation: pulse 2s infinite;
+}
+    
   </style>
 </head>
 <body>
@@ -239,6 +250,10 @@
         addArrow(p1, p2, device_id);
       }
 
+      setInterval(() => {
+        updateTable();
+      }, 10000); // every 10 seconds
+      
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
       latestPackets[device_id] = data;
       updateTable();
