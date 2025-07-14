@@ -158,19 +158,28 @@
       }).addTo(map);
     }
 
-    function addArrow(p1, p2) {
-      const dy = p2[0] - p1[0];  // Δlat
-      const dx = p2[1] - p1[1];  // Δlon
-      const angleRad = Math.atan2(dy,dx);
+    function addArrow(p1, p2, device_id) {
+      const latMid = (p1[0] + p2[0]) / 2;
+      const lonMid = (p1[1] + p2[1]) / 2;
+      const dy = p2[0] - p1[0]; // delta latitude
+      const dx = p2[1] - p1[1]; // delta longitude
+      const angleRad = Math.atan2(dy, dx);
       const angleDeg = angleRad * (180 / Math.PI);
+
+  // Optional tweak if arrows still look perpendicular
+      const adjustedDeg = angleDeg - 90;
+
+      const color = deviceColors[device_id] || "#7F8C8D";
+
       const arrowIcon = L.divIcon({
-        html: `<div style="transform: rotate(${angleDeg}deg);">➤</div>`,
+        html: `<div style="transform: rotate(${adjustedDeg}deg); color:${color};">➤</div>`,
         className: 'arrow-icon',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
-      });
-      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
-    }
+     });
+
+     L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
+   }
 
     function getAgeLabel(ts) {
       const pingTime = new Date(ts);
