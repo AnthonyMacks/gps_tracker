@@ -201,25 +201,6 @@
         </svg>
       `;
 
-      const arrowIcon = L.divIcon({
-        html: arrowSvg,
-        className: 'arrow-icon',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      });
-
-      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
-    }
-
-      const arrowIcon = L.divIcon({
-        html: arrowSvg,
-        className: 'arrow-icon',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6]
-      });
-
-      L.marker([latPos, lonPos], { icon: arrowIcon, interactive: false }).addTo(map);
-    }
 
     function getAgeLabel(ts) {
       const pingTime = new Date(ts);
