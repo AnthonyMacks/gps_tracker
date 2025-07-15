@@ -183,10 +183,10 @@
 
       // samller, more streamlined arrow
       const arrowSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-12 -12 24 24">
-          <polygon points="0,-10 5,0 0,3 -5,0" fill="${color}" transform="rotate(${angleDeg})"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-8 -8 16 16">
+          <polygon points="0,-6 3,2 0,0 -3,2" fill="${color}" stroke="${color}" stroke-width="0.5" transform="rotate(${angleDeg})"/>
         </svg>
-  `   ';
+      `;
 
       const arrowIcon = L.divIcon({
         html: arrowSvg,
