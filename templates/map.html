@@ -176,7 +176,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-12 -12 24 24">
           <polygon points="0,-10 5,0 0,3 -5,0" fill="${color}" transform="rotate(${angleDeg})"/>
         </svg>
-      `;
+  `   ';
 
       const arrowIcon = L.divIcon({
         html: arrowSvg,
@@ -222,14 +222,14 @@
         const count = packetCounts[id] || 0;
         const ageLabel = getAgeLabel(packet.timestamp);
         const row = document.createElement("tr");
-        row.className = getRowClass(packet.timestamp, packet.satellites);
+        row.className = getRowClass(packet.timestamp, packet.sats);
         row.innerHTML = `
           <td>${id}</td>
           <td>${parseFloat(packet.latitude).toFixed(6)}</td>
           <td>${parseFloat(packet.longitude).toFixed(6)}</td>
           <td>${ageLabel}</td>
           <td>${count}</td>
-          <td>${packet.satellites ?? "—"}</td>
+          <td>${packet.sats ?? "—"}</td>
         `;
         row.addEventListener("click", () => {
           map.setView([parseFloat(packet.latitude), parseFloat(packet.longitude)], 16, { animate: true });
