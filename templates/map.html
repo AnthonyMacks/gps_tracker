@@ -170,30 +170,46 @@
       }
     }
 
-    function addArrow(p1, p2, device_id) {
-      // Position arrow at 75% along the line segment (closer to the end)
-      const latPos = p1[0] + (p2[0] - p1[0]) * 0.75;
-      const lonPos = p1[1] + (p2[1] - p1[1]) * 0.75;
-      
-      // Calculate bearing (direction) from p1 to p2
+    function addTrailArrow(device_id) {
+      const trail = gpsTrails[device_id];
+      if (!trail || trail.length < 2) return;
+
+      // Use midpoint of trail
+      const midIndex = Math.floor(trail.length / 2);
+      const p1 = trail[midIndex - 1];
+      const p2 = trail[midIndex];
+
+      // Calculate lat/lon of midpoint
+      const latMid = (p1[0] + p2[0]) / 2;
+      const lonMid = (p1[1] + p2[1]) / 2;
+
+      // Bearing calculation using haversine-based method
       const lat1 = p1[0] * Math.PI / 180;
       const lat2 = p2[0] * Math.PI / 180;
       const deltaLon = (p2[1] - p1[1]) * Math.PI / 180;
-      
+
       const x = Math.sin(deltaLon) * Math.cos(lat2);
       const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-      
       const bearing = Math.atan2(x, y);
-      const angleDeg = bearing * (180 / Math.PI);
-      
+      const angleDeg = (bearing * 180 / Math.PI) + 90;  // optional offset
+
       const color = deviceColors[device_id] || "#7F8C8D";
 
-      // Smaller, more streamlined arrow
       const arrowSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="-6 -6 12 12">
-          <polygon points="0,-4 2,1 0,0 -2,1" fill="${color}" stroke="white" stroke-width="0.3" transform="rotate(${angleDeg})"/>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-8 -8 16 16">
+          <polygon points="0,-6 3,2 0,0 -3,2" fill="${color}" stroke="${color}" stroke-width="0.5" transform="rotate(${angleDeg})"/>
         </svg>
       `;
+
+      const arrowIcon = L.divIcon({
+        html: arrowSvg,
+        className: 'arrow-icon',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
+      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
+    }
 
       const arrowIcon = L.divIcon({
         html: arrowSvg,
@@ -271,6 +287,7 @@
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
       drawTrail(device_id);
+      addTrailArrow(device_id);
       
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
       latestPackets[device_id] = data;
