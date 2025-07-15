@@ -166,12 +166,22 @@
     function addArrow(p1, p2, device_id) {
       const latMid = (p1[0] + p2[0]) / 2;
       const lonMid = (p1[1] + p2[1]) / 2;
-      const dy = p2[0] - p1[0];
-      const dx = p2[1] - p1[1];
-      const angleRad = Math.atan2(dy, dx);
-      const angleDeg = angleRad * (180 / Math.PI);
+
+      // Calc bearing form p1 to p2
+      
+      const lat1 = p1[0] * Math.PI / 180;
+      const lat2 = p2[0] * Math.PI / 180;
+      const deltaLon = (p2[1] - p1[1]) * Math.PI / 180;
+      
+      const x = Math.sin(deltaLon) * Math.cos(lat2);
+      const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+      
+      const bearing = Math.atan2(x, y);
+      const angleDeg = bearing * (180 / Math.PI);
+
       const color = deviceColors[device_id] || "#7F8C8D";
 
+      // samller, more streamlined arrow
       const arrowSvg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-12 -12 24 24">
           <polygon points="0,-10 5,0 0,3 -5,0" fill="${color}" transform="rotate(${angleDeg})"/>
@@ -181,8 +191,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [12, 12],
-        iconAnchor: [12, 12]
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
       L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
