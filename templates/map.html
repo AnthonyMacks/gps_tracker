@@ -286,7 +286,8 @@
     }
 
     function getAgeLabel(ts) {
-      const pingTime = new Date(ts);
+      const pingTime = new Date(ts.replace(" ", "T") + "Z");
+      
       const now = new Date();
       const diff = Math.floor((now - pingTime) / 1000);
       if (diff < 60) return `${diff}s ago`;
