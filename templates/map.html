@@ -131,7 +131,9 @@
       "OpenStreetMap": osmLayer
     };
 
-    L.control.layers(baseLayers).addTo(map);
+    L.control.layers(baseLayers, null, {
+      position: 'topleft'
+    }).addTo(map);
 
     const socket = io({ transports: ['websocket'] });
     const gpsTrails = {};
