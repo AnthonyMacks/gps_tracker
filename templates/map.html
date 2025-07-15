@@ -286,13 +286,19 @@
     }
 
     function getAgeLabel(ts) {
-      const pingTime = new Date(ts.replace(" ", "T") + "Z");
-      
-      const now = new Date();
-      const diff = Math.floor((now - pingTime) / 1000);
-      if (diff < 60) return `${diff}s ago`;
-      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-      return `${Math.floor(diff / 3600)}h ago`;
+  // turn "YYYY-MM-DD HH:MM:SS" into a real ISO string
+      const iso = ts.replace(" ", "T") + "Z";
+      const pingTime = new Date(iso);
+      if (isNaN(pingTime)) {
+        console.warn("Bad timestamp:", ts);
+        return "––";
+      }
+
+      const nowSec = Date.now();
+      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
+      if (diffSec < 60)   return `${diffSec}s ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
+      return `${Math.floor(diffSec/3600)}h ago`;
     }
 
     function getRowClass(ts, sats) {
@@ -337,35 +343,45 @@
     }
 
     socket.on("gps_update", (data) => {
-      const { latitude, longitude, device_id } = data;
-      if (!latitude || !longitude || !device_id) return;
+      const { latitude, longitude, device_id, timestamp } = data;
+      if (!latitude || !longitude || !device_id || !timestamp) return;
 
+      // parse coords and timestamp
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
+      // coerce timestamp into ISO so getAgeLabel() works
+      latestPackets[device_id] = {
+        ...data,
+        timestamp: timestamp.replace(" ", "T") + "Z"
+      };
 
-      // Convert previous current position to historical pin
-      if (latestPackets[device_id]) {
+      // increment the lowercase count
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+
+      // move the last “current” point into history
+      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
         addDataPoint(latestPackets[device_id], false);
       }
-
-      // Add new current position
+      // drop the new current marker
       addDataPoint(data, true);
-      
+
+      // update map bounds
       allPointsBounds.extend([lat, lon]);
       map.fitBounds(allPointsBounds, { padding: [20, 20] });
 
-      if (!gpsTrails[device_id]) gpsTrails[device_id] = [];
+      // build the lat‐lon trail
+      gpsTrails[device_id] = gpsTrails[device_id] || [];
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
+      // redraw trail and arrow
       drawTrail(device_id);
       addTrailArrow(device_id);
-      
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-      latestPackets[device_id] = data;
+
+      // refresh the info panel (age & count)
       updateTable();
 
-      console.log(`📍 ${device_id} → (${lat}, ${lon})`);
+      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     });
 
     // 🔁 Refresh age and row color even without new packets
