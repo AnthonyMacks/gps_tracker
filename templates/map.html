@@ -317,31 +317,40 @@
       const tbody = document.querySelector("#device-table tbody");
       tbody.innerHTML = "";
 
-      const sortedIDs = Object.keys(latestPackets).sort((a, b) => {
-        return a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true });
-      });
+      // Sort device IDs naturally (I, II, III… 10, 11…)
+      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
+        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
+      );
 
       for (const id of sortedIDs) {
         const packet = latestPackets[id];
-        const count = packetCounts[id] || 0;
-        const ageLabel = getAgeLabel(packet.timestamp);
+        const count  = packetCounts[id] || 0;
+        const sats   = packet.sats ?? "—";
+        const lat    = parseFloat(packet.latitude).toFixed(6);
+        const lon    = parseFloat(packet.longitude).toFixed(6);
+
+        // Create row and apply your coloring logic
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
+
+        // Populate cells: ID | Lat | Lon | Count | Sats
         row.innerHTML = `
           <td>${id}</td>
-          <td>${parseFloat(packet.latitude).toFixed(6)}</td>
-          <td>${parseFloat(packet.longitude).toFixed(6)}</td>
-          <td>${ageLabel}</td>
+          <td>${lat}</td>
+          <td>${lon}</td>
           <td>${count}</td>
-          <td>${packet.sats ?? "—"}</td>
+          <td>${sats}</td>
         `;
+
+        // Center map on click
         row.addEventListener("click", () => {
-          map.setView([parseFloat(packet.latitude), parseFloat(packet.longitude)], 16, { animate: true });
+          map.setView([lat, lon], 16, { animate: true });
         });
+
         tbody.appendChild(row);
       }
     }
-
+    
     socket.on("gps_update", (data) => {
       const { latitude, longitude, device_id, timestamp } = data;
       if (!latitude || !longitude || !device_id || !timestamp) return;
