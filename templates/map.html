@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v2.0</title>
+  <title>Live GPS Tracker v1.9 - NSW Topo</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -25,48 +25,17 @@
       z-index: 1001;
     }
 
-    .row-active { 
-      background-color: #D5F5E3;
-      animation: pulse-green 2s infinite;
-    }
-    
-    .row-warm { 
-      background-color: #FCF3CF;
-      animation: pulse-yellow 2s infinite;
-    }
-    
-    .row-stale { 
-      background-color: #FADBD8;
-      animation: pulse-red 2s infinite;
-    }
+    .row-active { background-color: #D5F5E3; }
+    .row-warm   { background-color: #FCF3CF; }
+    .row-stale  { background-color: #FADBD8; }
 
     .row-low-sats {
-      background-color: #F5B7B1 !important;
-      animation: blink-red 1s step-start infinite;
+      background-color: #F5B7B1 !important;  /* light red */
+      animation: blink 1s step-start infinite;
     }
 
-    @keyframes pulse-green {
-      0%   { background-color: #D5F5E3; }
-      50%  { background-color: #ABEBC6; }
-      100% { background-color: #D5F5E3; }
-    }
-
-    @keyframes pulse-yellow {
-      0%   { background-color: #FCF3CF; }
-      50%  { background-color: #F7DC6F; }
-      100% { background-color: #FCF3CF; }
-    }
-
-    @keyframes pulse-red {
-      0%   { background-color: #FADBD8; }
-      50%  { background-color: #F1948A; }
-      100% { background-color: #FADBD8; }
-    }
-
-    @keyframes blink-red {
-      0%   { background-color: #F5B7B1; }
-      50%  { background-color: #E74C3C; }
-      100% { background-color: #F5B7B1; }
+    @keyframes blink {
+      50% { background-color: #FADBD8; }
     }
 
     .device-label {
@@ -96,25 +65,14 @@
       z-index: 1001;
     }
 
-    #device-table {
-      width: 100%;
-      border-collapse: collapse;
+    @keyframes pulse {
+      0%   { background-color: #D5F5E3; }
+      50%  { background-color: #ABEBC6; }
+      100% { background-color: #D5F5E3; }
     }
 
-    #device-table th, #device-table td {
-      padding: 4px 6px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    #device-table th {
-      background-color: #f2f2f2;
-      font-weight: bold;
-    }
-
-    #device-table tr:hover {
-      background-color: #f5f5f5;
-      cursor: pointer;
+    .row-active {
+      animation: pulse 2s infinite;
     }
     
   </style>
@@ -143,19 +101,44 @@
   
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
   <script>
     const map = L.map("map").setView([-33.87, 151.21], 13);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    
+    // Base layers
+    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "© OpenStreetMap contributors"
-    }).addTo(map);
+    });
+
+    const nswTopoLayer = L.esri.tiledMapLayer({
+      url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+      attribution: '© NSW Spatial Services'
+    });
+
+    const nswImageryLayer = L.esri.tiledMapLayer({
+      url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer',
+      attribution: '© NSW Spatial Services'
+    });
+
+    // Add NSW Topo as default
+    nswTopoLayer.addTo(map);
+
+    // Layer control
+    const baseLayers = {
+      "NSW Topographic": nswTopoLayer,
+      "NSW Imagery": nswImageryLayer,
+      "OpenStreetMap": osmLayer
+    };
+
+    L.control.layers(baseLayers).addTo(map);
 
     const socket = io({ transports: ['websocket'] });
     const gpsTrails = {};
     const packetCounts = {};
     const latestPackets = {};
     const allPointsBounds = L.latLngBounds();
-    const deviceLayers = {}; // Store layers for each device to enable clearing
+    const allMarkers = {}; // Store all markers for each device
 
     const deviceColors = {
       "I": "#E74C3C",    // red
@@ -164,126 +147,140 @@
       "IV": "#F1C40F"    // yellow
     };
 
-    function clearDeviceLayers(device_id) {
-      if (deviceLayers[device_id]) {
-        deviceLayers[device_id].forEach(layer => map.removeLayer(layer));
-        deviceLayers[device_id] = [];
-      }
-    }
-
-    function addLabeledCircle(point) {
+    function addDataPoint(point, isLatest = false) {
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
       const color = deviceColors[point.device_id] || "#7F8C8D";
 
-      const circle = L.circleMarker([lat, lon], {
-        radius: 12,
-        color: color,
-        fillColor: color,
-        fillOpacity: 0.9,
-        weight: 2
-      }).addTo(map);
+      if (isLatest) {
+        // Current position - use larger circle with label
+        const circle = L.circleMarker([lat, lon], {
+          radius: 12,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.9,
+          weight: 2
+        }).addTo(map);
 
-      const popupContent = `
-        <strong>Device ID:</strong> ${point.device_id}<br>
-        <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-        <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
-        <strong>Timestamp:</strong> ${point.timestamp}<br>
-        <strong>Satellites:</strong> ${point.sats || "N/A"}
-      `;
-      circle.bindPopup(popupContent);
+        const popupContent = `
+          <strong>Device ID:</strong> ${point.device_id}<br>
+          <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+          <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+          <strong>Timestamp:</strong> ${point.timestamp}
+        `;
+        circle.bindPopup(popupContent);
 
-      const label = L.divIcon({
-        html: `<div>${point.device_id}</div>`,
-        className: 'device-label',
-        iconSize: [24, 24]
-      });
+        const label = L.divIcon({
+          html: `<div>${point.device_id}</div>`,
+          className: 'device-label',
+          iconSize: [24, 24]
+        });
 
-      const labelMarker = L.marker([lat, lon], { icon: label, interactive: false }).addTo(map);
+        const labelMarker = L.marker([lat, lon], { icon: label, interactive: false }).addTo(map);
+        
+        // Store current position markers
+        if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+        
+        // Remove previous current position markers
+        if (allMarkers[point.device_id].current) {
+          allMarkers[point.device_id].current.circle.remove();
+          allMarkers[point.device_id].current.label.remove();
+        }
+        
+        allMarkers[point.device_id].current = { circle, label: labelMarker };
+      } else {
+        // Historical position - use smaller pin
+        const pinIcon = L.divIcon({
+          html: `<div style="
+            width: 6px; 
+            height: 6px; 
+            background-color: ${color}; 
+            border: 1px solid white; 
+            border-radius: 50%;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+          "></div>`,
+          className: 'history-pin',
+          iconSize: [6, 6],
+          iconAnchor: [3, 3]
+        });
 
-      // Store layers for this device
-      if (!deviceLayers[point.device_id]) deviceLayers[point.device_id] = [];
-      deviceLayers[point.device_id].push(circle, labelMarker);
+        const pin = L.marker([lat, lon], { 
+          icon: pinIcon,
+          interactive: true
+        }).addTo(map);
+
+        const popupContent = `
+          <strong>Device ID:</strong> ${point.device_id}<br>
+          <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+          <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+          <strong>Timestamp:</strong> ${point.timestamp}
+        `;
+        pin.bindPopup(popupContent);
+
+        // Store historical markers
+        if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+        allMarkers[point.device_id].history.push(pin);
+      }
     }
 
-    function calculateBearing(lat1, lon1, lat2, lon2) {
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const lat1Rad = lat1 * Math.PI / 180;
-      const lat2Rad = lat2 * Math.PI / 180;
-      
-      const y = Math.sin(dLon) * Math.cos(lat2Rad);
-      const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
-      
-      return Math.atan2(y, x) * 180 / Math.PI;
-    }
-
-    function addDirectionalArrow(lat1, lon1, lat2, lon2, device_id) {
-      const bearing = calculateBearing(lat1, lon1, lat2, lon2);
-      const color = deviceColors[device_id] || "#7F8C8D";
-      
-      // Place arrow at 70% along the segment
-      const arrowLat = lat1 + (lat2 - lat1) * 0.7;
-      const arrowLon = lon1 + (lon2 - lon1) * 0.7;
-      
-      const arrowSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="-10 -10 20 20">
-          <polygon points="0,-8 4,3 0,1 -4,3" fill="${color}" stroke="white" stroke-width="1" transform="rotate(${bearing})"/>
-        </svg>
-      `;
-
-      const arrowIcon = L.divIcon({
-        html: arrowSvg,
-        className: 'arrow-icon',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-
-      const arrowMarker = L.marker([arrowLat, arrowLon], { icon: arrowIcon, interactive: false }).addTo(map);
-      
-      if (!deviceLayers[device_id]) deviceLayers[device_id] = [];
-      deviceLayers[device_id].push(arrowMarker);
-    }
-
-    function drawTrailWithArrows(device_id) {
+    function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
-      if (!trail || trail.length < 2) return;
-      
+      if (trail.length < 2) return;
       const color = deviceColors[device_id] || "#7F8C8D";
 
-      // Draw the polyline
       const polyline = L.polyline(trail, {
         color: color,
         weight: 3,
         opacity: 0.7
       }).addTo(map);
 
-      if (!deviceLayers[device_id]) deviceLayers[device_id] = [];
-      deviceLayers[device_id].push(polyline);
-
-      // Add directional arrows every few segments
-      const arrowInterval = Math.max(1, Math.floor(trail.length / 5)); // Show ~5 arrows max
-      
-      for (let i = arrowInterval; i < trail.length; i += arrowInterval) {
-        const prevPoint = trail[i - 1];
-        const currPoint = trail[i];
-        
-        addDirectionalArrow(
-          prevPoint[0], prevPoint[1],
-          currPoint[0], currPoint[1],
-          device_id
-        );
-      }
-
-      // Always add arrow on the most recent segment
+      // Add arrow on the most recent segment
       if (trail.length >= 2) {
-        const secondLast = trail[trail.length - 2];
-        const last = trail[trail.length - 1];
-        addDirectionalArrow(
-          secondLast[0], secondLast[1],
-          last[0], last[1],
-          device_id
-        );
+        const p1 = trail[trail.length - 2];
+        const p2 = trail[trail.length - 1];
+        addArrow(p1, p2, device_id);
       }
+    }
+
+    function addTrailArrow(device_id) {
+      const trail = gpsTrails[device_id];
+      if (!trail || trail.length < 2) return;
+
+      // Use midpoint of trail
+      const midIndex = Math.floor(trail.length / 2);
+      const p1 = trail[midIndex - 1];
+      const p2 = trail[midIndex];
+
+      // Calculate lat/lon of midpoint
+      const latMid = (p1[0] + p2[0]) / 2;
+      const lonMid = (p1[1] + p2[1]) / 2;
+
+      // Bearing calculation using haversine-based method
+      const lat1 = p1[0] * Math.PI / 180;
+      const lat2 = p2[0] * Math.PI / 180;
+      const deltaLon = (p2[1] - p1[1]) * Math.PI / 180;
+
+      const x = Math.sin(deltaLon) * Math.cos(lat2);
+      const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
+      const bearing = Math.atan2(x, y);
+      const angleDeg = (bearing * 180 / Math.PI) + 90;  // optional offset
+
+      const color = deviceColors[device_id] || "#7F8C8D";
+
+      const arrowSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-8 -8 16 16">
+          <polygon points="0,-6 3,2 0,0 -3,2" fill="${color}" stroke="${color}" stroke-width="0.5" transform="rotate(${angleDeg})"/>
+        </svg>
+      `;
+
+      const arrowIcon = L.divIcon({
+        html: arrowSvg,
+        className: 'arrow-icon',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
+      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
     }
 
     function getAgeLabel(ts) {
@@ -302,9 +299,9 @@
 
       if (sats !== undefined && sats < 4) return "row-low-sats";
 
-      if (diff <= 180) return "row-active";      // Green - fresh data
-      if (diff <= 360) return "row-warm";       // Yellow - getting old
-      return "row-stale";                       // Red - stale data
+      if (diff <= 180) return "row-active";
+      if (diff <= 360) return "row-warm";
+      return "row-stale";
     }
 
     function updateTable() {
@@ -343,34 +340,33 @@
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
 
-      // Clear previous layers for this device
-      clearDeviceLayers(device_id);
+      // Convert previous current position to historical pin
+      if (latestPackets[device_id]) {
+        addDataPoint(latestPackets[device_id], false);
+      }
 
-      // Add new point
-      addLabeledCircle(data);
-      allPointsBounds.extend([lat, lon]);
+      // Add new current position
+      addDataPoint(data, true);
       
-      // Update trail
+      allPointsBounds.extend([lat, lon]);
+      map.fitBounds(allPointsBounds, { padding: [20, 20] });
+
       if (!gpsTrails[device_id]) gpsTrails[device_id] = [];
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // Redraw trail with arrows
-      drawTrailWithArrows(device_id);
+      drawTrail(device_id);
+      addTrailArrow(device_id);
       
-      // Update bounds and fit map
-      map.fitBounds(allPointsBounds, { padding: [20, 20] });
-      
-      // Update counters and table
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
       latestPackets[device_id] = data;
       updateTable();
 
-      console.log(`📍 ${device_id} → (${lat}, ${lon}) [${data.sats || 'N/A'} sats]`);
+      console.log(`📍 ${device_id} → (${lat}, ${lon})`);
     });
 
-    // Refresh age and row color every 5 seconds
-    setInterval(updateTable, 5000);
+    // 🔁 Refresh age and row color even without new packets
+    setInterval(updateTable, 10000);
     
     document.getElementById("build-time").textContent =
       new Date().toLocaleString("en-AU", {
