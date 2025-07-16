@@ -140,6 +140,7 @@
     const latestPackets = {};
     const allPointsBounds = L.latLngBounds();
     const allMarkers = {}; // Store all markers for each device
+    const trailLayers = {}; // Store trail polylines and arrows for cleanup
 
     const deviceColors = {
       "I": "#E74C3C",    // red
@@ -224,68 +225,90 @@
       }
     }
 
-    function drawTrail(device_id) {
-      const trail = gpsTrails[device_id];
-      if (trail.length < 2) return;
-      const color = deviceColors[device_id] || "#7F8C8D";
-
-      const polyline = L.polyline(trail, {
-        color: color,
-        weight: 3,
-        opacity: 0.7
-      }).addTo(map);
-
-      // Add arrow on the most recent segment
-      if (trail.length >= 2) {
-        const p1 = trail[trail.length - 2];
-        const p2 = trail[trail.length - 1];
-        addArrow(p1, p2, device_id);
-      }
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const lat1Rad = lat1 * Math.PI / 180;
+      const lat2Rad = lat2 * Math.PI / 180;
+      
+      const y = Math.sin(dLon) * Math.cos(lat2Rad);
+      const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+      
+      const bearing = Math.atan2(y, x) * 180 / Math.PI;
+      return (bearing + 360) % 360; // Normalize to 0-360
     }
 
-    function addTrailArrow(device_id) {
-      const trail = gpsTrails[device_id];
-      if (!trail || trail.length < 2) return;
-
-      // Use midpoint of trail
-      const midIndex = Math.floor(trail.length / 2);
-      const p1 = trail[midIndex - 1];
-      const p2 = trail[midIndex];
-
-      // Calculate lat/lon of midpoint
-      const latMid = (p1[0] + p2[0]) / 2;
-      const lonMid = (p1[1] + p2[1]) / 2;
-
-      // Bearing calculation using haversine-based method
-      const lat1 = p1[0] * Math.PI / 180;
-      const lat2 = p2[0] * Math.PI / 180;
-      const deltaLon = (p2[1] - p1[1]) * Math.PI / 180;
-
-      const x = Math.sin(deltaLon) * Math.cos(lat2);
-      const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLon);
-      const bearing = Math.atan2(x, y);
-      const angleDeg = (bearing * 180 / Math.PI) + 90;  // optional offset
-
-      const color = deviceColors[device_id] || "#7F8C8D";
-
+    function addArrowToSegment(p1, p2, color) {
+      // Calculate midpoint
+      const midLat = (p1[0] + p2[0]) / 2;
+      const midLon = (p1[1] + p2[1]) / 2;
+      
+      // Calculate bearing
+      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+      
+      // Create arrow SVG
       const arrowSvg = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-8 -8 16 16">
-          <polygon points="0,-6 3,2 0,0 -3,2" fill="${color}" stroke="${color}" stroke-width="0.5" transform="rotate(${angleDeg})"/>
+        <svg width="20" height="20" viewBox="0 0 20 20" style="overflow: visible;">
+          <defs>
+            <marker id="arrowhead-${color.replace('#', '')}" markerWidth="10" markerHeight="7" 
+              refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="${color}" stroke="${color}" stroke-width="1"/>
+            </marker>
+          </defs>
+          <line x1="2" y1="10" x2="18" y2="10" stroke="${color}" stroke-width="2" 
+            marker-end="url(#arrowhead-${color.replace('#', '')})" 
+            transform="rotate(${bearing} 10 10)"/>
         </svg>
       `;
 
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
 
-      L.marker([latMid, lonMid], { icon: arrowIcon, interactive: false }).addTo(map);
+      return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
+    }
+
+    function drawTrail(device_id) {
+      const trail = gpsTrails[device_id];
+      if (trail.length < 2) return;
+      
+      const color = deviceColors[device_id] || "#7F8C8D";
+
+      // Clear existing trail layers for this device
+      if (trailLayers[device_id]) {
+        trailLayers[device_id].forEach(layer => map.removeLayer(layer));
+      }
+      trailLayers[device_id] = [];
+
+      // Draw polyline
+      const polyline = L.polyline(trail, {
+        color: color,
+        weight: 3,
+        opacity: 0.7
+      }).addTo(map);
+      
+      trailLayers[device_id].push(polyline);
+
+      // Add arrows to segments (every few segments to avoid clutter)
+      const segmentInterval = Math.max(1, Math.floor(trail.length / 5)); // Show ~5 arrows max
+      for (let i = segmentInterval; i < trail.length; i += segmentInterval) {
+        const arrow = addArrowToSegment(trail[i-1], trail[i], color);
+        arrow.addTo(map);
+        trailLayers[device_id].push(arrow);
+      }
+
+      // Always add arrow to the most recent segment
+      if (trail.length >= 2) {
+        const lastArrow = addArrowToSegment(trail[trail.length - 2], trail[trail.length - 1], color);
+        lastArrow.addTo(map);
+        trailLayers[device_id].push(lastArrow);
+      }
     }
 
     function getAgeLabel(ts) {
-  // turn "YYYY-MM-DD HH:MM:SS" into a real ISO string
+      // turn "YYYY-MM-DD HH:MM:SS" into a real ISO string
       const iso = ts.replace(" ", "T") + "Z";
       const pingTime = new Date(iso);
       if (isNaN(pingTime)) {
@@ -366,10 +389,16 @@
       // increment the lowercase count
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
-      // move the last “current” point into history
+      // move the last "current" point into history
       if (gpsTrails[device_id] && gpsTrails[device_id].length) {
-        addDataPoint(latestPackets[device_id], false);
+        const lastPoint = {
+          ...latestPackets[device_id],
+          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
+          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
+        };
+        addDataPoint(lastPoint, false);
       }
+      
       // drop the new current marker
       addDataPoint(data, true);
 
@@ -382,9 +411,8 @@
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // redraw trail and arrow
+      // redraw trail with arrows
       drawTrail(device_id);
-      addTrailArrow(device_id);
 
       // refresh the info panel (age & count)
       updateTable();
