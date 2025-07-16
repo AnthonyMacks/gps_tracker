@@ -191,37 +191,74 @@
         
         allMarkers[point.device_id].current = { circle, label: labelMarker };
       } else {
-        // Historical position - use smaller pin
-        const pinIcon = L.divIcon({
-          html: `<div style="
-            width: 6px; 
-            height: 6px; 
-            background-color: ${color}; 
-            border: 1px solid white; 
-            border-radius: 50%;
-            box-shadow: 0 0 2px rgba(0,0,0,0.3);
-          "></div>`,
-          className: 'history-pin',
-          iconSize: [6, 6],
-          iconAnchor: [3, 3]
-        });
+        // Check if this is the first point for this device
+        const isFirstPoint = !allMarkers[point.device_id] || allMarkers[point.device_id].history.length === 0;
+        
+        if (isFirstPoint) {
+          // First point - use triangle
+          const triangleIcon = L.divIcon({
+            html: `<div style="
+              width: 0; 
+              height: 0; 
+              border-left: 6px solid transparent;
+              border-right: 6px solid transparent;
+              border-bottom: 10px solid ${color};
+              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+            "></div>`,
+            className: 'start-triangle',
+            iconSize: [12, 10],
+            iconAnchor: [6, 10]
+          });
 
-        const pin = L.marker([lat, lon], { 
-          icon: pinIcon,
-          interactive: true
-        }).addTo(map);
+          const triangle = L.marker([lat, lon], { 
+            icon: triangleIcon,
+            interactive: true
+          }).addTo(map);
 
-        const popupContent = `
-          <strong>Device ID:</strong> ${point.device_id}<br>
-          <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-          <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
-          <strong>Timestamp:</strong> ${point.timestamp}
-        `;
-        pin.bindPopup(popupContent);
+          const popupContent = `
+            <strong>Device ID:</strong> ${point.device_id} (START)<br>
+            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+            <strong>Timestamp:</strong> ${point.timestamp}
+          `;
+          triangle.bindPopup(popupContent);
 
-        // Store historical markers
-        if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
-        allMarkers[point.device_id].history.push(pin);
+          // Store first point marker
+          if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+          allMarkers[point.device_id].history.push(triangle);
+        } else {
+          // Historical position - use smaller pin
+          const pinIcon = L.divIcon({
+            html: `<div style="
+              width: 6px; 
+              height: 6px; 
+              background-color: ${color}; 
+              border: 1px solid white; 
+              border-radius: 50%;
+              box-shadow: 0 0 2px rgba(0,0,0,0.3);
+            "></div>`,
+            className: 'history-pin',
+            iconSize: [6, 6],
+            iconAnchor: [3, 3]
+          });
+
+          const pin = L.marker([lat, lon], { 
+            icon: pinIcon,
+            interactive: true
+          }).addTo(map);
+
+          const popupContent = `
+            <strong>Device ID:</strong> ${point.device_id}<br>
+            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+            <strong>Timestamp:</strong> ${point.timestamp}
+          `;
+          pin.bindPopup(popupContent);
+
+          // Store historical markers
+          if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+          allMarkers[point.device_id].history.push(pin);
+        }
       }
     }
 
@@ -242,29 +279,22 @@
       const midLat = (p1[0] + p2[0]) / 2;
       const midLon = (p1[1] + p2[1]) / 2;
       
-      // Calculate bearing
+      // Calculate bearing (direction from p1 to p2)
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
-      // Create arrow SVG
+      // Create arrow as a simple triangle pointing in the direction of travel
       const arrowSvg = `
-        <svg width="20" height="20" viewBox="0 0 20 20" style="overflow: visible;">
-          <defs>
-            <marker id="arrowhead-${color.replace('#', '')}" markerWidth="10" markerHeight="7" 
-              refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="${color}" stroke="${color}" stroke-width="1"/>
-            </marker>
-          </defs>
-          <line x1="2" y1="10" x2="18" y2="10" stroke="${color}" stroke-width="2" 
-            marker-end="url(#arrowhead-${color.replace('#', '')})" 
-            transform="rotate(${bearing} 10 10)"/>
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <polygon points="8,2 12,10 8,8 4,10" fill="${color}" stroke="white" stroke-width="0.5" 
+            transform="rotate(${bearing} 8 8)"/>
         </svg>
       `;
 
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -291,17 +321,20 @@
       
       trailLayers[device_id].push(polyline);
 
-      // Add arrows to segments (every few segments to avoid clutter)
-      const segmentInterval = Math.max(1, Math.floor(trail.length / 5)); // Show ~5 arrows max
-      for (let i = segmentInterval; i < trail.length; i += segmentInterval) {
+      // Add arrows to multiple segments for better direction indication
+      const numArrows = Math.min(trail.length - 1, 8); // Max 8 arrows
+      const step = Math.max(1, Math.floor((trail.length - 1) / numArrows));
+      
+      for (let i = step; i < trail.length; i += step) {
         const arrow = addArrowToSegment(trail[i-1], trail[i], color);
         arrow.addTo(map);
         trailLayers[device_id].push(arrow);
       }
 
-      // Always add arrow to the most recent segment
-      if (trail.length >= 2) {
-        const lastArrow = addArrowToSegment(trail[trail.length - 2], trail[trail.length - 1], color);
+      // Always ensure we have an arrow on the most recent segment if it wasn't already covered
+      const lastIndex = trail.length - 1;
+      if (lastIndex > 0 && (lastIndex % step !== 0)) {
+        const lastArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
         lastArrow.addTo(map);
         trailLayers[device_id].push(lastArrow);
       }
