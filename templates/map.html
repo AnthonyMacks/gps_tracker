@@ -25,12 +25,36 @@
       z-index: 1001;
     }
 
+    #opacity-control {
+      position: absolute;
+      bottom: 60px;
+      left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 12px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+    }
+
+    #opacity-control label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    #opacity-control input[type="range"] {
+      width: 150px;
+      margin-right: 10px;
+    }
+
     .row-active { background-color: #D5F5E3; }
     .row-warm   { background-color: #FCF3CF; }
     .row-stale  { background-color: #FADBD8; }
 
     .row-low-sats {
-      background-color: #F5B7B1 !important;  /* light red */
+      background-color: #F5B7B1 !important;
       animation: blink 1s step-start infinite;
     }
 
@@ -74,6 +98,20 @@
     .row-active {
       animation: pulse 2s infinite;
     }
+
+    #debug {
+      position: absolute;
+      bottom: 80px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      max-width: 300px;
+      z-index: 1001;
+    }
     
   </style>
 </head>
@@ -94,6 +132,21 @@
       <tbody></tbody>
     </table>
   </div>
+  
+  <div id="opacity-control">
+    <label for="opacity-slider">Base Layer Opacity:</label>
+    <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1">
+    <span id="opacity-value">100%</span>
+  </div>
+  
+  <div id="debug">
+    <strong>Debug Info:</strong><br>
+    Connected: <span id="socket-status">❌</span><br>
+    Total Devices: <span id="device-count">0</span><br>
+    Total Points: <span id="point-count">0</span><br>
+    Last Update: <span id="last-update">never</span>
+  </div>
+
   <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
   </footer>
@@ -122,6 +175,7 @@
 
     // Add NSW Topo as default
     nswTopoLayer.addTo(map);
+    let currentBaseLayer = nswTopoLayer;
 
     // Layer control
     const baseLayers = {
@@ -130,27 +184,84 @@
       "OpenStreetMap": osmLayer
     };
 
-    L.control.layers(baseLayers, null, {
+    const layerControl = L.control.layers(baseLayers, null, {
       position: 'topleft'
     }).addTo(map);
 
-    const socket = io({ transports: ['websocket'] });
+    // Opacity control
+    const opacitySlider = document.getElementById('opacity-slider');
+    const opacityValue = document.getElementById('opacity-value');
+
+    opacitySlider.addEventListener('input', function() {
+      const opacity = parseFloat(this.value);
+      currentBaseLayer.setOpacity(opacity);
+      opacityValue.textContent = Math.round(opacity * 100) + '%';
+    });
+
+    // Update current base layer when user switches
+    map.on('baselayerchange', function(e) {
+      currentBaseLayer = e.layer;
+      const opacity = parseFloat(opacitySlider.value);
+      currentBaseLayer.setOpacity(opacity);
+    });
+
+    // Device colors - more vibrant colors for better visibility
+    const deviceColors = {
+      '1': '#E74C3C', '2': '#3498DB', '3': '#2ECC71', '4': '#F39C12', '5': '#9B59B6',
+      '6': '#1ABC9C', '7': '#E67E22', '8': '#34495E', '9': '#E91E63', '10': '#FF5722',
+      'I': '#E74C3C', 'II': '#3498DB', 'III': '#2ECC71', 'IV': '#F39C12', 'V': '#9B59B6',
+      'VI': '#1ABC9C', 'VII': '#E67E22', 'VIII': '#34495E', 'IX': '#E91E63', 'X': '#FF5722'
+    };
+
+    // Initialize socket connection
+    const socket = io({ 
+      transports: ['websocket'],
+      timeout: 5000,
+      forceNew: true
+    });
+    
+    // Debug elements
+    const socketStatus = document.getElementById('socket-status');
+    const deviceCount = document.getElementById('device-count');
+    const pointCount = document.getElementById('point-count');
+    const lastUpdate = document.getElementById('last-update');
+    
+    let totalPoints = 0;
+
+    // Socket connection handlers
+    socket.on('connect', () => {
+      console.log('✅ Socket connected');
+      socketStatus.textContent = '✅';
+      socketStatus.style.color = '#2ECC71';
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket disconnected');
+      socketStatus.textContent = '❌';
+      socketStatus.style.color = '#E74C3C';
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      socketStatus.textContent = '⚠️';
+      socketStatus.style.color = '#F39C12';
+    });
+
     const gpsTrails = {};
     const packetCounts = {};
     const latestPackets = {};
     const allPointsBounds = L.latLngBounds();
-    const allMarkers = {}; // Store all markers for each device
-    const trailLayers = {}; // Store trail polylines and arrows for cleanup
-    const deviceVisibility = {}; // Track which devices are visible
-    let selectedDevice = null; // Track which device is selected (if any)
+    const allMarkers = {};
+    const trailLayers = {};
+    const deviceVisibility = {};
+    let selectedDevice = null;
+    let hasInitialData = false;
 
     function toggleDeviceVisibility(deviceId) {
       if (selectedDevice === deviceId) {
-        // Clicking on the same device - show all devices
         selectedDevice = null;
         showAllDevices();
       } else {
-        // Clicking on a different device - hide all others
         selectedDevice = deviceId;
         hideAllDevicesExcept(deviceId);
       }
@@ -176,20 +287,17 @@
     }
 
     function showDeviceMarkers(deviceId) {
-      // Show current position markers
       if (allMarkers[deviceId] && allMarkers[deviceId].current) {
         allMarkers[deviceId].current.circle.addTo(map);
         allMarkers[deviceId].current.label.addTo(map);
       }
       
-      // Show historical markers
       if (allMarkers[deviceId] && allMarkers[deviceId].history) {
         allMarkers[deviceId].history.forEach(marker => {
           marker.addTo(map);
         });
       }
       
-      // Show trail layers
       if (trailLayers[deviceId]) {
         trailLayers[deviceId].forEach(layer => {
           layer.addTo(map);
@@ -198,20 +306,17 @@
     }
 
     function hideDeviceMarkers(deviceId) {
-      // Hide current position markers
       if (allMarkers[deviceId] && allMarkers[deviceId].current) {
         map.removeLayer(allMarkers[deviceId].current.circle);
         map.removeLayer(allMarkers[deviceId].current.label);
       }
       
-      // Hide historical markers
       if (allMarkers[deviceId] && allMarkers[deviceId].history) {
         allMarkers[deviceId].history.forEach(marker => {
           map.removeLayer(marker);
         });
       }
       
-      // Hide trail layers
       if (trailLayers[deviceId]) {
         trailLayers[deviceId].forEach(layer => {
           map.removeLayer(layer);
@@ -222,50 +327,63 @@
     function addDataPoint(point, isLatest = false) {
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
+      
+      // Validate coordinates
+      if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        console.warn('Invalid coordinates:', point);
+        return;
+      }
+
       const color = deviceColors[point.device_id] || "#7F8C8D";
+      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), isLatest: ${isLatest}`);
 
       if (isLatest) {
-        // Current position - use larger circle with label
         const circle = L.circleMarker([lat, lon], {
           radius: 12,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
-          weight: 2
-        }).addTo(map);
+          weight: 3
+        });
 
         const popupContent = `
           <strong>Device ID:</strong> ${point.device_id}<br>
           <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
           <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
-          <strong>Timestamp:</strong> ${point.timestamp}
+          <strong>Timestamp:</strong> ${point.timestamp}<br>
+          <strong>Satellites:</strong> ${point.sats || 'N/A'}
         `;
         circle.bindPopup(popupContent);
 
         const label = L.divIcon({
-          html: `<div>${point.device_id}</div>`,
+          html: `<div style="color: ${color}; font-weight: bold; text-shadow: 1px 1px 2px white;">${point.device_id}</div>`,
           className: 'device-label',
           iconSize: [24, 24]
         });
 
-        const labelMarker = L.marker([lat, lon], { icon: label, interactive: false }).addTo(map);
+        const labelMarker = L.marker([lat, lon], { icon: label, interactive: false });
         
-        // Store current position markers
         if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
         
-        // Remove previous current position markers
         if (allMarkers[point.device_id].current) {
-          allMarkers[point.device_id].current.circle.remove();
-          allMarkers[point.device_id].current.label.remove();
+          map.removeLayer(allMarkers[point.device_id].current.circle);
+          map.removeLayer(allMarkers[point.device_id].current.label);
         }
         
         allMarkers[point.device_id].current = { circle, label: labelMarker };
+        
+        // Add to map if device is visible
+        if (deviceVisibility[point.device_id] !== false) {
+          circle.addTo(map);
+          labelMarker.addTo(map);
+        }
+        
+        totalPoints++;
+        
       } else {
-        // Check if this is the first point for this device
         const isFirstPoint = !allMarkers[point.device_id] || allMarkers[point.device_id].history.length === 0;
         
         if (isFirstPoint) {
-          // First point - use triangle (same size as current position circle)
           const triangleIcon = L.divIcon({
             html: `<div style="
               width: 0; 
@@ -283,7 +401,7 @@
           const triangle = L.marker([lat, lon], { 
             icon: triangleIcon,
             interactive: true
-          }).addTo(map);
+          });
 
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
@@ -293,11 +411,15 @@
           `;
           triangle.bindPopup(popupContent);
 
-          // Store first point marker
           if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
           allMarkers[point.device_id].history.push(triangle);
+          
+          if (deviceVisibility[point.device_id] !== false) {
+            triangle.addTo(map);
+          }
+          
+          totalPoints++;
         } else {
-          // Historical position - use smaller pin
           const pinIcon = L.divIcon({
             html: `<div style="
               width: 6px; 
@@ -315,7 +437,7 @@
           const pin = L.marker([lat, lon], { 
             icon: pinIcon,
             interactive: true
-          }).addTo(map);
+          });
 
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id}<br>
@@ -325,9 +447,14 @@
           `;
           pin.bindPopup(popupContent);
 
-          // Store historical markers
           if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
           allMarkers[point.device_id].history.push(pin);
+          
+          if (deviceVisibility[point.device_id] !== false) {
+            pin.addTo(map);
+          }
+          
+          totalPoints++;
         }
       }
     }
@@ -341,18 +468,15 @@
       const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
       
       const bearing = Math.atan2(y, x) * 180 / Math.PI;
-      return (bearing + 360) % 360; // Normalize to 0-360
+      return (bearing + 360) % 360;
     }
 
     function addArrowToSegment(p1, p2, color) {
-      // Calculate midpoint
       const midLat = (p1[0] + p2[0]) / 2;
       const midLon = (p1[1] + p2[1]) / 2;
       
-      // Calculate bearing (direction from p1 to p2)
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
-      // Create arrow as a simple triangle pointing in the direction of travel
       const arrowSvg = `
         <svg width="16" height="16" viewBox="0 0 16 16">
           <polygon points="8,2 12,10 8,8 4,10" fill="${color}" stroke="white" stroke-width="0.5" 
@@ -372,46 +496,55 @@
 
     function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
-      if (trail.length < 2) return;
+      if (!trail || trail.length < 2) return;
       
       const color = deviceColors[device_id] || "#7F8C8D";
 
-      // Clear existing trail layers for this device
       if (trailLayers[device_id]) {
-        trailLayers[device_id].forEach(layer => map.removeLayer(layer));
+        trailLayers[device_id].forEach(layer => {
+          if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        });
       }
       trailLayers[device_id] = [];
 
-      // Draw polyline
       const polyline = L.polyline(trail, {
         color: color,
         weight: 3,
         opacity: 0.7
-      }).addTo(map);
+      });
       
       trailLayers[device_id].push(polyline);
+      
+      if (deviceVisibility[device_id] !== false) {
+        polyline.addTo(map);
+      }
 
-      // Add arrows to multiple segments for better direction indication
-      const numArrows = Math.min(trail.length - 1, 8); // Max 8 arrows
+      const numArrows = Math.min(trail.length - 1, 8);
       const step = Math.max(1, Math.floor((trail.length - 1) / numArrows));
       
       for (let i = step; i < trail.length; i += step) {
         const arrow = addArrowToSegment(trail[i-1], trail[i], color);
-        arrow.addTo(map);
         trailLayers[device_id].push(arrow);
+        
+        if (deviceVisibility[device_id] !== false) {
+          arrow.addTo(map);
+        }
       }
 
-      // Always ensure we have an arrow on the most recent segment if it wasn't already covered
       const lastIndex = trail.length - 1;
       if (lastIndex > 0 && (lastIndex % step !== 0)) {
         const lastArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
-        lastArrow.addTo(map);
         trailLayers[device_id].push(lastArrow);
+        
+        if (deviceVisibility[device_id] !== false) {
+          lastArrow.addTo(map);
+        }
       }
     }
 
     function getAgeLabel(ts) {
-      // turn "YYYY-MM-DD HH:MM:SS" into a real ISO string
       const iso = ts.replace(" ", "T") + "Z";
       const pingTime = new Date(iso);
       if (isNaN(pingTime)) {
@@ -442,7 +575,6 @@
       const tbody = document.querySelector("#device-table tbody");
       tbody.innerHTML = "";
 
-      // Sort device IDs naturally (I, II, III… 10, 11…)
       const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
         a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
       );
@@ -454,11 +586,9 @@
         const lat    = parseFloat(packet.latitude).toFixed(6);
         const lon    = parseFloat(packet.longitude).toFixed(6);
 
-        // Create row and apply your coloring logic
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
 
-        // Populate cells: ID | Lat | Lon | Count | Sats
         row.innerHTML = `
           <td>${id}</td>
           <td>${lat}</td>
@@ -467,7 +597,6 @@
           <td>${sats}</td>
         `;
 
-        // Center map on click
         row.addEventListener("click", () => {
           map.setView([lat, lon], 16, { animate: true });
         });
@@ -475,24 +604,39 @@
         tbody.appendChild(row);
       }
     }
+
+    function updateDebugInfo() {
+      deviceCount.textContent = Object.keys(latestPackets).length;
+      pointCount.textContent = totalPoints;
+      lastUpdate.textContent = new Date().toLocaleTimeString();
+    }
     
     socket.on("gps_update", (data) => {
+      console.log('📡 Received GPS update:', data);
+      
       const { latitude, longitude, device_id, timestamp } = data;
-      if (!latitude || !longitude || !device_id || !timestamp) return;
+      if (!latitude || !longitude || !device_id || !timestamp) {
+        console.warn('Missing required data:', data);
+        return;
+      }
 
-      // parse coords and timestamp
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
-      // coerce timestamp into ISO so getAgeLabel() works
+      
+      if (isNaN(lat) || isNaN(lon)) {
+        console.warn('Invalid coordinates:', data);
+        return;
+      }
+
+      // Store the packet with corrected timestamp
       latestPackets[device_id] = {
         ...data,
         timestamp: timestamp.replace(" ", "T") + "Z"
       };
 
-      // increment the lowercase count
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
-      // move the last "current" point into history
+      // Move the last "current" point into history
       if (gpsTrails[device_id] && gpsTrails[device_id].length) {
         const lastPoint = {
           ...latestPackets[device_id],
@@ -502,28 +646,58 @@
         addDataPoint(lastPoint, false);
       }
       
-      // drop the new current marker
+      // Add the new current marker
       addDataPoint(data, true);
 
-      // update map bounds
+      // Update map bounds
       allPointsBounds.extend([lat, lon]);
-      map.fitBounds(allPointsBounds, { padding: [20, 20] });
+      
+      // Only fit bounds on first data or if bounds are empty
+      if (!hasInitialData || allPointsBounds.getNorthEast().equals(allPointsBounds.getSouthWest())) {
+        map.fitBounds(allPointsBounds, { padding: [20, 20] });
+        hasInitialData = true;
+      }
 
-      // build the lat‐lon trail
+      // Build the trail
       gpsTrails[device_id] = gpsTrails[device_id] || [];
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // redraw trail with arrows
+      // Redraw trail with arrows
       drawTrail(device_id);
 
-      // refresh the info panel (age & count)
+      // Update UI
       updateTable();
+      updateDebugInfo();
 
       console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     });
 
-    // 🔁 Refresh age and row color even without new packets
+    // Test data generator for debugging (remove in production)
+    function generateTestData() {
+      const testDevices = ['I', 'II', 'III'];
+      const baseLat = -33.87;
+      const baseLon = 151.21;
+      
+      testDevices.forEach((deviceId, index) => {
+        const lat = baseLat + (Math.random() - 0.5) * 0.01;
+        const lon = baseLon + (Math.random() - 0.5) * 0.01;
+        
+        const testData = {
+          device_id: deviceId,
+          latitude: lat.toString(),
+          longitude: lon.toString(),
+          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
+          sats: Math.floor(Math.random() * 12) + 4
+        };
+        
+        socket.emit('gps_update', testData);
+      });
+    }
+
+    // Uncomment the line below to generate test data every 5 seconds
+    // setInterval(generateTestData, 5000);
+
     setInterval(updateTable, 10000);
     
     document.getElementById("build-time").textContent =
