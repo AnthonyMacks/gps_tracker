@@ -157,7 +157,7 @@
       if (isLatest) {
         // Current position - use larger circle with label
         const circle = L.circleMarker([lat, lon], {
-          radius: 12,
+          radius: 10,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -206,8 +206,8 @@
               filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
             "></div>`,
             className: 'start-triangle',
-            iconSize: [16, 16],
-            iconAnchor: [10, 10]
+            iconSize: [24, 20],
+            iconAnchor: [12, 20]
           });
 
           const triangle = L.marker([lat, lon], { 
@@ -293,8 +293,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        iconSize: [18, 20],
+        iconAnchor: [12, 12]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -316,7 +316,7 @@
       const polyline = L.polyline(trail, {
         color: color,
         weight: 3,
-        opacity: 0.7
+        opacity: 0.9
       }).addTo(map);
       
       trailLayers[device_id].push(polyline);
