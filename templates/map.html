@@ -597,9 +597,15 @@
           <td>${sats}</td>
         `;
 
-        row.addEventListener("click", () => {
-          map.setView([lat, lon], 16, { animate: true });
-        });
+        row.style.cursor = "pointer";
+    row.addEventListener("click", () => {
+      toggleDeviceVisibility(id);
+      updateTable();
+    });
+
+    if (selectedDevice === id) {
+      row.style.border = "2px solid #3498DB";
+    }
 
         tbody.appendChild(row);
       }
@@ -653,10 +659,7 @@
       allPointsBounds.extend([lat, lon]);
       
       // Only fit bounds on first data or if bounds are empty
-      if (!hasInitialData || allPointsBounds.getNorthEast().equals(allPointsBounds.getSouthWest())) {
-        map.fitBounds(allPointsBounds, { padding: [20, 20] });
-        hasInitialData = true;
-      }
+      map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
 
       // Build the trail
       gpsTrails[device_id] = gpsTrails[device_id] || [];
