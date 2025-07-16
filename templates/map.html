@@ -141,13 +141,83 @@
     const allPointsBounds = L.latLngBounds();
     const allMarkers = {}; // Store all markers for each device
     const trailLayers = {}; // Store trail polylines and arrows for cleanup
+    const deviceVisibility = {}; // Track which devices are visible
+    let selectedDevice = null; // Track which device is selected (if any)
 
-    const deviceColors = {
-      "I": "#E74C3C",    // red
-      "II": "#2ECC71",   // green
-      "III": "#3498DB",  // blue
-      "IV": "#F1C40F"    // yellow
-    };
+    function toggleDeviceVisibility(deviceId) {
+      if (selectedDevice === deviceId) {
+        // Clicking on the same device - show all devices
+        selectedDevice = null;
+        showAllDevices();
+      } else {
+        // Clicking on a different device - hide all others
+        selectedDevice = deviceId;
+        hideAllDevicesExcept(deviceId);
+      }
+    }
+
+    function showAllDevices() {
+      Object.keys(allMarkers).forEach(deviceId => {
+        deviceVisibility[deviceId] = true;
+        showDeviceMarkers(deviceId);
+      });
+    }
+
+    function hideAllDevicesExcept(keepDeviceId) {
+      Object.keys(allMarkers).forEach(deviceId => {
+        if (deviceId === keepDeviceId) {
+          deviceVisibility[deviceId] = true;
+          showDeviceMarkers(deviceId);
+        } else {
+          deviceVisibility[deviceId] = false;
+          hideDeviceMarkers(deviceId);
+        }
+      });
+    }
+
+    function showDeviceMarkers(deviceId) {
+      // Show current position markers
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        allMarkers[deviceId].current.circle.addTo(map);
+        allMarkers[deviceId].current.label.addTo(map);
+      }
+      
+      // Show historical markers
+      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
+        allMarkers[deviceId].history.forEach(marker => {
+          marker.addTo(map);
+        });
+      }
+      
+      // Show trail layers
+      if (trailLayers[deviceId]) {
+        trailLayers[deviceId].forEach(layer => {
+          layer.addTo(map);
+        });
+      }
+    }
+
+    function hideDeviceMarkers(deviceId) {
+      // Hide current position markers
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        map.removeLayer(allMarkers[deviceId].current.circle);
+        map.removeLayer(allMarkers[deviceId].current.label);
+      }
+      
+      // Hide historical markers
+      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
+        allMarkers[deviceId].history.forEach(marker => {
+          map.removeLayer(marker);
+        });
+      }
+      
+      // Hide trail layers
+      if (trailLayers[deviceId]) {
+        trailLayers[deviceId].forEach(layer => {
+          map.removeLayer(layer);
+        });
+      }
+    }
 
     function addDataPoint(point, isLatest = false) {
       const lat = parseFloat(point.latitude);
@@ -157,7 +227,7 @@
       if (isLatest) {
         // Current position - use larger circle with label
         const circle = L.circleMarker([lat, lon], {
-          radius: 10,
+          radius: 12,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -195,15 +265,15 @@
         const isFirstPoint = !allMarkers[point.device_id] || allMarkers[point.device_id].history.length === 0;
         
         if (isFirstPoint) {
-          // First point - use triangle
+          // First point - use triangle (same size as current position circle)
           const triangleIcon = L.divIcon({
             html: `<div style="
               width: 0; 
               height: 0; 
-              border-left: 6px solid transparent;
-              border-right: 6px solid transparent;
-              border-bottom: 10px solid ${color};
-              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+              border-left: 12px solid transparent;
+              border-right: 12px solid transparent;
+              border-bottom: 20px solid ${color};
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
             "></div>`,
             className: 'start-triangle',
             iconSize: [24, 20],
@@ -293,8 +363,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [18, 20],
-        iconAnchor: [12, 12]
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -316,7 +386,7 @@
       const polyline = L.polyline(trail, {
         color: color,
         weight: 3,
-        opacity: 0.9
+        opacity: 0.7
       }).addTo(map);
       
       trailLayers[device_id].push(polyline);
