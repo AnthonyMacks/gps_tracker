@@ -1,18 +1,17 @@
-# 🐍 Use Python base image
-FROM python:3.11-slim
+# Use Node.js base image
+FROM node:18
 
-# 📁 Set working directory
+# Set working directory
 WORKDIR /app
 
-# 📦 Copy all source files
+# Copy everything
 COPY . .
 
-# 🧪 Install dependencies
-RUN pip install --upgrade pip \
-    && pip install flask flask_socketio eventlet gunicorn
+# Install dependencies
+RUN npm install
 
-# 🔥 Expose Flask port
-EXPOSE 5000
+# Expose the port (relay server listens here)
+EXPOSE 3000
 
-# 🚀 Start using Gunicorn + eventlet
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "app:app"]
+# Launch relay server
+CMD ["node", "index.js"]
