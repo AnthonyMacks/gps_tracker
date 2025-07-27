@@ -6,3 +6,6 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --worker-class eventlet -w 1 app:app
     autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 10000
