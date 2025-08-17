@@ -184,47 +184,22 @@
       opacity: 1
     });
 
-    // World Imagery layers - multiple options for better coverage
-    const worldImageryEsri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-      maxZoom: 22,
-      maxNativeZoom: 19
-    });
-
-    // Google Satellite alternative (using a public proxy)
+    // Google Satellite imagery
     const worldImageryGoogle = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
       attribution: '© Google',
       maxZoom: 22,
       maxNativeZoom: 20
     });
 
-    // Bing Satellite (alternative option)
-    const worldImageryBing = L.tileLayer('https://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=587&mkt=en-gb&n=z', {
-      attribution: '© Microsoft Bing Maps',
-      maxZoom: 22,
-      maxNativeZoom: 19,
-      subdomains: '0123'
-    });
-
-    // MapBox Satellite (requires API key - this is a demo key, replace with your own)
-    const worldImageryMapbox = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-      attribution: '© Mapbox © OpenStreetMap',
-      maxZoom: 22,
-      maxNativeZoom: 19
-    });
-
     // Add NSW Topo as default
     nswTopoLayer.addTo(map);
     let currentBaseLayer = nswTopoLayer;
 
-    // Layer control with world imagery options
+    // Layer control with only the required maps
     const baseLayers = {
       "NSW Topographic": nswTopoLayer,
       "NSW Imagery": nswImageryLayer,
-      "World Imagery (Esri)": worldImageryEsri,
       "World Imagery (Google)": worldImageryGoogle,
-      "World Imagery (Bing)": worldImageryBing,
-      "World Imagery (Mapbox)": worldImageryMapbox,
       "OpenStreetMap": osmLayer
     };
 
@@ -255,12 +230,14 @@
       currentBaseLayer.setOpacity(opacity);
     });
 
-    // Device colors - more vibrant colors for better visibility
+    // Device colors - expanded for 15 devices with vibrant colors for better visibility
     const deviceColors = {
       '1': '#E74C3C', '2': '#3498DB', '3': '#2ECC71', '4': '#F39C12', '5': '#9B59B6',
       '6': '#1ABC9C', '7': '#E67E22', '8': '#34495E', '9': '#E91E63', '10': '#FF5722',
+      '11': '#795548', '12': '#607D8B', '13': '#FF9800', '14': '#4CAF50', '15': '#673AB7',
       'I': '#E74C3C', 'II': '#3498DB', 'III': '#2ECC71', 'IV': '#F39C12', 'V': '#9B59B6',
-      'VI': '#1ABC9C', 'VII': '#E67E22', 'VIII': '#34495E', 'IX': '#E91E63', 'X': '#FF5722'
+      'VI': '#1ABC9C', 'VII': '#E67E22', 'VIII': '#34495E', 'IX': '#E91E63', 'X': '#FF5722',
+      'XI': '#795548', 'XII': '#607D8B', 'XIII': '#FF9800', 'XIV': '#4CAF50', 'XV': '#673AB7'
     };
 
     // Initialize socket connection
@@ -735,9 +712,9 @@
       console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     });
 
-    // Test data generator for debugging (remove in production)
+    // Test data generator for debugging (remove in production) - now supports 15 devices
     function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
       const baseLat = -33.87;
       const baseLon = 151.21;
       
