@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.9 - NSW Topo</title>
+  <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
   <meta charset="utf-8" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -184,9 +184,31 @@
       opacity: 1
     });
 
-    // Add high-resolution satellite layer for extreme zoom
-    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    // World Imagery layers - multiple options for better coverage
+    const worldImageryEsri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 22,
+      maxNativeZoom: 19
+    });
+
+    // Google Satellite alternative (using a public proxy)
+    const worldImageryGoogle = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: '© Google',
+      maxZoom: 22,
+      maxNativeZoom: 20
+    });
+
+    // Bing Satellite (alternative option)
+    const worldImageryBing = L.tileLayer('https://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=587&mkt=en-gb&n=z', {
+      attribution: '© Microsoft Bing Maps',
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      subdomains: '0123'
+    });
+
+    // MapBox Satellite (requires API key - this is a demo key, replace with your own)
+    const worldImageryMapbox = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+      attribution: '© Mapbox © OpenStreetMap',
       maxZoom: 22,
       maxNativeZoom: 19
     });
@@ -195,11 +217,14 @@
     nswTopoLayer.addTo(map);
     let currentBaseLayer = nswTopoLayer;
 
-    // Layer control with additional high-zoom options
+    // Layer control with world imagery options
     const baseLayers = {
       "NSW Topographic": nswTopoLayer,
       "NSW Imagery": nswImageryLayer,
-      "World Satellite (High-Res)": satelliteLayer,
+      "World Imagery (Esri)": worldImageryEsri,
+      "World Imagery (Google)": worldImageryGoogle,
+      "World Imagery (Bing)": worldImageryBing,
+      "World Imagery (Mapbox)": worldImageryMapbox,
       "OpenStreetMap": osmLayer
     };
 
@@ -580,7 +605,7 @@
       const pingTime = new Date(iso);
       if (isNaN(pingTime)) {
         console.warn("Bad timestamp:", ts);
-        return "––";
+        return "——";
       }
 
       const nowSec = Date.now();
