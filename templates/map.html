@@ -1,155 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live GPS Tracker v1.9 - Mobile</title>
+  <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body, html { 
-      margin: 0; 
-      padding: 0; 
-      height: 100%; 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overflow: hidden;
-    }
-    
-    #map { 
-      height: 100%; 
-      width: 100%; 
-      z-index: 0; 
-    }
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; width: 100%; z-index: 0; }
 
-    /* Mobile-optimized info panel */
     #info {
       position: absolute;
       top: 10px;
       right: 10px;
-      width: calc(100vw - 80px);
-      max-width: 300px;
-      max-height: 40vh;
+      max-width: 340px;
+      max-height: 70%;
       overflow-y: auto;
-      background: rgba(255,255,255,0.95);
-      padding: 8px;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
       border-radius: 8px;
-      font-size: 11px;
+      font-family: sans-serif;
+      font-size: 13px;
       color: #2C3E50;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
-      transition: transform 0.3s ease;
-    }
-
-    /* Collapsible info panel */
-    #info.collapsed {
-      transform: translateY(-90%);
-    }
-    
-    #info-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-      cursor: pointer;
-      user-select: none;
-      min-height: 30px;
-    }
-    
-    #toggle-info {
-      background: #3498DB;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 12px;
-      cursor: pointer;
-      min-width: 50px;
-      min-height: 30px;
-      font-weight: bold;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    #toggle-info:active {
-      background: #2980B9;
-      transform: scale(0.95);
-    }
-    
-    /* Ensure collapsed panel is still accessible */
-    #info.collapsed #info-header {
-      background: rgba(255,255,255,0.98);
-      border-radius: 8px 8px 0 0;
-      padding: 8px;
-      margin: -8px -8px 5px -8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    /* Compact table for mobile */
-    #device-table {
-      width: 100%;
-      font-size: 10px;
-      border-collapse: collapse;
-    }
-    
-    #device-table th,
-    #device-table td {
-      padding: 3px 2px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    #device-table th {
-      background: #f5f5f5;
-      font-weight: bold;
-      position: sticky;
-      top: 0;
-    }
-
-    /* Mobile-friendly controls */
-    #controls {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 8px;
-      border-radius: 8px;
-      font-size: 11px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      z-index: 1001;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
     }
 
     #opacity-control {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex: 1;
-      min-width: 120px;
+      position: absolute;
+      bottom: 60px;
+      left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 12px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+    }
+
+    #opacity-control label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
     }
 
     #opacity-control input[type="range"] {
-      flex: 1;
-      min-width: 60px;
+      width: 150px;
+      margin-right: 10px;
     }
 
-    /* Status indicators */
-    #status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 10px;
-    }
-
-    .status-item {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-    }
-
-    /* Row styling */
     .row-active { background-color: #D5F5E3; }
     .row-warm   { background-color: #FCF3CF; }
     .row-stale  { background-color: #FADBD8; }
@@ -163,6 +62,33 @@
       50% { background-color: #FADBD8; }
     }
 
+    .device-label {
+      background: transparent;
+      color: #154360;
+      font-weight: bold;
+      text-align: center;
+      line-height: 24px;
+      font-size: 11px;
+    }
+
+    .arrow-icon {
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 12px;
+      color: #666;
+      font-family: sans-serif;
+      background-color: rgba(255,255,255,0.6);
+      padding: 4px 8px;
+      border-radius: 6px;
+      z-index: 1001;
+    }
+
     @keyframes pulse {
       0%   { background-color: #D5F5E3; }
       50%  { background-color: #ABEBC6; }
@@ -173,266 +99,115 @@
       animation: pulse 2s infinite;
     }
 
-    /* Device labels - smaller for mobile */
-    .device-label {
-      background: transparent;
-      color: #154360;
-      font-weight: bold;
-      text-align: center;
-      line-height: 20px;
-      font-size: 9px;
-    }
-
-    .arrow-icon {
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    /* Touch-friendly layer control */
-    .leaflet-control-layers {
-      background: rgba(255,255,255,0.95) !important;
-      border-radius: 8px !important;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
-    }
-    
-    .leaflet-control-layers label {
-      font-size: 12px !important;
-      padding: 6px !important;
-    }
-
-    /* Hide elements on very small screens */
-    @media (max-width: 360px) {
-      #info {
-        width: calc(100vw - 40px);
-        max-width: none;
-        left: 10px;
-        right: 10px;
-      }
-      
-      #device-table th:nth-child(2),
-      #device-table td:nth-child(2),
-      #device-table th:nth-child(3),
-      #device-table td:nth-child(3) {
-        display: none;
-      }
-    }
-
-    /* Portrait orientation adjustments */
-    @media (orientation: portrait) and (max-height: 600px) {
-      #info {
-        max-height: 35vh;
-      }
-    }
-
-    /* Landscape orientation adjustments */
-    @media (orientation: landscape) and (max-height: 500px) {
-      #info {
-        max-height: 50vh;
-        top: 5px;
-        right: 5px;
-        padding: 6px;
-      }
-      
-      #controls {
-        bottom: 5px;
-        left: 5px;
-        right: 5px;
-        padding: 6px;
-      }
+    #debug {
+      position: absolute;
+      bottom: 80px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      max-width: 300px;
+      z-index: 1001;
     }
     
   </style>
 </head>
 <body>
   <div id="map"></div>
-  
   <div id="info">
-    <div id="info-header">
-      <strong>📡 GPS Data</strong>
-      <button id="toggle-info">Hide</button>
-    </div>
-    <div id="info-content">
-      <table id="device-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Lat</th>
-            <th>Lon</th>
-            <th>Cnt</th>
-            <th>Sat</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+    <strong>📡 Latest GPS Data</strong>
+    <table id="device-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Lat</th>
+          <th>Lon</th>
+          <th>Count</th>
+          <th>Sats</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
   
-  <div id="controls">
-    <div id="opacity-control">
-      <label for="opacity-slider">Opacity:</label>
-      <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1">
-      <span id="opacity-value">100%</span>
-    </div>
-    
-    <div id="status">
-      <div class="status-item">
-        <span>📶</span>
-        <span id="socket-status">❌</span>
-      </div>
-      <div class="status-item">
-        <span>📱</span>
-        <span id="device-count">0</span>
-      </div>
-      <div class="status-item">
-        <span>📍</span>
-        <span id="point-count">0</span>
-      </div>
-      <div class="status-item">
-        <span>🔍</span>
-        <span id="current-zoom">13</span>
-      </div>
-    </div>
+  <div id="opacity-control">
+    <label for="opacity-slider">Base Layer Opacity:</label>
+    <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1">
+    <span id="opacity-value">100%</span>
   </div>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/esri-leaflet/3.0.12/esri-leaflet.min.js"></script>
-  <script>
-    // Wait for all libraries to load before initializing
-    function initializeApp() {
-      console.log('Checking libraries...');
-      console.log('Leaflet (L):', typeof L);
-      console.log('Socket.IO (io):', typeof io);
-      
-      if (typeof L === 'undefined') {
-        console.error('Leaflet not loaded, retrying in 1000ms...');
-        setTimeout(initializeApp, 1000);
-        return;
-      }
-      
-      if (typeof io === 'undefined') {
-        console.error('Socket.IO not loaded, retrying in 1000ms...');
-        setTimeout(initializeApp, 1000);
-        return;
-      }
-      
-      // Check if esri-leaflet is available (optional, won't block initialization)
-      if (typeof L.esri === 'undefined') {
-        console.warn('⚠️ Esri-Leaflet not loaded, will use basic layers only');
-      }
-      
-      console.log('✅ All required libraries loaded successfully');
-      startGPSTracker();
-    }
-    
-    function startGPSTracker() {
-      // Initialize map with mobile optimizations
-      const map = L.map("map", {
-        maxZoom: 22,
-        zoomControl: false, // We'll add it back in a better position
-        tap: true,
-        touchZoom: true,
-        dragging: true
-      }).setView([-32.758, 151.174], 13);
-    
-    // Add zoom control in better position for mobile
-    L.control.zoom({
-      position: 'topleft'
-    }).addTo(map);
+  <div id="debug">
+    <strong>Debug Info:</strong><br>
+    Connected: <span id="socket-status">❌</span><br>
+    Total Devices: <span id="device-count">0</span><br>
+    Total Points: <span id="point-count">0</span><br>
+    Last Update: <span id="last-update">never</span><br>
+    Current Zoom: <span id="current-zoom">13</span>
+  </div>
 
+  <footer>
+    🚀 Last Render Build: <span id="build-time">loading...</span>
+  </footer>
+  
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+  <script>
+    // Initialize map with higher max zoom
+    const map = L.map("map", {
+      maxZoom: 22  // Allow maximum zoom
+    }).setView([-33.87, 151.21], 13);
+    
     // Base layers with increased maxZoom and maxNativeZoom
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
-      maxNativeZoom: 19,
-      attribution: "© OpenStreetMap"
+      maxNativeZoom: 19,  // OSM tiles go up to zoom 19
+      attribution: "© OpenStreetMap contributors"
     });
 
-    let nswTopoLayer, nswImageryLayer;
-    
-    // Try to create Esri layers if available, fallback to OSM
-    if (typeof L.esri !== 'undefined') {
-      try {
-        nswTopoLayer = L.esri.tiledMapLayer({
-          url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-          attribution: '© NSW Spatial Services',
-          maxZoom: 22,
-          maxNativeZoom: 16,
-          opacity: 1
-        });
+    const nswTopoLayer = L.esri.tiledMapLayer({
+      url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+      attribution: '© NSW Spatial Services',
+      maxZoom: 22,
+      maxNativeZoom: 16,  // NSW tiles typically go up to 16, but we'll allow upscaling
+      opacity: 1
+    });
 
-        nswImageryLayer = L.esri.tiledMapLayer({
-          url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer',
-          attribution: '© NSW Spatial Services',
-          maxZoom: 22,
-          maxNativeZoom: 18,
-          opacity: 1
-        });
-        console.log('✅ NSW Esri layers created successfully');
-      } catch (error) {
-        console.warn('⚠️ Failed to create NSW Esri layers:', error);
-        nswTopoLayer = osmLayer;
-        nswImageryLayer = osmLayer;
-      }
-    } else {
-      console.warn('⚠️ Esri-Leaflet not available, using OSM as fallback');
-      nswTopoLayer = osmLayer;
-      nswImageryLayer = osmLayer;
-    }
+    const nswImageryLayer = L.esri.tiledMapLayer({
+      url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer',
+      attribution: '© NSW Spatial Services',
+      maxZoom: 22,
+      maxNativeZoom: 18,  // Imagery usually has higher resolution
+      opacity: 1
+    });
 
+    // Google Satellite imagery
     const worldImageryGoogle = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
       attribution: '© Google',
       maxZoom: 22,
       maxNativeZoom: 20
     });
 
-    // Add default layer (try NSW Topo, fallback to OSM)
-    const defaultLayer = nswTopoLayer || osmLayer;
-    defaultLayer.addTo(map);
-    let currentBaseLayer = defaultLayer;
+    // Add NSW Topo as default
+    nswTopoLayer.addTo(map);
+    let currentBaseLayer = nswTopoLayer;
 
-    // Layer control with available maps
-    const baseLayers = {};
-    
-    if (nswTopoLayer && nswTopoLayer !== osmLayer) {
-      baseLayers["NSW Topo"] = nswTopoLayer;
-    }
-    if (nswImageryLayer && nswImageryLayer !== osmLayer) {
-      baseLayers["NSW Imagery"] = nswImageryLayer;
-    }
-    baseLayers["Google Satellite"] = worldImageryGoogle;
-    baseLayers["OpenStreetMap"] = osmLayer;
+    // Layer control with only the required maps
+    const baseLayers = {
+      "NSW Topographic": nswTopoLayer,
+      "NSW Imagery": nswImageryLayer,
+      "World Imagery (Google)": worldImageryGoogle,
+      "OpenStreetMap": osmLayer
+    };
 
     const layerControl = L.control.layers(baseLayers, null, {
-      position: 'topleft',
-      collapsed: true
+      position: 'topleft'
     }).addTo(map);
 
-    // Mobile-specific event handlers
-    const infoPanel = document.getElementById('info');
-    const toggleButton = document.getElementById('toggle-info');
-    const infoContent = document.getElementById('info-content');
-    
-    toggleButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      infoPanel.classList.toggle('collapsed');
-      toggleButton.textContent = infoPanel.classList.contains('collapsed') ? 'Show' : 'Hide';
-    });
-    
-    // Also allow clicking the header to toggle
-    document.getElementById('info-header').addEventListener('click', function(e) {
-      if (e.target === toggleButton) return; // Don't double-trigger
-      infoPanel.classList.toggle('collapsed');
-      toggleButton.textContent = infoPanel.classList.contains('collapsed') ? 'Show' : 'Hide';
-    });
-    
-    // Auto-collapse on small screens
-    if (window.innerWidth < 400) {
-      infoPanel.classList.add('collapsed');
-      toggleButton.textContent = 'Show';
-    }
-
-    // Update zoom display
+    // Add zoom level display
     const currentZoomSpan = document.getElementById('current-zoom');
     map.on('zoomend', function() {
       currentZoomSpan.textContent = map.getZoom();
@@ -455,7 +230,7 @@
       currentBaseLayer.setOpacity(opacity);
     });
 
-    // Device colors - expanded for 15 devices
+    // Device colors - expanded for 15 devices with vibrant colors for better visibility
     const deviceColors = {
       '1': '#E74C3C', '2': '#3498DB', '3': '#2ECC71', '4': '#F39C12', '5': '#9B59B6',
       '6': '#1ABC9C', '7': '#E67E22', '8': '#34495E', '9': '#E91E63', '10': '#FF5722',
@@ -465,98 +240,38 @@
       'XI': '#795548', 'XII': '#607D8B', 'XIII': '#FF9800', 'XIV': '#4CAF50', 'XV': '#673AB7'
     };
 
-    // Initialize socket connection with better error handling
+    // Initialize socket connection
     const socket = io({ 
       transports: ['websocket'],
       timeout: 5000,
-      forceNew: true,
-      autoConnect: false  // Don't auto-connect, we'll handle this manually
+      forceNew: true
     });
     
-    // Status elements
+    // Debug elements
     const socketStatus = document.getElementById('socket-status');
     const deviceCount = document.getElementById('device-count');
     const pointCount = document.getElementById('point-count');
+    const lastUpdate = document.getElementById('last-update');
     
     let totalPoints = 0;
-    let isTestMode = false;
-    let connectionAttempts = 0;
-    const maxConnectionAttempts = 3;
-
-    // Try to connect to server
-    function attemptConnection() {
-      if (connectionAttempts >= maxConnectionAttempts) {
-        console.log('🔄 Max connection attempts reached, switching to test mode');
-        enableTestMode();
-        return;
-      }
-      
-      connectionAttempts++;
-      console.log(`🔌 Attempting server connection (${connectionAttempts}/${maxConnectionAttempts})`);
-      socket.connect();
-      
-      // If connection fails after 3 seconds, try again or switch to test mode
-      setTimeout(() => {
-        if (!socket.connected) {
-          console.log(`❌ Connection attempt ${connectionAttempts} failed`);
-          if (connectionAttempts < maxConnectionAttempts) {
-            attemptConnection();
-          } else {
-            enableTestMode();
-          }
-        }
-      }, 3000);
-    }
-    
-    function enableTestMode() {
-      isTestMode = true;
-      socketStatus.textContent = '🧪';
-      socketStatus.style.color = '#FF9800';
-      socketStatus.title = 'Test Mode - No server connection';
-      
-      console.log('🧪 Enabled test mode - generating sample GPS data');
-      
-      // Add a notice to the info panel
-      const infoContent = document.getElementById('info-content');
-      const testNotice = document.createElement('div');
-      testNotice.style.cssText = 'background: #fff3cd; border: 1px solid #ffeaa7; padding: 4px; margin-bottom: 5px; font-size: 9px; border-radius: 4px; text-align: center;';
-      testNotice.innerHTML = '🧪 <strong>Test Mode</strong><br>Displaying sample data';
-      infoContent.insertBefore(testNotice, infoContent.firstChild);
-      
-      // Start generating test data immediately
-      generateTestData();
-      setInterval(generateTestData, 5000);
-    }
 
     // Socket connection handlers
     socket.on('connect', () => {
-      console.log('✅ Socket connected to server');
+      console.log('✅ Socket connected');
       socketStatus.textContent = '✅';
       socketStatus.style.color = '#2ECC71';
-      socketStatus.title = 'Connected to GPS server';
-      connectionAttempts = 0;
-      isTestMode = false;
     });
 
     socket.on('disconnect', () => {
-      console.log('❌ Socket disconnected from server');
+      console.log('❌ Socket disconnected');
       socketStatus.textContent = '❌';
       socketStatus.style.color = '#E74C3C';
-      socketStatus.title = 'Disconnected from GPS server';
-      
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        if (!isTestMode) {
-          attemptConnection();
-        }
-      }, 2000);
     });
 
     socket.on('connect_error', (error) => {
-      console.log(`⚠️ Socket connection error (attempt ${connectionAttempts}):`, error.message);
+      console.error('Socket connection error:', error);
       socketStatus.textContent = '⚠️';
       socketStatus.style.color = '#F39C12';
-      socketStatus.title = 'Connection error - trying to connect...';
     });
 
     const gpsTrails = {};
@@ -640,26 +355,29 @@
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
       
+      // Validate coordinates
       if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
         console.warn('Invalid coordinates:', point);
         return;
       }
 
       const color = deviceColors[point.device_id] || "#7F8C8D";
+      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), isLatest: ${isLatest}`);
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
-          radius: 10, // Slightly smaller for mobile
+          radius: 12,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
-          weight: 2
+          weight: 3
         });
 
         const popupContent = `
-          <strong>Device:</strong> ${point.device_id}<br>
-          <strong>Location:</strong> ${lat.toFixed(4)}, ${lon.toFixed(4)}<br>
-          <strong>Time:</strong> ${new Date(point.timestamp).toLocaleTimeString()}<br>
+          <strong>Device ID:</strong> ${point.device_id}<br>
+          <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+          <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+          <strong>Timestamp:</strong> ${point.timestamp}<br>
           <strong>Satellites:</strong> ${point.sats || 'N/A'}
         `;
         circle.bindPopup(popupContent);
@@ -667,7 +385,7 @@
         const label = L.divIcon({
           html: `<div style="color: ${color}; font-weight: bold; text-shadow: 1px 1px 2px white;">${point.device_id}</div>`,
           className: 'device-label',
-          iconSize: [20, 20]
+          iconSize: [24, 24]
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label, interactive: false });
@@ -681,6 +399,7 @@
         
         allMarkers[point.device_id].current = { circle, label: labelMarker };
         
+        // Add to map if device is visible
         if (deviceVisibility[point.device_id] !== false) {
           circle.addTo(map);
           labelMarker.addTo(map);
@@ -696,14 +415,14 @@
             html: `<div style="
               width: 0; 
               height: 0; 
-              border-left: 10px solid transparent;
-              border-right: 10px solid transparent;
-              border-bottom: 16px solid ${color};
+              border-left: 12px solid transparent;
+              border-right: 12px solid transparent;
+              border-bottom: 20px solid ${color};
               filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
             "></div>`,
             className: 'start-triangle',
-            iconSize: [16, 14],
-            iconAnchor: [10, 16]
+            iconSize: [18, 16],
+            iconAnchor: [12, 20]
           });
 
           const triangle = L.marker([lat, lon], { 
@@ -712,9 +431,10 @@
           });
 
           const popupContent = `
-            <strong>Start:</strong> ${point.device_id}<br>
-            <strong>Location:</strong> ${lat.toFixed(4)}, ${lon.toFixed(4)}<br>
-            <strong>Time:</strong> ${new Date(point.timestamp).toLocaleTimeString()}
+            <strong>Device ID:</strong> ${point.device_id} (START)<br>
+            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+            <strong>Timestamp:</strong> ${point.timestamp}
           `;
           triangle.bindPopup(popupContent);
 
@@ -729,16 +449,16 @@
         } else {
           const pinIcon = L.divIcon({
             html: `<div style="
-              width: 5px; 
-              height: 5px; 
+              width: 6px; 
+              height: 6px; 
               background-color: ${color}; 
               border: 1px solid white; 
               border-radius: 50%;
               box-shadow: 0 0 2px rgba(0,0,0,0.3);
             "></div>`,
             className: 'history-pin',
-            iconSize: [5, 5],
-            iconAnchor: [2.5, 2.5]
+            iconSize: [6, 6],
+            iconAnchor: [3, 3]
           });
 
           const pin = L.marker([lat, lon], { 
@@ -747,9 +467,10 @@
           });
 
           const popupContent = `
-            <strong>Device:</strong> ${point.device_id}<br>
-            <strong>Location:</strong> ${lat.toFixed(4)}, ${lon.toFixed(4)}<br>
-            <strong>Time:</strong> ${new Date(point.timestamp).toLocaleTimeString()}
+            <strong>Device ID:</strong> ${point.device_id}<br>
+            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
+            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
+            <strong>Timestamp:</strong> ${point.timestamp}
           `;
           pin.bindPopup(popupContent);
 
@@ -784,8 +505,8 @@
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
       const arrowSvg = `
-        <svg width="24" height="24" viewBox="0 0 16 16">
-          <g transform="scale(1.5) translate(-4, -4) rotate(${bearing} 8 8)">
+        <svg width="32" height="32" viewBox="0 0 16 16">
+          <g transform="scale(2) translate(-4, -4) rotate(${bearing} 8 8)">
             <polygon 
               points="8,2 12,10 8,8 4,10" 
               fill="${color}" 
@@ -799,8 +520,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [20, 16],
-        iconAnchor: [12, 12]
+        iconSize: [24, 20],
+        iconAnchor: [16, 16]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -823,7 +544,7 @@
 
       const polyline = L.polyline(trail, {
         color: color,
-        weight: 2, // Thinner for mobile
+        weight: 3,
         opacity: 0.7
       });
       
@@ -833,8 +554,7 @@
         polyline.addTo(map);
       }
 
-      // Fewer arrows for mobile performance
-      const numArrows = Math.min(trail.length - 1, 5);
+      const numArrows = Math.min(trail.length - 1, 8);
       const step = Math.max(1, Math.floor((trail.length - 1) / numArrows));
       
       for (let i = step; i < trail.length; i += step) {
@@ -845,6 +565,31 @@
           arrow.addTo(map);
         }
       }
+
+      const lastIndex = trail.length - 1;
+      if (lastIndex > 0 && (lastIndex % step !== 0)) {
+        const lastArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
+        trailLayers[device_id].push(lastArrow);
+        
+        if (deviceVisibility[device_id] !== false) {
+          lastArrow.addTo(map);
+        }
+      }
+    }
+
+    function getAgeLabel(ts) {
+      const iso = ts.replace(" ", "T") + "Z";
+      const pingTime = new Date(iso);
+      if (isNaN(pingTime)) {
+        console.warn("Bad timestamp:", ts);
+        return "——";
+      }
+
+      const nowSec = Date.now();
+      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
+      if (diffSec < 60)   return `${diffSec}s ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
+      return `${Math.floor(diffSec/3600)}h ago`;
     }
 
     function getRowClass(ts, sats) {
@@ -869,10 +614,10 @@
 
       for (const id of sortedIDs) {
         const packet = latestPackets[id];
-        const count = packetCounts[id] || 0;
-        const sats = packet.sats ?? "—";
-        const lat = parseFloat(packet.latitude).toFixed(4);
-        const lon = parseFloat(packet.longitude).toFixed(4);
+        const count  = packetCounts[id] || 0;
+        const sats   = packet.sats ?? "—";
+        const lat    = parseFloat(packet.latitude).toFixed(6);
+        const lon    = parseFloat(packet.longitude).toFixed(6);
 
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
@@ -886,20 +631,9 @@
         `;
 
         row.style.cursor = "pointer";
-        row.addEventListener('click', () => {
+        row.addEventListener("click", () => {
           toggleDeviceVisibility(id);
           updateTable();
-        });
-        
-        // Add touch feedback
-        row.addEventListener('touchstart', () => {
-          row.style.backgroundColor = '#e3f2fd';
-        });
-        
-        row.addEventListener('touchend', () => {
-          setTimeout(() => {
-            row.className = getRowClass(packet.timestamp, packet.sats);
-          }, 200);
         });
 
         if (selectedDevice === id) {
@@ -910,116 +644,41 @@
       }
     }
 
-    function updateStatusInfo() {
+    function updateDebugInfo() {
       deviceCount.textContent = Object.keys(latestPackets).length;
       pointCount.textContent = totalPoints;
+      lastUpdate.textContent = new Date().toLocaleTimeString();
     }
     
     socket.on("gps_update", (data) => {
-      console.log('📡 Received GPS update:', data);
-      
-      const { latitude, longitude, device_id, timestamp } = data;
-      if (!latitude || !longitude || !device_id || !timestamp) {
-        console.warn('Missing required data:', data);
-        return;
-      }
-
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      
-      if (isNaN(lat) || isNaN(lon)) {
-        console.warn('Invalid coordinates:', data);
-        return;
-      }
-
-      latestPackets[device_id] = {
-        ...data,
-        timestamp: timestamp.replace(" ", "T") + "Z"
-      };
-
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-
-      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
-        const lastPoint = {
-          ...latestPackets[device_id],
-          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
-          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
-        };
-        addDataPoint(lastPoint, false);
-      }
-      
-      addDataPoint(data, true);
-      allPointsBounds.extend([lat, lon]);
-      
-      if (!hasInitialData) {
-        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-        hasInitialData = true;
-      }
-
-      gpsTrails[device_id] = gpsTrails[device_id] || [];
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 50) gpsTrails[device_id].shift(); // Shorter trails for mobile
-
-      drawTrail(device_id);
-      updateTable();
-      updateStatusInfo();
+      processGPSUpdate(data);
     });
 
-    // Test data generator with more realistic movement
+    // Test data generator for debugging (remove in production) - now supports 15 devices
     function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V'];
-      const baseLat = -32.758;
-      const baseLon = 151.174;
+      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+      const baseLat = -33.87;
+      const baseLon = 151.21;
       
       testDevices.forEach((deviceId, index) => {
-        // Create persistent movement for each device
-        if (!window.devicePositions) window.devicePositions = {};
-        
-        if (!window.devicePositions[deviceId]) {
-          // Initial position with some spread
-          window.devicePositions[deviceId] = {
-            lat: baseLat + (index - 2) * 0.002 + (Math.random() - 0.5) * 0.001,
-            lon: baseLon + (index - 2) * 0.002 + (Math.random() - 0.5) * 0.001,
-            bearing: Math.random() * 360,
-            speed: 0.0001 + Math.random() * 0.0001
-          };
-        }
-        
-        const device = window.devicePositions[deviceId];
-        
-        // Slight course corrections
-        device.bearing += (Math.random() - 0.5) * 30;
-        device.speed = Math.max(0.00005, Math.min(0.0002, device.speed + (Math.random() - 0.5) * 0.00005));
-        
-        // Move in current direction
-        const radians = device.bearing * Math.PI / 180;
-        device.lat += Math.cos(radians) * device.speed;
-        device.lon += Math.sin(radians) * device.speed;
-        
-        // Keep within reasonable bounds
-        const maxDistance = 0.01;
-        if (Math.abs(device.lat - baseLat) > maxDistance) {
-          device.bearing = (device.bearing + 180) % 360;
-        }
-        if (Math.abs(device.lon - baseLon) > maxDistance) {
-          device.bearing = (device.bearing + 180) % 360;
-        }
+        const lat = baseLat + (Math.random() - 0.5) * 0.01;
+        const lon = baseLon + (Math.random() - 0.5) * 0.01;
         
         const testData = {
           device_id: deviceId,
-          latitude: device.lat.toFixed(6),
-          longitude: device.lon.toFixed(6),
+          latitude: lat.toString(),
+          longitude: lon.toString(),
           timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
-          sats: Math.floor(Math.random() * 8) + 4 + (Math.random() < 0.1 ? -2 : 0) // Occasional low satellite count
+          sats: Math.floor(Math.random() * 12) + 4
         };
         
-        // Simulate receiving data
-        handleGpsUpdate(testData);
+        // Process test data directly instead of emitting through socket
+        processGPSUpdate(testData);
       });
     }
-    
-    // Unified GPS update handler (works for both real and test data)
-    function handleGpsUpdate(data) {
+
+    // Extract GPS processing logic into a separate function
+    function processGPSUpdate(data) {
       console.log('📡 Processing GPS update:', data);
       
       const { latitude, longitude, device_id, timestamp } = data;
@@ -1036,6 +695,7 @@
         return;
       }
 
+      // Store the packet with corrected timestamp
       latestPackets[device_id] = {
         ...data,
         timestamp: timestamp.replace(" ", "T") + "Z"
@@ -1043,6 +703,7 @@
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
+      // Move the last "current" point into history
       if (gpsTrails[device_id] && gpsTrails[device_id].length) {
         const lastPoint = {
           ...latestPackets[device_id],
@@ -1052,49 +713,49 @@
         addDataPoint(lastPoint, false);
       }
       
+      // Add the new current marker
       addDataPoint(data, true);
+
+      // Update map bounds
       allPointsBounds.extend([lat, lon]);
       
+      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
       if (!hasInitialData) {
         map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
         hasInitialData = true;
       }
 
+      // Build the trail
       gpsTrails[device_id] = gpsTrails[device_id] || [];
       gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 50) gpsTrails[device_id].shift(); // Shorter trails for mobile
+      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
+      // Redraw trail with arrows
       drawTrail(device_id);
+
+      // Update UI
       updateTable();
-      updateStatusInfo();
+      updateDebugInfo();
+
+      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     }
 
     // Uncomment the line below to generate test data every 5 seconds
     // setInterval(generateTestData, 5000);
 
-    // Update table less frequently to save battery
-    setInterval(updateTable, 15000);
+    setInterval(updateTable, 10000);
     
-    // Handle orientation changes
-    window.addEventListener('orientationchange', function() {
-      setTimeout(function() {
-        map.invalidateSize();
-      }, 100);
-    });
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-      map.invalidateSize();
-    });
-    
-    } // End of startGPSTracker function
-    
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initializeApp);
-    } else {
-      initializeApp();
-    }
+    document.getElementById("build-time").textContent =
+      new Date().toLocaleString("en-AU", {
+        timeZone: "Australia/Sydney",
+        hour12: false,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
   </script>
 </body>
 </html>
