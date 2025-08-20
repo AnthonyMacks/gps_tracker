@@ -366,7 +366,7 @@
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
-          radius: 12,
+          radius: 10,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -457,7 +457,7 @@
               box-shadow: 0 0 2px rgba(0,0,0,0.3);
             "></div>`,
             className: 'history-pin',
-            iconSize: [6, 6],
+            iconSize: [8, 8],
             iconAnchor: [3, 3]
           });
 
@@ -520,7 +520,7 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [24, 20],
+        iconSize: [20, 16],
         iconAnchor: [16, 16]
       });
 
@@ -544,7 +544,7 @@
 
       const polyline = L.polyline(trail, {
         color: color,
-        weight: 3,
+        weight: 2,
         opacity: 0.7
       });
       
@@ -759,4 +759,5 @@
   </script>
 </body>
 </html>
+
 
