@@ -159,7 +159,7 @@
     // Initialize map with higher max zoom
     const map = L.map("map", {
       maxZoom: 22  // Allow maximum zoom
-    }).setView([-32.758, 151.174], 13);
+    }).setView([-33.87, 151.21], 13);
     
     // Base layers with increased maxZoom and maxNativeZoom
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -651,7 +651,35 @@
     }
     
     socket.on("gps_update", (data) => {
-      console.log('📡 Received GPS update:', data);
+      processGPSUpdate(data);
+    });
+
+    // Test data generator for debugging (remove in production) - now supports 15 devices
+    function generateTestData() {
+      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+      const baseLat = -33.87;
+      const baseLon = 151.21;
+      
+      testDevices.forEach((deviceId, index) => {
+        const lat = baseLat + (Math.random() - 0.5) * 0.01;
+        const lon = baseLon + (Math.random() - 0.5) * 0.01;
+        
+        const testData = {
+          device_id: deviceId,
+          latitude: lat.toString(),
+          longitude: lon.toString(),
+          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
+          sats: Math.floor(Math.random() * 12) + 4
+        };
+        
+        // Process test data directly instead of emitting through socket
+        processGPSUpdate(testData);
+      });
+    }
+
+    // Extract GPS processing logic into a separate function
+    function processGPSUpdate(data) {
+      console.log('📡 Processing GPS update:', data);
       
       const { latitude, longitude, device_id, timestamp } = data;
       if (!latitude || !longitude || !device_id || !timestamp) {
@@ -710,28 +738,6 @@
       updateDebugInfo();
 
       console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
-    });
-
-    // Test data generator for debugging (remove in production) - now supports 15 devices
-    function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-      const baseLat = -33.87;
-      const baseLon = 151.21;
-      
-      testDevices.forEach((deviceId, index) => {
-        const lat = baseLat + (Math.random() - 0.5) * 0.01;
-        const lon = baseLon + (Math.random() - 0.5) * 0.01;
-        
-        const testData = {
-          device_id: deviceId,
-          latitude: lat.toString(),
-          longitude: lon.toString(),
-          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
-          sats: Math.floor(Math.random() * 12) + 4
-        };
-        
-        socket.emit('gps_update', testData);
-      });
     }
 
     // Uncomment the line below to generate test data every 5 seconds
@@ -753,7 +759,3 @@
   </script>
 </body>
 </html>
-
-
-
-
