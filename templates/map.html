@@ -505,8 +505,8 @@
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
       const arrowSvg = `
-        <svg width="32" height="32" viewBox="0 0 16 16">
-          <g transform="scale(2) translate(-4, -4) rotate(${bearing} 8 8)">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <g transform="scale(1) translate(-4, -4) rotate(${bearing} 8 8)">
             <polygon 
               points="8,2 12,10 8,8 4,10" 
               fill="${color}" 
@@ -520,8 +520,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [20, 16],
-        iconAnchor: [16, 16]
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -759,6 +759,7 @@
   </script>
 </body>
 </html>
+
 
 
 
