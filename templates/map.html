@@ -7,7 +7,7 @@
     font-family: sans-serif;
   }
   #map {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -16,16 +16,15 @@
   }
   #controls {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+    top: 0;
+    right: 0;
+    width: 300px;
+    max-height: 60%;
     background: rgba(255, 255, 255, 0.95);
     z-index: 2;
+    overflow-y: auto;
     padding: 10px;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
   }
   #controls table {
     width: 100%;
@@ -37,14 +36,9 @@
     padding: 4px;
     text-align: center;
   }
-  #controls .row {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  #controls .row > div {
-    flex: 1 1 45%;
+  #controls .info {
+    margin-top: 10px;
+    font-size: 12px;
   }
 </style>
 
