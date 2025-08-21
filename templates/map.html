@@ -73,7 +73,7 @@
 
     .arrow-icon {
       font-weight: bold;
-      font-size: 20px;
+      font-size: 10px;
     }
 
     footer {
@@ -366,7 +366,7 @@
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
-          radius: 12,
+          radius: 10,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -385,7 +385,7 @@
         const label = L.divIcon({
           html: `<div style="color: ${color}; font-weight: bold; text-shadow: 1px 1px 2px white;">${point.device_id}</div>`,
           className: 'device-label',
-          iconSize: [24, 24]
+          iconSize: [20, 20]
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label, interactive: false });
@@ -506,7 +506,7 @@
       
       const arrowSvg = `
         <svg width="32" height="32" viewBox="0 0 16 16">
-          <g transform="scale(2) translate(-4, -4) rotate(${bearing} 8 8)">
+          <g transform="scale(1.5) translate(-4, -4) rotate(${bearing} 8 8)">
             <polygon 
               points="8,2 12,10 8,8 4,10" 
               fill="${color}" 
@@ -520,8 +520,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [24, 20],
-        iconAnchor: [16, 16]
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -759,3 +759,4 @@
   </script>
 </body>
 </html>
+
