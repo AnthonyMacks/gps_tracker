@@ -506,7 +506,7 @@
       
       const arrowSvg = `
         <svg width="32" height="32" viewBox="0 0 16 16">
-          <g transform="scale(1.5) translate(-4, -4) rotate(${bearing} 8 8)">
+          <g transform="scale(1) translate(-4, -4) rotate(${bearing} 8 8)">
             <polygon 
               points="8,2 12,10 8,8 4,10" 
               fill="${color}" 
@@ -520,8 +520,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -759,6 +759,7 @@
   </script>
 </body>
 </html>
+
 
 
 
