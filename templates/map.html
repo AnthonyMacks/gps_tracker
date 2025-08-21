@@ -119,19 +119,6 @@
   <div id="map"></div>
   <div id="info">
     <strong>📡 Latest GPS Data</strong>
-    
-<script>
-function toggleTable() {
-  var table = document.getElementById("data-table");
-  if (table.style.display === "none") {
-    table.style.display = "table";
-  } else {
-    table.style.display = "none";
-  }
-}
-</script>
-<button onclick="toggleTable()">Hide/Show Table</button>
-
     <table id="device-table">
       <thead>
         <tr>
@@ -778,3 +765,27 @@ function toggleTable() {
 
 
 
+<style>
+  #toggle-button {
+    background-color: #0078D7;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #toggle-button:hover {
+    background-color: #005A9E;
+  }
+</style>
+<script>
+function toggleTable() {
+  var table = document.getElementById("data-table");
+  if (table.style.display === "none") {
+    table.style.display = "table";
+  } else {
+    table.style.display = "none";
+  }
+}
+</script>
