@@ -73,7 +73,7 @@
 
     .arrow-icon {
       font-weight: bold;
-      font-size: 10px;
+      font-size: 20px;
     }
 
     footer {
@@ -159,7 +159,7 @@
     // Initialize map with higher max zoom
     const map = L.map("map", {
       maxZoom: 22  // Allow maximum zoom
-    }).setView([-32.768580, 151.179022], 12);
+    }).setView([-33.87, 151.21], 13);
     
     // Base layers with increased maxZoom and maxNativeZoom
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -366,7 +366,7 @@
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
-          radius: 10,
+          radius: 12,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -421,8 +421,8 @@
               filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
             "></div>`,
             className: 'start-triangle',
-            iconSize: [18, 16],
-            iconAnchor: [12, 20]
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
           });
 
           const triangle = L.marker([lat, lon], { 
@@ -457,7 +457,7 @@
               box-shadow: 0 0 2px rgba(0,0,0,0.3);
             "></div>`,
             className: 'history-pin',
-            iconSize: [8, 8],
+            iconSize: [6, 6],
             iconAnchor: [3, 3]
           });
 
@@ -505,8 +505,8 @@
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
       const arrowSvg = `
-        <svg width="24" height="24" viewBox="0 0 16 16">
-          <g transform="scale(1.5) translate(-4, -4) rotate(${bearing} 8 8)">
+        <svg width="32" height="32" viewBox="0 0 16 16">
+          <g transform="scale(2) translate(-4, -4) rotate(${bearing} 8 8)">
             <polygon 
               points="8,2 12,10 8,8 4,10" 
               fill="${color}" 
@@ -520,8 +520,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
+        iconSize: [24, 20],
+        iconAnchor: [16, 16]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -544,7 +544,7 @@
 
       const polyline = L.polyline(trail, {
         color: color,
-        weight: 2,
+        weight: 3,
         opacity: 0.7
       });
       
@@ -759,9 +759,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
