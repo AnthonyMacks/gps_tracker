@@ -119,6 +119,19 @@
   <div id="map"></div>
   <div id="info">
     <strong>📡 Latest GPS Data</strong>
+    
+<script>
+function toggleTable() {
+  var table = document.getElementById("data-table");
+  if (table.style.display === "none") {
+    table.style.display = "table";
+  } else {
+    table.style.display = "none";
+  }
+}
+</script>
+<button onclick="toggleTable()">Hide/Show Table</button>
+
     <table id="device-table">
       <thead>
         <tr>
@@ -759,6 +772,7 @@
   </script>
 </body>
 </html>
+
 
 
 
