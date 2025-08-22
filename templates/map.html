@@ -109,20 +109,9 @@
       font-size: 8px;
     }
 
-    /* Animated dotted line styles */
-    .animated-polyline {
-      stroke-dasharray: 10, 5;
+    /* Animated dot styles - removed dashed line animation */
+    .trail-segment {
       stroke-linecap: round;
-      animation: dash 2s linear infinite;
-    }
-
-    @keyframes dash {
-      0% {
-        stroke-dashoffset: 15;
-      }
-      100% {
-        stroke-dashoffset: 0;
-      }
     }
 
     footer {
@@ -643,23 +632,27 @@
       }
       trailLayers[device_id] = [];
 
-      // Create the main polyline with animated dots
-      const polyline = L.polyline(trail, {
-        color: color,
-        weight: 4,
-        opacity: 0.8,
-        className: 'animated-polyline'
-      });
-      
-      trailLayers[device_id].push(polyline);
-      
-      if (deviceVisibility[device_id] !== false) {
-        polyline.addTo(map);
+      // Create individual line segments instead of one polyline
+      for (let i = 0; i < trail.length - 1; i++) {
+        const segment = L.polyline([trail[i], trail[i + 1]], {
+          color: color,
+          weight: 3,
+          opacity: 0.6,
+          className: 'trail-segment'
+        });
+        
+        trailLayers[device_id].push(segment);
+        
+        if (deviceVisibility[device_id] !== false) {
+          segment.addTo(map);
+        }
       }
 
-      // Add fewer arrows but make them more prominent for active segments
+      // Start animating dots along the trail
+      animateDotsAlongTrail(device_id, trail, color);
+
+      // Add arrow on the most recent segment
       if (trail.length >= 2) {
-        // Only show arrow on the most recent segment (indicating current direction)
         const lastIndex = trail.length - 1;
         const recentArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
         trailLayers[device_id].push(recentArrow);
@@ -667,22 +660,82 @@
         if (deviceVisibility[device_id] !== false) {
           recentArrow.addTo(map);
         }
-
-        // Add a few more arrows for longer trails
-        if (trail.length > 5) {
-          const numArrows = Math.min(3, Math.floor(trail.length / 5));
-          const step = Math.floor(trail.length / numArrows);
-          
-          for (let i = step; i < trail.length - 1; i += step) {
-            const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
-            trailLayers[device_id].push(arrow);
-            
-            if (deviceVisibility[device_id] !== false) {
-              arrow.addTo(map);
-            }
-          }
-        }
       }
+    }
+
+    function animateDotsAlongTrail(device_id, trail, color) {
+      if (!trail || trail.length < 2) return;
+      
+      // Create animated dots that move from point to point
+      for (let i = 0; i < trail.length - 1; i++) {
+        setTimeout(() => {
+          if (deviceVisibility[device_id] !== false) {
+            createMovingDot(trail[i], trail[i + 1], color, device_id, i);
+          }
+        }, i * 800); // Stagger each dot by 800ms
+      }
+    }
+
+    function createMovingDot(startPoint, endPoint, color, device_id, segmentIndex) {
+      const dotIcon = L.divIcon({
+        html: `<div style="
+          width: 8px; 
+          height: 8px; 
+          background-color: ${color}; 
+          border: 2px solid white; 
+          border-radius: 50%;
+          box-shadow: 0 0 4px rgba(0,0,0,0.3);
+        "></div>`,
+        className: 'moving-dot',
+        iconSize: [8, 8],
+        iconAnchor: [4, 4]
+      });
+
+      const dot = L.marker(startPoint, { 
+        icon: dotIcon,
+        interactive: false
+      });
+
+      // Only add if device is visible
+      if (deviceVisibility[device_id] !== false) {
+        dot.addTo(map);
+      }
+
+      // Store dot reference for cleanup
+      if (!trailLayers[device_id]) trailLayers[device_id] = [];
+      trailLayers[device_id].push(dot);
+
+      // Animate dot movement
+      const duration = 2000; // 2 seconds to travel between points
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Smooth easing function
+        const easedProgress = progress < 0.5 
+          ? 2 * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+        
+        const currentLat = startPoint[0] + (endPoint[0] - startPoint[0]) * easedProgress;
+        const currentLon = startPoint[1] + (endPoint[1] - startPoint[1]) * easedProgress;
+        
+        dot.setLatLng([currentLat, currentLon]);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // Remove dot after animation completes
+          setTimeout(() => {
+            if (map.hasLayer(dot)) {
+              map.removeLayer(dot);
+            }
+          }, 500); // Keep dot visible for 500ms at end point
+        }
+      };
+      
+      requestAnimationFrame(animate);
     }
 
     function getAgeLabel(ts) {
