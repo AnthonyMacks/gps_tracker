@@ -42,7 +42,7 @@
       z-index: 1001;
     }
 
-    #toggle-button, #toggle-button2, #toggle-trails1, #toggle-trails2 {
+    #toggle-button, #toggle-button2 {
       background-color: #0078D7;
       color: white;
       border: none;
@@ -54,27 +54,8 @@
       width: 100%;
     }
     
-    #toggle-button:hover, #toggle-button2:hover, #toggle-trails1:hover, #toggle-trails2:hover {
+    #toggle-button:hover, #toggle-button2:hover {
       background-color: #005A9E;
-    }
-
-    #toggle-trails1, #toggle-trails2 {
-      background-color: #28a745;
-      margin-bottom: 5px;
-      display: block !important;
-      visibility: visible !important;
-    }
-
-    #toggle-trails1:hover, #toggle-trails2:hover {
-      background-color: #218838;
-    }
-
-    #toggle-trails1.hidden-trails, #toggle-trails2.hidden-trails {
-      background-color: #dc3545;
-    }
-
-    #toggle-trails1.hidden-trails:hover, #toggle-trails2.hidden-trails:hover {
-      background-color: #c82333;
     }
 
     #opacity-control {
@@ -204,7 +185,6 @@
     <strong>📡 GPS Data (I-XV)</strong>
     
     <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
-    <button id="toggle-trails1" onclick="toggleTrails1()">Hide Trails</button>
    
     <table id="device-table">
       <thead>
@@ -224,7 +204,6 @@
     <strong>📡 GPS Data (XVI-XXVII)</strong>
     
     <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
-    <button id="toggle-trails2" onclick="toggleTrails2()">Hide Trails</button>
    
     <table id="device-table2">
       <thead>
@@ -657,12 +636,6 @@
     }
 
     function showDeviceMarkers(deviceId) {
-      // Check if trails are visible for this device group
-      const shouldShowMarkers = (firstTableDevices.includes(deviceId) && trails1Visible) || 
-                               (secondTableDevices.includes(deviceId) && trails2Visible);
-      
-      if (!shouldShowMarkers) return; // Don't show markers if trails are hidden
-      
       if (allMarkers[deviceId] && allMarkers[deviceId].current) {
         allMarkers[deviceId].current.circle.addTo(map);
         allMarkers[deviceId].current.label.addTo(map);
@@ -881,10 +854,6 @@
       if (!trail || trail.length < 2) return;
       
       const color = deviceColors[device_id] || "#7F8C8D";
-      
-      // Use window references to ensure global access
-      const firstTableDevices = window.firstTableDevices;
-      const secondTableDevices = window.secondTableDevices;
 
       if (trailLayers[device_id]) {
         trailLayers[device_id].forEach(layer => {
@@ -905,9 +874,7 @@
       
       trailLayers[device_id].push(polyline);
       
-      if (deviceVisibility[device_id] !== false && 
-          ((firstTableDevices.includes(device_id) && trails1Visible) || 
-           (secondTableDevices.includes(device_id) && trails2Visible))) {
+      if (deviceVisibility[device_id] !== false) {
         polyline.addTo(map);
       }
 
@@ -916,9 +883,7 @@
         const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
         trailLayers[device_id].push(arrow);
         
-        if (deviceVisibility[device_id] !== false &&
-            ((firstTableDevices.includes(device_id) && trails1Visible) || 
-             (secondTableDevices.includes(device_id) && trails2Visible))) {
+        if (deviceVisibility[device_id] !== false) {
           arrow.addTo(map);
         }
       }
