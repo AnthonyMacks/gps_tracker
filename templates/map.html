@@ -344,6 +344,8 @@
     }
 
     function showTrailsForDevice(deviceId) {
+      console.log(`Showing trails and markers for device: ${deviceId}`);
+      
       // Show trails (polylines and arrows)
       if (trailLayers[deviceId]) {
         trailLayers[deviceId].forEach(layer => {
@@ -353,22 +355,32 @@
         });
       }
       
-      // Show markers (current position, history, start triangles)
+      // Show current position markers
       if (allMarkers[deviceId] && allMarkers[deviceId].current) {
-        allMarkers[deviceId].current.circle.addTo(map);
-        allMarkers[deviceId].current.label.addTo(map);
+        if (!map.hasLayer(allMarkers[deviceId].current.circle)) {
+          allMarkers[deviceId].current.circle.addTo(map);
+        }
+        if (!map.hasLayer(allMarkers[deviceId].current.label)) {
+          allMarkers[deviceId].current.label.addTo(map);
+        }
       }
       
+      // Show all history markers
       if (allMarkers[deviceId] && allMarkers[deviceId].history) {
         allMarkers[deviceId].history.forEach(marker => {
-          marker.addTo(map);
+          if (!map.hasLayer(marker)) {
+            marker.addTo(map);
+          }
         });
       }
       
       // Hide large directional arrow if it exists
       if (window.largeArrows && window.largeArrows[deviceId]) {
-        map.removeLayer(window.largeArrows[deviceId]);
+        if (map.hasLayer(window.largeArrows[deviceId])) {
+          map.removeLayer(window.largeArrows[deviceId]);
+        }
         delete window.largeArrows[deviceId];
+        console.log(`Large arrow removed for ${deviceId}`);
       }
     }
 
@@ -408,9 +420,11 @@
     }
 
     function createLargeDirectionalArrow(deviceId) {
+      console.log(`Attempting to create large arrow for device: ${deviceId}`);
+      
       const trail = gpsTrails[deviceId];
       if (!trail || trail.length < 2) {
-        console.log(`Cannot create arrow for ${deviceId}: insufficient trail data`);
+        console.log(`Cannot create arrow for ${deviceId}: trail length = ${trail ? trail.length : 0}`);
         return;
       }
       
@@ -422,38 +436,45 @@
       const startPoint = trail[lastIndex - 1];
       const endPoint = trail[lastIndex];
       
+      console.log(`Start point:`, startPoint, `End point:`, endPoint);
+      
       const bearing = calculateBearing(startPoint[0], startPoint[1], endPoint[0], endPoint[1]);
       console.log(`Arrow bearing for ${deviceId}: ${bearing} degrees`);
       
-      // Create a very large arrow
-      const largeArrowSvg = `
+      // Create a simple, large arrow using HTML/CSS
+      const arrowHtml = `
         <div style="
-          width: 48px; 
-          height: 48px; 
-          background-color: ${color}; 
-          border: 3px solid white; 
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(${bearing + 45}deg);
-          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+          width: 0;
+          height: 0;
+          border-left: 20px solid transparent;
+          border-right: 20px solid transparent;
+          border-bottom: 40px solid ${color};
+          transform: rotate(${bearing}deg);
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
           position: relative;
         ">
           <div style="
             position: absolute;
-            top: 50%;
+            top: 45px;
             left: 50%;
-            transform: translate(-50%, -50%) rotate(-${bearing + 45}deg);
+            transform: translateX(-50%);
+            background: ${color};
             color: white;
-            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
             font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            border: 1px solid white;
           ">${deviceId}</div>
         </div>
       `;
 
       const largeArrowIcon = L.divIcon({
-        html: largeArrowSvg,
+        html: arrowHtml,
         className: 'large-directional-arrow',
-        iconSize: [48, 48],
-        iconAnchor: [24, 24]
+        iconSize: [40, 60],
+        iconAnchor: [20, 20]
       });
 
       // Position the arrow at the current location (end of trail)
@@ -476,8 +497,12 @@
       if (!window.largeArrows) window.largeArrows = {};
       window.largeArrows[deviceId] = largeArrow;
       
-      largeArrow.addTo(map);
-      console.log(`Large arrow added to map for ${deviceId}`);
+      try {
+        largeArrow.addTo(map);
+        console.log(`✅ Large arrow successfully added to map for ${deviceId}`);
+      } catch (error) {
+        console.error(`❌ Error adding large arrow for ${deviceId}:`, error);
+      }
     }
 
     // Initialize map with higher max zoom
