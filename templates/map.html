@@ -25,7 +25,24 @@
       z-index: 1001;
     }
 
-    #toggle-button {
+    #info2 {
+      position: absolute;
+      top: 10px;
+      right: 370px;
+      max-width: 340px;
+      max-height: 70%;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #2C3E50;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+    }
+
+    #toggle-button, #toggle-button2 {
       background-color: #0078D7;
       color: white;
       border: none;
@@ -37,7 +54,7 @@
       width: 100%;
     }
     
-    #toggle-button:hover {
+    #toggle-button:hover, #toggle-button2:hover {
       background-color: #005A9E;
     }
 
@@ -134,11 +151,30 @@
 <body>
   <div id="map"></div>
   <div id="info">
-    <strong>📡 Latest GPS Data</strong>
+    <strong>📡 GPS Data (I-XV)</strong>
     
     <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
    
     <table id="device-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Lat</th>
+          <th>Lon</th>
+          <th>Count</th>
+          <th>Sats</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="info2">
+    <strong>📡 GPS Data (XVI-XXVII)</strong>
+    
+    <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
+   
+    <table id="device-table2">
       <thead>
         <tr>
           <th>ID</th>
@@ -175,10 +211,23 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
   <script>
-    // Toggle table visibility function
+    // Toggle table visibility functions
     function toggleTable() {
       const table = document.getElementById("device-table");
       const button = document.getElementById("toggle-button");
+      
+      if (table.style.display === "none") {
+        table.style.display = "table";
+        button.textContent = "Hide Table";
+      } else {
+        table.style.display = "none";
+        button.textContent = "Show Table";
+      }
+    }
+
+    function toggleTable2() {
+      const table = document.getElementById("device-table2");
+      const button = document.getElementById("toggle-button2");
       
       if (table.style.display === "none") {
         table.style.display = "table";
@@ -263,14 +312,17 @@
       currentBaseLayer.setOpacity(opacity);
     });
 
-    // Device colors - expanded for 15 devices with vibrant colors for better visibility
+    // Device colors - expanded for 27 devices with vibrant colors for better visibility
     const deviceColors = {
       '1': '#E74C3C', '2': '#3498DB', '3': '#2ECC71', '4': '#F39C12', '5': '#9B59B6',
       '6': '#1ABC9C', '7': '#E67E22', '8': '#34495E', '9': '#E91E63', '10': '#FF5722',
       '11': '#795548', '12': '#607D8B', '13': '#FF9800', '14': '#4CAF50', '15': '#673AB7',
       'I': '#E74C3C', 'II': '#3498DB', 'III': '#2ECC71', 'IV': '#F39C12', 'V': '#9B59B6',
       'VI': '#1ABC9C', 'VII': '#E67E22', 'VIII': '#34495E', 'IX': '#E91E63', 'X': '#FF5722',
-      'XI': '#795548', 'XII': '#607D8B', 'XIII': '#FF9800', 'XIV': '#4CAF50', 'XV': '#673AB7'
+      'XI': '#795548', 'XII': '#607D8B', 'XIII': '#FF9800', 'XIV': '#4CAF50', 'XV': '#673AB7',
+      'XVI': '#FF1744', 'XVII': '#448AFF', 'XVIII': '#00E676', 'XIX': '#FFC107', 'XX': '#AB47BC',
+      'XXI': '#26C6DA', 'XXII': '#FF6F00', 'XXIII': '#546E7A', 'XXIV': '#EC407A', 'XXV': '#8BC34A',
+      'XXVI': '#5E35B1', 'XXVII': '#FF5252'
     };
 
     // Initialize socket connection
@@ -638,12 +690,18 @@
     }
 
     function updateTable() {
-      const tbody = document.querySelector("#device-table tbody");
-      tbody.innerHTML = "";
+      const tbody1 = document.querySelector("#device-table tbody");
+      const tbody2 = document.querySelector("#device-table2 tbody");
+      tbody1.innerHTML = "";
+      tbody2.innerHTML = "";
 
       const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
         a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
       );
+
+      // Devices I-XV go to first table, XVI-XXVII go to second table
+      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
 
       for (const id of sortedIDs) {
         const packet = latestPackets[id];
@@ -673,7 +731,12 @@
           row.style.border = "2px solid #3498DB";
         }
 
-        tbody.appendChild(row);
+        // Add row to appropriate table
+        if (firstTableDevices.includes(id)) {
+          tbody1.appendChild(row);
+        } else if (secondTableDevices.includes(id)) {
+          tbody2.appendChild(row);
+        }
       }
     }
 
@@ -687,9 +750,10 @@
       processGPSUpdate(data);
     });
 
-    // Test data generator for debugging (remove in production) - now supports 15 devices
+    // Test data generator for debugging (remove in production) - now supports 27 devices
     function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
+                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
       const baseLat = -33.87;
       const baseLon = 151.21;
       
