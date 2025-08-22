@@ -109,6 +109,22 @@
       font-size: 8px;
     }
 
+    /* Animated dotted line styles */
+    .animated-polyline {
+      stroke-dasharray: 10, 5;
+      stroke-linecap: round;
+      animation: dash 2s linear infinite;
+    }
+
+    @keyframes dash {
+      0% {
+        stroke-dashoffset: 0;
+      }
+      100% {
+        stroke-dashoffset: 15;
+      }
+    }
+
     footer {
       position: absolute;
       bottom: 10px;
@@ -627,10 +643,12 @@
       }
       trailLayers[device_id] = [];
 
+      // Create the main polyline with animated dots
       const polyline = L.polyline(trail, {
         color: color,
-        weight: 3,
-        opacity: 0.7
+        weight: 4,
+        opacity: 0.8,
+        className: 'animated-polyline'
       });
       
       trailLayers[device_id].push(polyline);
@@ -639,25 +657,30 @@
         polyline.addTo(map);
       }
 
-      const numArrows = Math.min(trail.length - 1, 8);
-      const step = Math.max(1, Math.floor((trail.length - 1) / numArrows));
-      
-      for (let i = step; i < trail.length; i += step) {
-        const arrow = addArrowToSegment(trail[i-1], trail[i], color);
-        trailLayers[device_id].push(arrow);
+      // Add fewer arrows but make them more prominent for active segments
+      if (trail.length >= 2) {
+        // Only show arrow on the most recent segment (indicating current direction)
+        const lastIndex = trail.length - 1;
+        const recentArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
+        trailLayers[device_id].push(recentArrow);
         
         if (deviceVisibility[device_id] !== false) {
-          arrow.addTo(map);
+          recentArrow.addTo(map);
         }
-      }
 
-      const lastIndex = trail.length - 1;
-      if (lastIndex > 0 && (lastIndex % step !== 0)) {
-        const lastArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
-        trailLayers[device_id].push(lastArrow);
-        
-        if (deviceVisibility[device_id] !== false) {
-          lastArrow.addTo(map);
+        // Add a few more arrows for longer trails
+        if (trail.length > 5) {
+          const numArrows = Math.min(3, Math.floor(trail.length / 5));
+          const step = Math.floor(trail.length / numArrows);
+          
+          for (let i = step; i < trail.length - 1; i += step) {
+            const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
+            trailLayers[device_id].push(arrow);
+            
+            if (deviceVisibility[device_id] !== false) {
+              arrow.addTo(map);
+            }
+          }
         }
       }
     }
