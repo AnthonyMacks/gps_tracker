@@ -290,9 +290,11 @@
       }
     }
 
-    // Define device groups globally for reuse
-    const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-    const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+    // Define device groups globally for reuse - attach to window for global access
+    window.firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+    window.secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+    const firstTableDevices = window.firstTableDevices;
+    const secondTableDevices = window.secondTableDevices;
 
     // Trail visibility state
     let trails1Visible = true;
@@ -441,40 +443,29 @@
       const bearing = calculateBearing(startPoint[0], startPoint[1], endPoint[0], endPoint[1]);
       console.log(`Arrow bearing for ${deviceId}: ${bearing} degrees`);
       
-      // Create a simple, large arrow using HTML/CSS
-      const arrowHtml = `
+      // Create a simple large circle with device ID instead of arrow
+      const circleHtml = `
         <div style="
-          width: 0;
-          height: 0;
-          border-left: 20px solid transparent;
-          border-right: 20px solid transparent;
-          border-bottom: 40px solid ${color};
-          transform: rotate(${bearing}deg);
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-          position: relative;
-        ">
-          <div style="
-            position: absolute;
-            top: 45px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: ${color};
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
-            white-space: nowrap;
-            border: 1px solid white;
-          ">${deviceId}</div>
-        </div>
+          width: 50px;
+          height: 50px;
+          background-color: ${color};
+          border: 4px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        ">${deviceId}</div>
       `;
 
       const largeArrowIcon = L.divIcon({
-        html: arrowHtml,
+        html: circleHtml,
         className: 'large-directional-arrow',
-        iconSize: [40, 60],
-        iconAnchor: [20, 20]
+        iconSize: [58, 58],
+        iconAnchor: [29, 29]
       });
 
       // Position the arrow at the current location (end of trail)
@@ -499,9 +490,9 @@
       
       try {
         largeArrow.addTo(map);
-        console.log(`✅ Large arrow successfully added to map for ${deviceId}`);
+        console.log(`✅ Large circle marker successfully added to map for ${deviceId}`);
       } catch (error) {
-        console.error(`❌ Error adding large arrow for ${deviceId}:`, error);
+        console.error(`❌ Error adding large circle marker for ${deviceId}:`, error);
       }
     }
 
@@ -890,6 +881,10 @@
       if (!trail || trail.length < 2) return;
       
       const color = deviceColors[device_id] || "#7F8C8D";
+      
+      // Use window references to ensure global access
+      const firstTableDevices = window.firstTableDevices;
+      const secondTableDevices = window.secondTableDevices;
 
       if (trailLayers[device_id]) {
         trailLayers[device_id].forEach(layer => {
