@@ -25,6 +25,22 @@
       z-index: 1001;
     }
 
+    #toggle-button {
+      background-color: #0078D7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    
+    #toggle-button:hover {
+      background-color: #005A9E;
+    }
+
     #opacity-control {
       position: absolute;
       bottom: 60px;
@@ -119,31 +135,8 @@
   <div id="map"></div>
   <div id="info">
     <strong>📡 Latest GPS Data</strong>
-
-    <style>
-  #toggle-button {
-    background-color: #0078D7;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    font-size: 14px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  #toggle-button:hover {
-    background-color: #005A9E;
-  }
-</style>
-<script>
-function toggleTable() {
-  var table = document.getElementById("data-table");
-  if (table.style.display === "none") {
-    table.style.display = "table";
-  } else {
-    table.style.display = "none";
-  }
-}
-</script>
+    
+    <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
    
     <table id="device-table">
       <thead>
@@ -182,6 +175,20 @@ function toggleTable() {
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
   <script>
+    // Toggle table visibility function
+    function toggleTable() {
+      const table = document.getElementById("device-table");
+      const button = document.getElementById("toggle-button");
+      
+      if (table.style.display === "none") {
+        table.style.display = "table";
+        button.textContent = "Hide Table";
+      } else {
+        table.style.display = "none";
+        button.textContent = "Show Table";
+      }
+    }
+
     // Initialize map with higher max zoom
     const map = L.map("map", {
       maxZoom: 22  // Allow maximum zoom
@@ -785,7 +792,3 @@ function toggleTable() {
   </script>
 </body>
 </html>
-
-
-
-
