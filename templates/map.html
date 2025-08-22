@@ -48,24 +48,23 @@
       #info {
         position: absolute;
         top: 10px;
-        left: 10px;
         right: 10px;
+        left: auto;
         max-width: none;
-        width: calc(100% - 20px);
-        max-height: 40%;
+        width: calc(45% - 10px);
+        max-height: 35%;
         font-size: 11px;
         padding: 6px;
       }
 
       #info2 {
         position: absolute;
-        bottom: 10px;
-        left: 10px;
+        top: 50%;
         right: 10px;
-        top: auto;
+        left: auto;
         max-width: none;
-        width: calc(100% - 20px);
-        max-height: 40%;
+        width: calc(45% - 10px);
+        max-height: 35%;
         font-size: 11px;
         padding: 6px;
       }
@@ -88,18 +87,23 @@
       }
 
       #opacity-control {
-        bottom: 160px;
+        bottom: 60px;
         left: 10px;
         font-size: 10px;
         padding: 6px;
       }
 
       #debug {
-        bottom: 160px;
+        bottom: 10px;
         right: 10px;
         font-size: 9px;
-        padding: 6px;
-        max-width: 200px;
+        width: 25px;
+        height: 18px;
+      }
+
+      #debug:hover {
+        width: 180px;
+        min-height: 70px;
       }
 
       footer {
@@ -113,13 +117,16 @@
     /* Portrait phone adjustments */
     @media (max-width: 480px) and (orientation: portrait) {
       #info {
-        max-height: 35%;
+        max-height: 30%;
         font-size: 10px;
+        width: calc(50% - 10px);
       }
 
       #info2 {
-        max-height: 35%;
+        top: 35%;
+        max-height: 30%;
         font-size: 10px;
+        width: calc(50% - 10px);
       }
 
       table {
@@ -136,11 +143,23 @@
       }
 
       #opacity-control {
-        display: none; /* Hide on very small screens */
+        bottom: 60px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
       }
 
       #debug {
-        display: none; /* Hide debug on very small screens */
+        bottom: 10px;
+        right: 10px;
+        font-size: 8px;
+        width: 22px;
+        height: 16px;
+      }
+
+      #debug:hover {
+        width: 150px;
+        min-height: 60px;
       }
 
       footer {
@@ -155,34 +174,38 @@
         top: 10px;
         right: 10px;
         left: auto;
-        width: 280px;
-        max-width: 280px;
-        max-height: 80%;
+        width: 200px;
+        max-width: 200px;
+        max-height: 40%;
       }
 
       #info2 {
         position: absolute;
-        top: 10px;
-        left: 10px;
-        right: auto;
-        width: 280px;
-        max-width: 280px;
-        max-height: 80%;
-        bottom: auto;
+        top: 50%;
+        right: 10px;
+        left: auto;
+        width: 200px;
+        max-width: 200px;
+        max-height: 40%;
       }
 
       #opacity-control {
         bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
+        left: 10px;
         font-size: 10px;
       }
 
       #debug {
         bottom: 10px;
-        right: 10px;
+        left: 10px;
         font-size: 9px;
-        max-width: 150px;
+        width: 25px;
+        height: 18px;
+      }
+
+      #debug:hover {
+        width: 160px;
+        min-height: 65px;
       }
     }
 
@@ -371,12 +394,14 @@
   </div>
   
   <div id="debug">
-    <strong>Debug Info:</strong><br>
-    Connected: <span id="socket-status">❌</span><br>
-    Total Devices: <span id="device-count">0</span><br>
-    Total Points: <span id="point-count">0</span><br>
-    Last Update: <span id="last-update">never</span><br>
-    Current Zoom: <span id="current-zoom">13</span>
+    <div id="debug-content">
+      <strong>Debug Info:</strong><br>
+      Connected: <span id="socket-status">❌</span><br>
+      Total Devices: <span id="device-count">0</span><br>
+      Total Points: <span id="point-count">0</span><br>
+      Last Update: <span id="last-update">never</span><br>
+      Current Zoom: <span id="current-zoom">13</span>
+    </div>
   </div>
 
   <footer>
