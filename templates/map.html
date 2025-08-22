@@ -42,7 +42,7 @@
       z-index: 1001;
     }
 
-    #toggle-button, #toggle-button2 {
+    #toggle-button, #toggle-button2, #toggle-trails1, #toggle-trails2 {
       background-color: #0078D7;
       color: white;
       border: none;
@@ -54,8 +54,17 @@
       width: 100%;
     }
     
-    #toggle-button:hover, #toggle-button2:hover {
+    #toggle-button:hover, #toggle-button2:hover, #toggle-trails1:hover, #toggle-trails2:hover {
       background-color: #005A9E;
+    }
+
+    #toggle-trails1, #toggle-trails2 {
+      background-color: #28a745;
+      margin-bottom: 5px;
+    }
+
+    #toggle-trails1:hover, #toggle-trails2:hover {
+      background-color: #218838;
     }
 
     #opacity-control {
@@ -109,11 +118,15 @@
       font-size: 8px;
     }
 
-    /* Animated dots on polyline */
+    /* Animated dots and arrows on polyline */
     .animated-polyline {
       stroke-dasharray: 1, 14;
       stroke-linecap: round;
       animation: moveDots 4s linear infinite;
+    }
+
+    .animated-arrow {
+      animation: moveArrow 4s linear infinite;
     }
 
     @keyframes moveDots {
@@ -122,6 +135,17 @@
       }
       100% {
         stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes moveArrow {
+      0% {
+        transform: translateX(15px) translateY(15px);
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateX(0px) translateY(0px);
+        opacity: 1;
       }
     }
 
@@ -606,13 +630,13 @@
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
       const arrowSvg = `
-        <svg width="20" height="20" viewBox="0 0 20 20" style="overflow: visible;">
-          <g transform="translate(10, 10) rotate(${bearing - 90})">
+        <svg width="24" height="24" viewBox="0 0 24 24" style="overflow: visible;">
+          <g transform="translate(12, 12) rotate(${bearing - 90})">
             <polygon 
-              points="-6,-3 6,0 -6,3 -3,0" 
+              points="-8,-8 8,0 -8,8 -4,0" 
               fill="${color}" 
               stroke="white" 
-              stroke-width="1" 
+              stroke-width="1.5" 
             />
           </g>
         </svg>
@@ -620,9 +644,9 @@
 
       const arrowIcon = L.divIcon({
         html: arrowSvg,
-        className: 'arrow-icon',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        className: 'arrow-icon animated-arrow',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
