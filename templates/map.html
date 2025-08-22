@@ -290,6 +290,10 @@
       }
     }
 
+    // Define device groups globally for reuse
+    const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+    const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+
     // Trail visibility state
     let trails1Visible = true;
     let trails2Visible = true;
@@ -297,7 +301,6 @@
     // Toggle trail visibility functions
     function toggleTrails1() {
       const button = document.getElementById("toggle-trails1");
-      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
       
       trails1Visible = !trails1Visible;
       
@@ -320,7 +323,6 @@
 
     function toggleTrails2() {
       const button = document.getElementById("toggle-trails2");
-      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
       
       trails2Visible = !trails2Visible;
       
@@ -342,6 +344,7 @@
     }
 
     function showTrailsForDevice(deviceId) {
+      // Show trails (polylines and arrows)
       if (trailLayers[deviceId]) {
         trailLayers[deviceId].forEach(layer => {
           if (!map.hasLayer(layer)) {
@@ -349,9 +352,30 @@
           }
         });
       }
+      
+      // Show markers (current position, history, start triangles)
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        allMarkers[deviceId].current.circle.addTo(map);
+        allMarkers[deviceId].current.label.addTo(map);
+      }
+      
+      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
+        allMarkers[deviceId].history.forEach(marker => {
+          marker.addTo(map);
+        });
+      }
+      
+      // Hide large directional arrow if it exists
+      if (window.largeArrows && window.largeArrows[deviceId]) {
+        map.removeLayer(window.largeArrows[deviceId]);
+        delete window.largeArrows[deviceId];
+      }
     }
 
     function hideTrailsForDevice(deviceId) {
+      console.log(`Hiding trails and markers for device: ${deviceId}`);
+      
+      // Hide trails (polylines and arrows)
       if (trailLayers[deviceId]) {
         trailLayers[deviceId].forEach(layer => {
           if (map.hasLayer(layer)) {
@@ -359,6 +383,101 @@
           }
         });
       }
+      
+      // Hide current position markers
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        if (map.hasLayer(allMarkers[deviceId].current.circle)) {
+          map.removeLayer(allMarkers[deviceId].current.circle);
+        }
+        if (map.hasLayer(allMarkers[deviceId].current.label)) {
+          map.removeLayer(allMarkers[deviceId].current.label);
+        }
+      }
+      
+      // Hide all history markers
+      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
+        allMarkers[deviceId].history.forEach(marker => {
+          if (map.hasLayer(marker)) {
+            map.removeLayer(marker);
+          }
+        });
+      }
+      
+      // Show large directional arrow
+      createLargeDirectionalArrow(deviceId);
+    }
+
+    function createLargeDirectionalArrow(deviceId) {
+      const trail = gpsTrails[deviceId];
+      if (!trail || trail.length < 2) {
+        console.log(`Cannot create arrow for ${deviceId}: insufficient trail data`);
+        return;
+      }
+      
+      const color = deviceColors[deviceId] || "#7F8C8D";
+      console.log(`Creating large arrow for ${deviceId} with color ${color}`);
+      
+      // Get the last two points to determine direction
+      const lastIndex = trail.length - 1;
+      const startPoint = trail[lastIndex - 1];
+      const endPoint = trail[lastIndex];
+      
+      const bearing = calculateBearing(startPoint[0], startPoint[1], endPoint[0], endPoint[1]);
+      console.log(`Arrow bearing for ${deviceId}: ${bearing} degrees`);
+      
+      // Create a very large arrow
+      const largeArrowSvg = `
+        <div style="
+          width: 48px; 
+          height: 48px; 
+          background-color: ${color}; 
+          border: 3px solid white; 
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(${bearing + 45}deg);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+          position: relative;
+        ">
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-${bearing + 45}deg);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+          ">${deviceId}</div>
+        </div>
+      `;
+
+      const largeArrowIcon = L.divIcon({
+        html: largeArrowSvg,
+        className: 'large-directional-arrow',
+        iconSize: [48, 48],
+        iconAnchor: [24, 24]
+      });
+
+      // Position the arrow at the current location (end of trail)
+      const largeArrow = L.marker(endPoint, { 
+        icon: largeArrowIcon,
+        interactive: true
+      });
+      
+      // Add popup with device info
+      const popupContent = `
+        <strong>Device ID:</strong> ${deviceId}<br>
+        <strong>Status:</strong> Trail Hidden<br>
+        <strong>Last Position:</strong> ${endPoint[0].toFixed(6)}, ${endPoint[1].toFixed(6)}<br>
+        <strong>Bearing:</strong> ${bearing.toFixed(1)}°<br>
+        <em>Click "Show Trails" to see full path</em>
+      `;
+      largeArrow.bindPopup(popupContent);
+      
+      // Store reference for cleanup
+      if (!window.largeArrows) window.largeArrows = {};
+      window.largeArrows[deviceId] = largeArrow;
+      
+      largeArrow.addTo(map);
+      console.log(`Large arrow added to map for ${deviceId}`);
     }
 
     // Initialize map with higher max zoom
@@ -522,6 +641,12 @@
     }
 
     function showDeviceMarkers(deviceId) {
+      // Check if trails are visible for this device group
+      const shouldShowMarkers = (firstTableDevices.includes(deviceId) && trails1Visible) || 
+                               (secondTableDevices.includes(deviceId) && trails2Visible);
+      
+      if (!shouldShowMarkers) return; // Don't show markers if trails are hidden
+      
       if (allMarkers[deviceId] && allMarkers[deviceId].current) {
         allMarkers[deviceId].current.circle.addTo(map);
         allMarkers[deviceId].current.label.addTo(map);
@@ -713,13 +838,13 @@
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
       
       const arrowSvg = `
-        <svg width="24" height="24" viewBox="0 0 24 24" style="overflow: visible;">
-          <g transform="translate(12, 12) rotate(${bearing - 90})">
+        <svg width="32" height="32" viewBox="0 0 32 32" style="overflow: visible;">
+          <g transform="translate(16, 16) rotate(${bearing - 90})">
             <polygon 
-              points="-8,-8 8,0 -8,8 -4,0" 
+              points="-12,-10 12,0 -12,10 -6,0" 
               fill="${color}" 
               stroke="white" 
-              stroke-width="1.5" 
+              stroke-width="2" 
             />
           </g>
         </svg>
@@ -728,8 +853,8 @@
       const arrowIcon = L.divIcon({
         html: arrowSvg,
         className: 'arrow-icon animated-arrow',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       });
 
       return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
@@ -766,16 +891,15 @@
         polyline.addTo(map);
       }
 
-      // Add arrow on the most recent segment
-      if (trail.length >= 2) {
-        const lastIndex = trail.length - 1;
-        const recentArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
-        trailLayers[device_id].push(recentArrow);
+      // Add arrows along the trail - one arrow per segment
+      for (let i = 0; i < trail.length - 1; i++) {
+        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
+        trailLayers[device_id].push(arrow);
         
         if (deviceVisibility[device_id] !== false &&
             ((firstTableDevices.includes(device_id) && trails1Visible) || 
              (secondTableDevices.includes(device_id) && trails2Visible))) {
-          recentArrow.addTo(map);
+          arrow.addTo(map);
         }
       }
     }
