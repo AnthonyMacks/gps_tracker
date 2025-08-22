@@ -109,20 +109,18 @@
       font-size: 8px;
     }
 
-    /* Animated dots on polyline */
-    .animated-polyline {
-      stroke-dasharray: 1, 14;
+    /* Remove dot animation, we'll use jumping frog instead */
+    .trail-line {
       stroke-linecap: round;
-      animation: moveDots 4s linear infinite;
     }
 
-    @keyframes moveDots {
-      0% {
-        stroke-dashoffset: 15;
-      }
-      100% {
-        stroke-dashoffset: 0;
-      }
+    .jumping-frog {
+      z-index: 1002;
+      transition: transform 0.3s ease;
+    }
+
+    .jumping-frog.hop {
+      transform: scale(1.2) translateY(-5px);
     }
 
     footer {
