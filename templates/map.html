@@ -109,18 +109,20 @@
       font-size: 8px;
     }
 
-    /* Remove dot animation, we'll use jumping frog instead */
-    .trail-line {
+    /* Animated dots on polyline */
+    .animated-polyline {
+      stroke-dasharray: 1, 14;
       stroke-linecap: round;
+      animation: moveDots 4s linear infinite;
     }
 
-    .jumping-frog {
-      z-index: 1002;
-      transition: transform 0.3s ease;
-    }
-
-    .jumping-frog.hop {
-      transform: scale(1.2) translateY(-5px);
+    @keyframes moveDots {
+      0% {
+        stroke-dashoffset: 15;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
     }
 
     footer {
@@ -641,12 +643,12 @@
       }
       trailLayers[device_id] = [];
 
-      // Create the main polyline (static trail)
+      // Create the main polyline with animated dots
       const polyline = L.polyline(trail, {
         color: color,
-        weight: 3,
-        opacity: 0.6,
-        className: 'trail-line'
+        weight: 4,
+        opacity: 0.8,
+        className: 'animated-polyline'
       });
       
       trailLayers[device_id].push(polyline);
@@ -654,9 +656,6 @@
       if (deviceVisibility[device_id] !== false) {
         polyline.addTo(map);
       }
-
-      // Start the frog jumping animation
-      animateFrogAlongTrail(device_id, trail, color);
 
       // Add arrow on the most recent segment
       if (trail.length >= 2) {
@@ -668,99 +667,6 @@
           recentArrow.addTo(map);
         }
       }
-    }
-
-    function animateFrogAlongTrail(device_id, trail, color) {
-      if (!trail || trail.length < 2) return;
-      
-      // Clear any existing frog animations for this device
-      if (window.frogIntervals && window.frogIntervals[device_id]) {
-        clearInterval(window.frogIntervals[device_id]);
-      }
-      if (!window.frogIntervals) window.frogIntervals = {};
-      
-      let currentSegment = 0;
-      
-      function jumpToNextSegment() {
-        if (currentSegment >= trail.length - 1) {
-          currentSegment = 0; // Loop back to start
-        }
-        
-        console.log(`Frog ${device_id} jumping from segment ${currentSegment} to ${currentSegment + 1}`);
-        createJumpingFrog(trail[currentSegment], trail[currentSegment + 1], color, device_id);
-        
-        currentSegment++;
-      }
-      
-      // Start immediately, then repeat every 4 seconds
-      jumpToNextSegment();
-      window.frogIntervals[device_id] = setInterval(jumpToNextSegment, 4000);
-    }
-
-    function createJumpingFrog(startPoint, endPoint, color, device_id) {
-      console.log(`Creating frog for ${device_id} from`, startPoint, 'to', endPoint);
-      
-      // Create frog emoji icon
-      const frogIcon = L.divIcon({
-        html: `<div style="
-          font-size: 24px;
-          text-align: center;
-          line-height: 24px;
-          width: 24px;
-          height: 24px;
-          background: rgba(255,255,255,0.8);
-          border-radius: 50%;
-          border: 2px solid ${color};
-        ">🐸</div>`,
-        className: 'jumping-frog',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
-
-      const frog = L.marker(startPoint, { 
-        icon: frogIcon,
-        interactive: false
-      });
-
-      // Always add frog to map for testing
-      frog.addTo(map);
-      console.log(`Frog added to map for ${device_id}`);
-
-      // Store frog reference for cleanup
-      if (!trailLayers[device_id]) trailLayers[device_id] = [];
-      trailLayers[device_id].push(frog);
-
-      // Animate frog jumping
-      const duration = 3000; // 3 seconds to jump between points
-      const startTime = Date.now();
-      
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Linear interpolation for position
-        const currentLat = startPoint[0] + (endPoint[0] - startPoint[0]) * progress;
-        const currentLon = startPoint[1] + (endPoint[1] - startPoint[1]) * progress;
-        
-        // Add a small bounce effect
-        const bounce = Math.sin(progress * Math.PI) * 0.0001;
-        
-        frog.setLatLng([currentLat + bounce, currentLon]);
-        
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          // Remove frog after animation completes
-          setTimeout(() => {
-            if (map.hasLayer(frog)) {
-              map.removeLayer(frog);
-              console.log(`Frog removed for ${device_id}`);
-            }
-          }, 500);
-        }
-      };
-      
-      requestAnimationFrame(animate);
     }
 
     function getAgeLabel(ts) {
