@@ -1,14 +1,4 @@
-#debug::before {
-        font-size: 16px;
-        top: 0px;
-        left: 5px;
-      }      #debug:hover {
-        width: 150px;
-        min-height: 80px;
-      }      #debug:hover {
-        width: 180px;
-        min-height: 90px;
-      }<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
@@ -53,174 +43,6 @@
       z-index: 1001;
     }
 
-    /* Mobile responsive styles */
-    @media (max-width: 768px) {
-      #info {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        left: auto;
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
-        font-size: 11px;
-        padding: 6px;
-      }
-
-      #info2 {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        left: auto;
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
-        font-size: 11px;
-        padding: 6px;
-      }
-
-      #info strong, #info2 strong {
-        font-size: 12px;
-      }
-
-      table {
-        font-size: 10px;
-      }
-
-      th, td {
-        padding: 4px 2px;
-      }
-
-      #toggle-button, #toggle-button2 {
-        font-size: 12px;
-        padding: 6px 12px;
-      }
-
-      #opacity-control {
-        bottom: 60px;
-        left: 10px;
-        font-size: 10px;
-        padding: 6px;
-      }
-
-      #debug {
-        bottom: 10px;
-        right: 10px;
-        font-size: 9px;
-        width: 30px;
-        height: 22px;
-      }
-
-      #debug::before {
-        font-size: 18px;
-        top: 1px;
-        left: 6px;
-      }
-
-      footer {
-        bottom: 10px;
-        left: 10px;
-        font-size: 10px;
-        padding: 2px 4px;
-      }
-    }
-
-    /* Portrait phone adjustments */
-    @media (max-width: 480px) and (orientation: portrait) {
-      #info {
-        max-height: 30%;
-        font-size: 10px;
-        width: calc(50% - 10px);
-      }
-
-      #info2 {
-        top: 35%;
-        max-height: 30%;
-        font-size: 10px;
-        width: calc(50% - 10px);
-      }
-
-      table {
-        font-size: 9px;
-      }
-
-      th, td {
-        padding: 3px 1px;
-      }
-
-      #toggle-button, #toggle-button2 {
-        font-size: 11px;
-        padding: 5px 10px;
-      }
-
-      #opacity-control {
-        bottom: 60px;
-        left: 10px;
-        font-size: 9px;
-        padding: 4px;
-      }
-
-      #debug {
-        bottom: 10px;
-        right: 10px;
-        font-size: 8px;
-        width: 28px;
-        height: 20px;
-      }
-
-      #debug::before {
-        font-size: 16px;
-        top: 0px;
-        left: 6px;
-      }
-
-      footer {
-        font-size: 9px;
-      }
-    }
-
-    /* Landscape phone adjustments */
-    @media (max-width: 768px) and (orientation: landscape) {
-      #info {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        left: auto;
-        width: 200px;
-        max-width: 200px;
-        max-height: 40%;
-      }
-
-      #info2 {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        left: auto;
-        width: 200px;
-        max-width: 200px;
-        max-height: 40%;
-      }
-
-      #opacity-control {
-        bottom: 10px;
-        left: 10px;
-        font-size: 10px;
-      }
-
-      #debug {
-        bottom: 10px;
-        left: 10px;
-        font-size: 9px;
-        width: 25px;
-        height: 18px;
-      }
-
-      #debug:hover {
-        width: 160px;
-        min-height: 85px;
-      }
-    }
-
     #toggle-button, #toggle-button2 {
       background-color: #0078D7;
       color: white;
@@ -231,7 +53,7 @@
       cursor: pointer;
       margin-bottom: 8px;
       width: 100%;
-      touch-action: manipulation; /* Improves touch responsiveness */
+      touch-action: manipulation;
     }
     
     #toggle-button:hover, #toggle-button2:hover {
@@ -289,46 +111,15 @@
       font-size: 8px;
     }
 
-    /* Animated dots and arrows on polyline */
-    .animated-polyline {
-      stroke-dasharray: 1, 14;
-      stroke-linecap: round;
-      animation: moveDots 4s linear infinite;
-    }
-
-    .animated-arrow {
-      animation: moveArrow 4s linear infinite;
-    }
-
-    @keyframes moveDots {
-      0% {
-        stroke-dashoffset: 15;
-      }
-      100% {
-        stroke-dashoffset: 0;
-      }
-    }
-
-    @keyframes moveArrow {
-      0% {
-        transform: translateX(15px) translateY(15px);
-        opacity: 0.7;
-      }
-      100% {
-        transform: translateX(0px) translateY(0px);
-        opacity: 1;
-      }
-    }
-
     footer {
       position: absolute;
       bottom: 10px;
       left: 10px;
-      font-size: 12px;
+      font-size: 11px;
       color: #666;
       font-family: sans-serif;
-      background-color: rgba(255,255,255,0.6);
-      padding: 4px 8px;
+      background-color: rgba(255,255,255,0.7);
+      padding: 3px 6px;
       border-radius: 6px;
       z-index: 1001;
     }
@@ -347,14 +138,238 @@
       position: absolute;
       bottom: 80px;
       right: 10px;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
       color: white;
-      padding: 10px;
+      padding: 6px;
       border-radius: 6px;
       font-family: monospace;
-      font-size: 11px;
-      max-width: 300px;
+      font-size: 10px;
+      max-width: 250px;
       z-index: 1001;
+    }
+
+    /* Animated dots on polyline */
+    .animated-polyline {
+      stroke-dasharray: 1, 14;
+      stroke-linecap: round;
+      animation: moveDots 4s linear infinite;
+    }
+
+    .animated-arrow {
+      animation: moveArrowAlongPath 4s linear infinite;
+    }
+
+    @keyframes moveDots {
+      0% {
+        stroke-dashoffset: 15;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes moveArrowAlongPath {
+      0% {
+        transform: translateX(-7px) translateY(-7px);
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(7px) translateY(7px);
+        opacity: 0.6;
+      }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+      font-size: 11px;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px 4px;
+      text-align: center;
+      word-break: break-all;
+    }
+    
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      color: #333;
+      position: sticky;
+      top: 0;
+      font-size: 10px;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    tr:hover {
+      background-color: #e6f3ff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .row-number {
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      #info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        left: auto;
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info2 {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        left: auto;
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info strong, #info2 strong {
+        font-size: 12px;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px 2px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      #opacity-control {
+        bottom: 60px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
+      #debug {
+        bottom: 120px;
+        left: 10px;
+        font-size: 9px;
+        padding: 6px;
+        max-width: 200px;
+      }
+
+      footer {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+        padding: 2px 4px;
+      }
+    }
+
+    /* Portrait phone adjustments */
+    @media (max-width: 480px) and (orientation: portrait) {
+      #info {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+
+      #info2 {
+        top: 35%;
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+
+      table {
+        font-size: 9px;
+      }
+
+      th, td {
+        padding: 3px 1px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+
+      #opacity-control {
+        bottom: 60px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
+      }
+
+      #debug {
+        bottom: 110px;
+        left: 10px;
+        font-size: 8px;
+        padding: 4px;
+        max-width: 150px;
+      }
+
+      footer {
+        font-size: 9px;
+      }
+    }
+
+    /* Landscape phone adjustments */
+    @media (max-width: 768px) and (orientation: landscape) {
+      #info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        left: auto;
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+
+      #info2 {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        left: auto;
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+
+      #opacity-control {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+      }
+
+      #debug {
+        bottom: 60px;
+        left: 10px;
+        font-size: 9px;
+        max-width: 180px;
+      }
     }
     
   </style>
@@ -406,14 +421,12 @@
   </div>
   
   <div id="debug">
-    <div id="debug-content">
-      <strong>Debug Info:</strong><br>
-      Connected: <span id="socket-status">❌</span><br>
-      Total Devices: <span id="device-count">0</span><br>
-      Total Points: <span id="point-count">0</span><br>
-      Last Update: <span id="last-update">never</span><br>
-      Current Zoom: <span id="current-zoom">13</span>
-    </div>
+    <strong>Debug Info:</strong><br>
+    Connected: <span id="socket-status">❌</span><br>
+    Total Devices: <span id="device-count">0</span><br>
+    Total Points: <span id="point-count">0</span><br>
+    Last Update: <span id="last-update">never</span><br>
+    Current Zoom: <span id="current-zoom">13</span>
   </div>
 
   <footer>
@@ -448,212 +461,6 @@
       } else {
         table.style.display = "none";
         button.textContent = "Show Table";
-      }
-    }
-
-    // Define device groups globally for reuse - attach to window for global access
-    window.firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-    window.secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-    const firstTableDevices = window.firstTableDevices;
-    const secondTableDevices = window.secondTableDevices;
-
-    // Trail visibility state
-    let trails1Visible = true;
-    let trails2Visible = true;
-
-    // Toggle trail visibility functions
-    function toggleTrails1() {
-      const button = document.getElementById("toggle-trails1");
-      
-      trails1Visible = !trails1Visible;
-      
-      if (trails1Visible) {
-        button.textContent = "Hide Trails";
-        button.classList.remove("hidden-trails");
-        // Show trails for devices I-XV
-        firstTableDevices.forEach(deviceId => {
-          showTrailsForDevice(deviceId);
-        });
-      } else {
-        button.textContent = "Show Trails";
-        button.classList.add("hidden-trails");
-        // Hide trails for devices I-XV
-        firstTableDevices.forEach(deviceId => {
-          hideTrailsForDevice(deviceId);
-        });
-      }
-    }
-
-    function toggleTrails2() {
-      const button = document.getElementById("toggle-trails2");
-      
-      trails2Visible = !trails2Visible;
-      
-      if (trails2Visible) {
-        button.textContent = "Hide Trails";
-        button.classList.remove("hidden-trails");
-        // Show trails for devices XVI-XXVII
-        secondTableDevices.forEach(deviceId => {
-          showTrailsForDevice(deviceId);
-        });
-      } else {
-        button.textContent = "Show Trails";
-        button.classList.add("hidden-trails");
-        // Hide trails for devices XVI-XXVII
-        secondTableDevices.forEach(deviceId => {
-          hideTrailsForDevice(deviceId);
-        });
-      }
-    }
-
-    function showTrailsForDevice(deviceId) {
-      console.log(`Showing trails and markers for device: ${deviceId}`);
-      
-      // Show trails (polylines and arrows)
-      if (trailLayers[deviceId]) {
-        trailLayers[deviceId].forEach(layer => {
-          if (!map.hasLayer(layer)) {
-            layer.addTo(map);
-          }
-        });
-      }
-      
-      // Show current position markers
-      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
-        if (!map.hasLayer(allMarkers[deviceId].current.circle)) {
-          allMarkers[deviceId].current.circle.addTo(map);
-        }
-        if (!map.hasLayer(allMarkers[deviceId].current.label)) {
-          allMarkers[deviceId].current.label.addTo(map);
-        }
-      }
-      
-      // Show all history markers
-      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
-        allMarkers[deviceId].history.forEach(marker => {
-          if (!map.hasLayer(marker)) {
-            marker.addTo(map);
-          }
-        });
-      }
-      
-      // Hide large directional arrow if it exists
-      if (window.largeArrows && window.largeArrows[deviceId]) {
-        if (map.hasLayer(window.largeArrows[deviceId])) {
-          map.removeLayer(window.largeArrows[deviceId]);
-        }
-        delete window.largeArrows[deviceId];
-        console.log(`Large arrow removed for ${deviceId}`);
-      }
-    }
-
-    function hideTrailsForDevice(deviceId) {
-      console.log(`Hiding trails and markers for device: ${deviceId}`);
-      
-      // Hide trails (polylines and arrows)
-      if (trailLayers[deviceId]) {
-        trailLayers[deviceId].forEach(layer => {
-          if (map.hasLayer(layer)) {
-            map.removeLayer(layer);
-          }
-        });
-      }
-      
-      // Hide current position markers
-      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
-        if (map.hasLayer(allMarkers[deviceId].current.circle)) {
-          map.removeLayer(allMarkers[deviceId].current.circle);
-        }
-        if (map.hasLayer(allMarkers[deviceId].current.label)) {
-          map.removeLayer(allMarkers[deviceId].current.label);
-        }
-      }
-      
-      // Hide all history markers
-      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
-        allMarkers[deviceId].history.forEach(marker => {
-          if (map.hasLayer(marker)) {
-            map.removeLayer(marker);
-          }
-        });
-      }
-      
-      // Show large directional arrow
-      createLargeDirectionalArrow(deviceId);
-    }
-
-    function createLargeDirectionalArrow(deviceId) {
-      console.log(`Attempting to create large arrow for device: ${deviceId}`);
-      
-      const trail = gpsTrails[deviceId];
-      if (!trail || trail.length < 2) {
-        console.log(`Cannot create arrow for ${deviceId}: trail length = ${trail ? trail.length : 0}`);
-        return;
-      }
-      
-      const color = deviceColors[deviceId] || "#7F8C8D";
-      console.log(`Creating large arrow for ${deviceId} with color ${color}`);
-      
-      // Get the last two points to determine direction
-      const lastIndex = trail.length - 1;
-      const startPoint = trail[lastIndex - 1];
-      const endPoint = trail[lastIndex];
-      
-      console.log(`Start point:`, startPoint, `End point:`, endPoint);
-      
-      const bearing = calculateBearing(startPoint[0], startPoint[1], endPoint[0], endPoint[1]);
-      console.log(`Arrow bearing for ${deviceId}: ${bearing} degrees`);
-      
-      // Create a simple large circle with device ID instead of arrow
-      const circleHtml = `
-        <div style="
-          width: 50px;
-          height: 50px;
-          background-color: ${color};
-          border: 4px solid white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 14px;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        ">${deviceId}</div>
-      `;
-
-      const largeArrowIcon = L.divIcon({
-        html: circleHtml,
-        className: 'large-directional-arrow',
-        iconSize: [58, 58],
-        iconAnchor: [29, 29]
-      });
-
-      // Position the arrow at the current location (end of trail)
-      const largeArrow = L.marker(endPoint, { 
-        icon: largeArrowIcon,
-        interactive: true
-      });
-      
-      // Add popup with device info
-      const popupContent = `
-        <strong>Device ID:</strong> ${deviceId}<br>
-        <strong>Status:</strong> Trail Hidden<br>
-        <strong>Last Position:</strong> ${endPoint[0].toFixed(6)}, ${endPoint[1].toFixed(6)}<br>
-        <strong>Bearing:</strong> ${bearing.toFixed(1)}°<br>
-        <em>Click "Show Trails" to see full path</em>
-      `;
-      largeArrow.bindPopup(popupContent);
-      
-      // Store reference for cleanup
-      if (!window.largeArrows) window.largeArrows = {};
-      window.largeArrows[deviceId] = largeArrow;
-      
-      try {
-        largeArrow.addTo(map);
-        console.log(`✅ Large circle marker successfully added to map for ${deviceId}`);
-      } catch (error) {
-        console.error(`❌ Error adding large circle marker for ${deviceId}:`, error);
       }
     }
 
@@ -1059,209 +866,3 @@
       if (deviceVisibility[device_id] !== false) {
         polyline.addTo(map);
       }
-
-      // Add arrows along the trail - one arrow per segment
-      for (let i = 0; i < trail.length - 1; i++) {
-        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
-        trailLayers[device_id].push(arrow);
-        
-        if (deviceVisibility[device_id] !== false) {
-          arrow.addTo(map);
-        }
-      }
-    }
-
-    function getAgeLabel(ts) {
-      const iso = ts.replace(" ", "T") + "Z";
-      const pingTime = new Date(iso);
-      if (isNaN(pingTime)) {
-        console.warn("Bad timestamp:", ts);
-        return "——";
-      }
-
-      const nowSec = Date.now();
-      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
-      if (diffSec < 60)   return `${diffSec}s ago`;
-      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
-      return `${Math.floor(diffSec/3600)}h ago`;
-    }
-
-    function getRowClass(ts, sats) {
-      const pingTime = new Date(ts);
-      const now = new Date();
-      const diff = (now - pingTime) / 1000;
-
-      if (sats !== undefined && sats < 4) return "row-low-sats";
-
-      if (diff <= 180) return "row-active";
-      if (diff <= 360) return "row-warm";
-      return "row-stale";
-    }
-
-    function updateTable() {
-      const tbody1 = document.querySelector("#device-table tbody");
-      const tbody2 = document.querySelector("#device-table2 tbody");
-      tbody1.innerHTML = "";
-      tbody2.innerHTML = "";
-
-      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
-        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
-      );
-
-      // Devices I-XV go to first table, XVI-XXVII go to second table
-      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-
-      for (const id of sortedIDs) {
-        const packet = latestPackets[id];
-        const count  = packetCounts[id] || 0;
-        const sats   = packet.sats ?? "—";
-        const lat    = parseFloat(packet.latitude).toFixed(6);
-        const lon    = parseFloat(packet.longitude).toFixed(6);
-
-        const row = document.createElement("tr");
-        row.className = getRowClass(packet.timestamp, packet.sats);
-
-        row.innerHTML = `
-          <td>${id}</td>
-          <td>${lat}</td>
-          <td>${lon}</td>
-          <td>${count}</td>
-          <td>${sats}</td>
-        `;
-
-        row.style.cursor = "pointer";
-        row.addEventListener("click", () => {
-          toggleDeviceVisibility(id);
-          updateTable();
-        });
-
-        if (selectedDevice === id) {
-          row.style.border = "2px solid #3498DB";
-        }
-
-        // Add row to appropriate table
-        if (firstTableDevices.includes(id)) {
-          tbody1.appendChild(row);
-        } else if (secondTableDevices.includes(id)) {
-          tbody2.appendChild(row);
-        }
-      }
-    }
-
-    function updateDebugInfo() {
-      deviceCount.textContent = Object.keys(latestPackets).length;
-      pointCount.textContent = totalPoints;
-      lastUpdate.textContent = new Date().toLocaleTimeString();
-    }
-    
-    socket.on("gps_update", (data) => {
-      processGPSUpdate(data);
-    });
-
-    // Test data generator for debugging (remove in production) - now supports 27 devices
-    function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
-                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-      const baseLat = -33.87;
-      const baseLon = 151.21;
-      
-      testDevices.forEach((deviceId, index) => {
-        const lat = baseLat + (Math.random() - 0.5) * 0.01;
-        const lon = baseLon + (Math.random() - 0.5) * 0.01;
-        
-        const testData = {
-          device_id: deviceId,
-          latitude: lat.toString(),
-          longitude: lon.toString(),
-          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
-          sats: Math.floor(Math.random() * 12) + 4
-        };
-        
-        // Process test data directly instead of emitting through socket
-        processGPSUpdate(testData);
-      });
-    }
-
-    // Extract GPS processing logic into a separate function
-    function processGPSUpdate(data) {
-      console.log('📡 Processing GPS update:', data);
-      
-      const { latitude, longitude, device_id, timestamp } = data;
-      if (!latitude || !longitude || !device_id || !timestamp) {
-        console.warn('Missing required data:', data);
-        return;
-      }
-
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      
-      if (isNaN(lat) || isNaN(lon)) {
-        console.warn('Invalid coordinates:', data);
-        return;
-      }
-
-      // Store the packet with corrected timestamp
-      latestPackets[device_id] = {
-        ...data,
-        timestamp: timestamp.replace(" ", "T") + "Z"
-      };
-
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-
-      // Move the last "current" point into history
-      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
-        const lastPoint = {
-          ...latestPackets[device_id],
-          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
-          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
-        };
-        addDataPoint(lastPoint, false);
-      }
-      
-      // Add the new current marker
-      addDataPoint(data, true);
-
-      // Update map bounds
-      allPointsBounds.extend([lat, lon]);
-      
-      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
-      if (!hasInitialData) {
-        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-        hasInitialData = true;
-      }
-
-      // Build the trail
-      gpsTrails[device_id] = gpsTrails[device_id] || [];
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
-
-      // Redraw trail with arrows
-      drawTrail(device_id);
-
-      // Update UI
-      updateTable();
-      updateDebugInfo();
-
-      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
-    }
-
-    // Uncomment the line below to generate test data every 5 seconds
-    // setInterval(generateTestData, 5000);
-
-    setInterval(updateTable, 10000);
-    
-    document.getElementById("build-time").textContent =
-      new Date().toLocaleString("en-AU", {
-        timeZone: "Australia/Sydney",
-        hour12: false,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-  </script>
-</body>
-</html>
