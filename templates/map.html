@@ -61,10 +61,20 @@
     #toggle-trails1, #toggle-trails2 {
       background-color: #28a745;
       margin-bottom: 5px;
+      display: block !important;
+      visibility: visible !important;
     }
 
     #toggle-trails1:hover, #toggle-trails2:hover {
       background-color: #218838;
+    }
+
+    #toggle-trails1.hidden-trails, #toggle-trails2.hidden-trails {
+      background-color: #dc3545;
+    }
+
+    #toggle-trails1.hidden-trails:hover, #toggle-trails2.hidden-trails:hover {
+      background-color: #c82333;
     }
 
     #opacity-control {
@@ -194,6 +204,7 @@
     <strong>📡 GPS Data (I-XV)</strong>
     
     <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
+    <button id="toggle-trails1" onclick="toggleTrails1()">Hide Trails</button>
    
     <table id="device-table">
       <thead>
@@ -213,6 +224,7 @@
     <strong>📡 GPS Data (XVI-XXVII)</strong>
     
     <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
+    <button id="toggle-trails2" onclick="toggleTrails2()">Hide Trails</button>
    
     <table id="device-table2">
       <thead>
@@ -275,6 +287,77 @@
       } else {
         table.style.display = "none";
         button.textContent = "Show Table";
+      }
+    }
+
+    // Trail visibility state
+    let trails1Visible = true;
+    let trails2Visible = true;
+
+    // Toggle trail visibility functions
+    function toggleTrails1() {
+      const button = document.getElementById("toggle-trails1");
+      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+      
+      trails1Visible = !trails1Visible;
+      
+      if (trails1Visible) {
+        button.textContent = "Hide Trails";
+        button.classList.remove("hidden-trails");
+        // Show trails for devices I-XV
+        firstTableDevices.forEach(deviceId => {
+          showTrailsForDevice(deviceId);
+        });
+      } else {
+        button.textContent = "Show Trails";
+        button.classList.add("hidden-trails");
+        // Hide trails for devices I-XV
+        firstTableDevices.forEach(deviceId => {
+          hideTrailsForDevice(deviceId);
+        });
+      }
+    }
+
+    function toggleTrails2() {
+      const button = document.getElementById("toggle-trails2");
+      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+      
+      trails2Visible = !trails2Visible;
+      
+      if (trails2Visible) {
+        button.textContent = "Hide Trails";
+        button.classList.remove("hidden-trails");
+        // Show trails for devices XVI-XXVII
+        secondTableDevices.forEach(deviceId => {
+          showTrailsForDevice(deviceId);
+        });
+      } else {
+        button.textContent = "Show Trails";
+        button.classList.add("hidden-trails");
+        // Hide trails for devices XVI-XXVII
+        secondTableDevices.forEach(deviceId => {
+          hideTrailsForDevice(deviceId);
+        });
+      }
+    }
+
+    function showTrailsForDevice(deviceId) {
+      if (trailLayers[deviceId]) {
+        trailLayers[deviceId].forEach(layer => {
+          if (!map.hasLayer(layer)) {
+            layer.addTo(map);
+          }
+        });
+      }
+    }
+
+    function hideTrailsForDevice(deviceId) {
+      if (trailLayers[deviceId]) {
+        trailLayers[deviceId].forEach(layer => {
+          if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        });
       }
     }
 
@@ -677,7 +760,9 @@
       
       trailLayers[device_id].push(polyline);
       
-      if (deviceVisibility[device_id] !== false) {
+      if (deviceVisibility[device_id] !== false && 
+          ((firstTableDevices.includes(device_id) && trails1Visible) || 
+           (secondTableDevices.includes(device_id) && trails2Visible))) {
         polyline.addTo(map);
       }
 
@@ -687,7 +772,9 @@
         const recentArrow = addArrowToSegment(trail[lastIndex - 1], trail[lastIndex], color);
         trailLayers[device_id].push(recentArrow);
         
-        if (deviceVisibility[device_id] !== false) {
+        if (deviceVisibility[device_id] !== false &&
+            ((firstTableDevices.includes(device_id) && trails1Visible) || 
+             (secondTableDevices.includes(device_id) && trails2Visible))) {
           recentArrow.addTo(map);
         }
       }
