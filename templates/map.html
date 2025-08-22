@@ -3,6 +3,7 @@
 <head>
   <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
@@ -15,11 +16,11 @@
       max-width: 340px;
       max-height: 70%;
       overflow-y: auto;
-      background: rgba(255,255,255,0.85);
-      padding: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 8px;
       border-radius: 8px;
       font-family: sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
@@ -32,14 +33,157 @@
       max-width: 340px;
       max-height: 70%;
       overflow-y: auto;
-      background: rgba(255,255,255,0.85);
-      padding: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 8px;
       border-radius: 8px;
       font-family: sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        width: calc(100% - 20px);
+        max-height: 40%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info2 {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        top: auto;
+        max-width: none;
+        width: calc(100% - 20px);
+        max-height: 40%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info strong, #info2 strong {
+        font-size: 12px;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px 2px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      #opacity-control {
+        bottom: 160px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
+      #debug {
+        bottom: 160px;
+        right: 10px;
+        font-size: 9px;
+        padding: 6px;
+        max-width: 200px;
+      }
+
+      footer {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+        padding: 2px 4px;
+      }
+    }
+
+    /* Portrait phone adjustments */
+    @media (max-width: 480px) and (orientation: portrait) {
+      #info {
+        max-height: 35%;
+        font-size: 10px;
+      }
+
+      #info2 {
+        max-height: 35%;
+        font-size: 10px;
+      }
+
+      table {
+        font-size: 9px;
+      }
+
+      th, td {
+        padding: 3px 1px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+
+      #opacity-control {
+        display: none; /* Hide on very small screens */
+      }
+
+      #debug {
+        display: none; /* Hide debug on very small screens */
+      }
+
+      footer {
+        font-size: 9px;
+      }
+    }
+
+    /* Landscape phone adjustments */
+    @media (max-width: 768px) and (orientation: landscape) {
+      #info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        left: auto;
+        width: 280px;
+        max-width: 280px;
+        max-height: 80%;
+      }
+
+      #info2 {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: auto;
+        width: 280px;
+        max-width: 280px;
+        max-height: 80%;
+        bottom: auto;
+      }
+
+      #opacity-control {
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 10px;
+      }
+
+      #debug {
+        bottom: 10px;
+        right: 10px;
+        font-size: 9px;
+        max-width: 150px;
+      }
     }
 
     #toggle-button, #toggle-button2 {
@@ -50,8 +194,9 @@
       font-size: 14px;
       border-radius: 4px;
       cursor: pointer;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       width: 100%;
+      touch-action: manipulation; /* Improves touch responsiveness */
     }
     
     #toggle-button:hover, #toggle-button2:hover {
@@ -63,23 +208,23 @@
       bottom: 60px;
       left: 10px;
       background: rgba(255,255,255,0.9);
-      padding: 10px;
+      padding: 8px;
       border-radius: 6px;
       font-family: sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
     }
 
     #opacity-control label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       font-weight: bold;
     }
 
     #opacity-control input[type="range"] {
-      width: 150px;
-      margin-right: 10px;
+      width: 120px;
+      margin-right: 8px;
     }
 
     .row-active { background-color: #D5F5E3; }
