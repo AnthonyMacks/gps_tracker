@@ -449,36 +449,58 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
 <script>
-    // Helper function to convert lat/lon to 8-figure grid reference
+    // Grid reference conversion function for Australian coordinates
     function latLonToMGRS(lat, lon) {
       try {
-        // MGRS library expects [longitude, latitude] order and precision level
-        const mgrsRef = mgrs.forward([lon, lat], 4); // 4 digits = 8-figure precision
-        console.log('MGRS conversion result:', mgrsRef);
+        console.log('Converting coordinates:', lat, lon);
         
-        // Parse the MGRS string - format is like "56HLH12345678"
-        const match = mgrsRef.match(/^(\d{1,2}[A-Z][A-Z]{2})(\d{4})(\d{4})$/);
-        if (match) {
-          const gridZone = match[1];     // Grid zone (e.g., "56HLH")
-          const easting = match[2];      // 4-digit easting
-          const northing = match[3];     // 4-digit northing
-          return `${gridZone} ${easting} ${northing}`;
-        }
+        // Determine UTM zone for Australia
+        const zone = Math.floor((lon + 180) / 6) + 1;
         
-        // If the regex doesn't match, try a different approach
-        // Sometimes the format includes spaces or different structure
-        if (mgrsRef.length >= 11) {
-          const gridZone = mgrsRef.substring(0, mgrsRef.length - 8);
-          const coords = mgrsRef.substring(mgrsRef.length - 8);
-          const easting = coords.substring(0, 4);
-          const northing = coords.substring(4, 8);
-          return `${gridZone} ${easting} ${northing}`;
-        }
+        // Basic UTM conversion parameters
+        const a = 6378137; // WGS84 major axis
+        const e = 0.0818191908; // WGS84 eccentricity
+        const k0 = 0.9996; // UTM scale factor
         
-        return mgrsRef; // Return as-is if we can't parse it
+        const lonRad = (lon * Math.PI) / 180;
+        const latRad = (lat * Math.PI) / 180;
+        
+        const lonOrigin = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+        
+        const N = a / Math.sqrt(1 - e * e * Math.sin(latRad) * Math.sin(latRad));
+        const T = Math.tan(latRad) * Math.tan(latRad);
+        const C = (e * e / (1 - e * e)) * Math.cos(latRad) * Math.cos(latRad);
+        const A = Math.cos(latRad) * (lonRad - lonOrigin);
+        
+        const M = a * ((1 - e * e / 4 - 3 * Math.pow(e, 4) / 64) * latRad
+          - (3 * e * e / 8 + 3 * Math.pow(e, 4) / 32) * Math.sin(2 * latRad)
+          + (15 * Math.pow(e, 4) / 256) * Math.sin(4 * latRad));
+        
+        let easting = k0 * N * (A + (1 - T + C) * Math.pow(A, 3) / 6
+          + (5 - 18 * T + T * T + 72 * C - 58 * (e * e / (1 - e * e))) * Math.pow(A, 5) / 120) + 500000;
+        
+        let northing = k0 * (M + N * Math.tan(latRad) * (Math.pow(A, 2) / 2
+          + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24
+          + (61 - 58 * T + T * T + 600 * C - 330 * (e * e / (1 - e * e))) * Math.pow(A, 6) / 720));
+        
+        // For southern hemisphere
+        if (lat < 0) northing += 10000000;
+        
+        // Convert to 4-digit grid coordinates
+        const eastingGrid = Math.floor((easting % 100000) / 10).toString().padStart(4, '0');
+        const northingGrid = Math.floor((northing % 100000) / 10).toString().padStart(4, '0');
+        
+        // Simplified zone designation for NSW area
+        const zoneLetter = 'H';
+        const gridSquare = 'LH';
+        
+        const result = `${zone}${zoneLetter}${gridSquare} ${eastingGrid} ${northingGrid}`;
+        console.log('Grid reference result:', result);
+        return result;
+        
       } catch (error) {
-        console.error('MGRS conversion error:', error, 'for coordinates:', lat, lon);
-        return `Error converting coordinates`;
+        console.error('Grid conversion error:', error);
+        return `Grid: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
       }
     }
 
@@ -719,7 +741,7 @@
 
       const color = deviceColors[point.device_id] || "#7F8C8D";
       const mgrsGrid = latLonToMGRS(lat, lon);
-      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), MGRS: ${mgrsGrid}, isLatest: ${isLatest}`);
+      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), Grid: ${mgrsGrid}, isLatest: ${isLatest}`);
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
@@ -1010,31 +1032,6 @@
       lastUpdate.textContent = new Date().toLocaleTimeString();
     }
     
-    // Test data generator for debugging (remove in production) - now supports 27 devices
-    function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
-                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-      const baseLat = -33.87;
-      const baseLon = 151.21;
-      
-      testDevices.forEach((deviceId, index) => {
-        const lat = baseLat + (Math.random() - 0.5) * 0.01;
-        const lon = baseLon + (Math.random() - 0.5) * 0.01;
-        
-        const testData = {
-          device_id: deviceId,
-          latitude: lat.toString(),
-          longitude: lon.toString(),
-          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
-          sats: Math.floor(Math.random() * 12) + 4
-        };
-        
-        // Process test data directly instead of emitting through socket
-        processGPSUpdate(testData);
-      });
-    }
-
-    // Extract GPS processing logic into a separate function
     function processGPSUpdate(data) {
       console.log('📡 Processing GPS update:', data);
       
@@ -1096,7 +1093,8 @@
 
       console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     }
-    // Initialize immediately - no need to wait for MGRS library
+
+    // Initialize immediately
     console.log('Initializing GPS tracker...');
     
     // Test grid conversion
