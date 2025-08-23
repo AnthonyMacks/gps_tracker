@@ -1,16 +1,7 @@
 <!DOCTYPE html>
 
 <html>
-<head><style>
-.left-of-center-image {
-    position: absolute;
-    top: 20px;
-    left: 40%;
-    transform: translateX(-50%);
-    max-width: 150px;
-    z-index: 1000;
-}
-</style>
+<head>
 <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
@@ -395,7 +386,7 @@
     
   </style>
 </head>
-<body><img alt="SCU Crest" class="left-of-center-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
+<body>
 <div id="map"></div>
 <div id="info">
 <strong>📡 GPS MacksTrack Data (I-XV)</strong>
@@ -1094,5 +1085,24 @@
         second: '2-digit'
       });
   </script>
-</body>
+<script>
+// Define custom SCU crest icon
+const scuCrestIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+});
+
+// Example device data with multiple points
+const devices = [
+  { id: 'Device1', points: [[-33.865143, 151.209900], [-33.866000, 151.210000]] },
+  { id: 'Device2', points: [[-33.870000, 151.215000], [-33.871000, 151.216000]] }
+];
+
+// Add only the starting point with the crest icon
+devices.forEach(device => {
+  const startPoint = device.points[0];
+  L.marker(startPoint, { icon: scuCrestIcon }).addTo(map);
+});
+</script></body>
 </html>
