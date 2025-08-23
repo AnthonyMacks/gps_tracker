@@ -154,8 +154,8 @@
       animation: moveDots 4s linear infinite;
     }
 
-    .animated-arrow {
-      animation: moveArrowAlongPath 4s linear infinite;
+    .trail-arrow {
+      z-index: 1000;
     }
 
     @keyframes moveDots {
@@ -810,28 +810,38 @@
       const midLon = (p1[1] + p2[1]) / 2;
       
       const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+      console.log(`Creating arrow: P1=[${p1[0]}, ${p1[1]}], P2=[${p2[0]}, ${p2[1]}], Mid=[${midLat}, ${midLon}], bearing=${bearing}°`);
       
-      const arrowSvg = `
-        <svg width="32" height="32" viewBox="0 0 32 32" style="overflow: visible;">
-          <g transform="translate(16, 16) rotate(${bearing - 90})">
-            <polygon 
-              points="-12,-10 12,0 -12,10 -6,0" 
-              fill="${color}" 
-              stroke="white" 
-              stroke-width="2" 
-            />
-          </g>
-        </svg>
+      // Create a simple CSS-based arrow that's easier to position
+      const arrowHtml = `
+        <div style="
+          width: 0;
+          height: 0;
+          border-left: 8px solid transparent;
+          border-right: 8px solid transparent;
+          border-bottom: 16px solid ${color};
+          border-top: 2px solid white;
+          transform: rotate(${bearing}deg);
+          transform-origin: center bottom;
+          position: relative;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        "></div>
       `;
 
       const arrowIcon = L.divIcon({
-        html: arrowSvg,
-        className: 'arrow-icon animated-arrow',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        html: arrowHtml,
+        className: 'trail-arrow',
+        iconSize: [16, 18],
+        iconAnchor: [8, 16]
       });
 
-      return L.marker([midLat, midLon], { icon: arrowIcon, interactive: false });
+      const arrow = L.marker([midLat, midLon], { 
+        icon: arrowIcon, 
+        interactive: false 
+      });
+
+      console.log(`CSS Arrow placed at [${midLat}, ${midLon}] with ${bearing}° rotation`);
+      return arrow;
     }
 
     function drawTrail(device_id) {
@@ -864,12 +874,14 @@
       }
 
       // Add arrows along the trail - one arrow per segment
+      console.log(`Drawing ${trail.length - 1} arrows for device ${device_id}`);
       for (let i = 0; i < trail.length - 1; i++) {
         const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
         trailLayers[device_id].push(arrow);
         
         if (deviceVisibility[device_id] !== false) {
           arrow.addTo(map);
+          console.log(`Arrow ${i + 1} added to map for device ${device_id}`);
         }
       }
     }
