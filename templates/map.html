@@ -10,221 +10,17 @@
     #map { height: 100%; width: 100%; z-index: 0; }
 
     #info {
-      // Add arrows along the trail - one arrow per segment
-      for (let i = 0; i < trail.length - 1; i++) {
-        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
-        trailLayers[device_id].push(arrow);
-        
-        if (deviceVisibility[device_id] !== false) {
-          arrow.addTo(map);
-        }
-      }
-    }
-
-    function getAgeLabel(ts) {
-      const iso = ts.replace(" ", "T") + "Z";
-      const pingTime = new Date(iso);
-      if (isNaN(pingTime)) {
-        console.warn("Bad timestamp:", ts);
-        return "——";
-      }
-
-      const nowSec = Date.now();
-      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
-      if (diffSec < 60)   return `${diffSec}s ago`;
-      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
-      return `${Math.floor(diffSec/3600)}h ago`;
-    }
-
-    function getRowClass(ts, sats) {
-      const pingTime = new Date(ts);
-      const now = new Date();
-      const diff = (now - pingTime) / 1000;
-
-      if (sats !== undefined && sats < 4) return "row-low-sats";
-
-      if (diff <= 180) return "row-active";
-      if (diff <= 360) return "row-warm";
-      return "row-stale";
-    }
-
-    function updateTable() {
-      const tbody1 = document.querySelector("#device-table tbody");
-      const tbody2 = document.querySelector("#device-table2 tbody");
-      tbody1.innerHTML = "";
-      tbody2.innerHTML = "";
-
-      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
-        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
-      );
-
-      // Devices I-XV go to first table, XVI-XXVII go to second table
-      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-
-      for (const id of sortedIDs) {
-        const packet = latestPackets[id];
-        const count  = packetCounts[id] || 0;
-        const sats   = packet.sats ?? "—";
-        const lat    = parseFloat(packet.latitude).toFixed(6);
-        const lon    = parseFloat(packet.longitude).toFixed(6);
-
-        const row = document.createElement("tr");
-        row.className = getRowClass(packet.timestamp, packet.sats);
-
-        row.innerHTML = `
-          <td>${id}</td>
-          <td>${lat}</td>
-          <td>${lon}</td>
-          <td>${count}</td>
-          <td>${sats}</td>
-        `;
-
-        row.style.cursor = "pointer";
-        row.addEventListener("click", () => {
-          toggleDeviceVisibility(id);
-          updateTable();
-        });
-
-        if (selectedDevice === id) {
-          row.style.border = "2px solid #3498DB";
-        }
-
-        // Add row to appropriate table
-        if (firstTableDevices.includes(id)) {
-          tbody1.appendChild(row);
-        } else if (secondTableDevices.includes(id)) {
-          tbody2.appendChild(row);
-        }
-      }
-    }
-
-    function updateDebugInfo() {
-      deviceCount.textContent = Object.keys(latestPackets).length;
-      pointCount.textContent = totalPoints;
-      lastUpdate.textContent = new Date().toLocaleTimeString();
-    }
-    
-    socket.on("gps_update", (data) => {
-      processGPSUpdate(data);
-    });
-
-    // Test data generator for debugging (remove in production) - now supports 27 devices
-    function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
-                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-      const baseLat = -33.87;
-      const baseLon = 151.21;
-      
-      testDevices.forEach((deviceId, index) => {
-        const lat = baseLat + (Math.random() - 0.5) * 0.01;
-        const lon = baseLon + (Math.random() - 0.5) * 0.01;
-        
-        const testData = {
-          device_id: deviceId,
-          latitude: lat.toString(),
-          longitude: lon.toString(),
-          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
-          sats: Math.floor(Math.random() * 12) + 4
-        };
-        
-        // Process test data directly instead of emitting through socket
-        processGPSUpdate(testData);
-      });
-    }
-
-    // Extract GPS processing logic into a separate function
-    function processGPSUpdate(data) {
-      console.log('📡 Processing GPS update:', data);
-      
-      const { latitude, longitude, device_id, timestamp } = data;
-      if (!latitude || !longitude || !device_id || !timestamp) {
-        console.warn('Missing required data:', data);
-        return;
-      }
-
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      
-      if (isNaN(lat) || isNaN(lon)) {
-        console.warn('Invalid coordinates:', data);
-        return;
-      }
-
-      // Store the packet with corrected timestamp
-      latestPackets[device_id] = {
-        ...data,
-        timestamp: timestamp.replace(" ", "T") + "Z"
-      };
-
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-
-      // Move the last "current" point into history
-      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
-        const lastPoint = {
-          ...latestPackets[device_id],
-          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
-          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
-        };
-        addDataPoint(lastPoint, false);
-      }
-      
-      // Add the new current marker
-      addDataPoint(data, true);
-
-      // Update map bounds
-      allPointsBounds.extend([lat, lon]);
-      
-      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
-      if (!hasInitialData) {
-        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-        hasInitialData = true;
-      }
-
-      // Build the trail
-      gpsTrails[device_id] = gpsTrails[device_id] || [];
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
-
-      // Redraw trail with arrows
-      drawTrail(device_id);
-
-      // Update UI
-      updateTable();
-      updateDebugInfo();
-
-      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
-    }
-
-    // Uncomment the line below to generate test data every 5 seconds
-    // setInterval(generateTestData, 5000);
-
-    setInterval(updateTable, 10000);
-    
-    document.getElementById("build-time").textContent =
-      new Date().toLocaleString("en-AU", {
-        timeZone: "Australia/Sydney",
-        hour12: false,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-  </script>
-</body>
-</html>position: absolute;
+      position: absolute;
       top: 10px;
       right: 10px;
       max-width: 340px;
       max-height: 70%;
       overflow-y: auto;
-      background: rgba(255,255,255,0.9);
-      padding: 8px;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
       border-radius: 8px;
       font-family: sans-serif;
-      font-size: 12px;
+      font-size: 13px;
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
@@ -237,11 +33,11 @@
       max-width: 340px;
       max-height: 70%;
       overflow-y: auto;
-      background: rgba(255,255,255,0.9);
-      padding: 8px;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
       border-radius: 8px;
       font-family: sans-serif;
-      font-size: 12px;
+      font-size: 13px;
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
@@ -255,9 +51,8 @@
       font-size: 14px;
       border-radius: 4px;
       cursor: pointer;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       width: 100%;
-      touch-action: manipulation;
     }
     
     #toggle-button:hover, #toggle-button2:hover {
@@ -269,23 +64,23 @@
       bottom: 60px;
       left: 10px;
       background: rgba(255,255,255,0.9);
-      padding: 8px;
+      padding: 10px;
       border-radius: 6px;
       font-family: sans-serif;
-      font-size: 11px;
+      font-size: 12px;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
     }
 
     #opacity-control label {
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       font-weight: bold;
     }
 
     #opacity-control input[type="range"] {
-      width: 120px;
-      margin-right: 8px;
+      width: 150px;
+      margin-right: 10px;
     }
 
     .row-active { background-color: #D5F5E3; }
@@ -319,11 +114,11 @@
       position: absolute;
       bottom: 10px;
       left: 10px;
-      font-size: 11px;
+      font-size: 12px;
       color: #666;
       font-family: sans-serif;
-      background-color: rgba(255,255,255,0.7);
-      padding: 3px 6px;
+      background-color: rgba(255,255,255,0.6);
+      padding: 4px 8px;
       border-radius: 6px;
       z-index: 1001;
     }
@@ -342,13 +137,13 @@
       position: absolute;
       bottom: 80px;
       right: 10px;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.7);
       color: white;
-      padding: 6px;
+      padding: 10px;
       border-radius: 6px;
       font-family: monospace;
-      font-size: 10px;
-      max-width: 250px;
+      font-size: 11px;
+      max-width: 300px;
       z-index: 1001;
     }
 
@@ -390,14 +185,12 @@
       width: 100%;
       border-collapse: collapse;
       margin: 0 auto;
-      font-size: 11px;
     }
     
     th, td {
       border: 1px solid #ddd;
-      padding: 6px 4px;
+      padding: 12px;
       text-align: center;
-      word-break: break-all;
     }
     
     th {
@@ -406,7 +199,6 @@
       color: #333;
       position: sticky;
       top: 0;
-      font-size: 10px;
     }
     
     tr:nth-child(even) {
@@ -670,13 +462,13 @@
 
     // Initialize map with higher max zoom
     const map = L.map("map", {
-      maxZoom: 22  // Allow maximum zoom
+      maxZoom: 22
     }).setView([-32.7686, 151.1790], 14);
     
     // Base layers with increased maxZoom and maxNativeZoom
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
-      maxNativeZoom: 19,  // OSM tiles go up to zoom 19
+      maxNativeZoom: 19,
       attribution: "© OpenStreetMap contributors"
     });
 
@@ -684,7 +476,7 @@
       url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
       attribution: '© NSW Spatial Services',
       maxZoom: 22,
-      maxNativeZoom: 16,  // NSW tiles typically go up to 16, but we'll allow upscaling
+      maxNativeZoom: 16,
       opacity: 1
     });
 
@@ -692,7 +484,7 @@
       url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer',
       attribution: '© NSW Spatial Services',
       maxZoom: 22,
-      maxNativeZoom: 18,  // Imagery usually has higher resolution
+      maxNativeZoom: 18,
       opacity: 1
     });
 
@@ -1070,3 +862,209 @@
       if (deviceVisibility[device_id] !== false) {
         polyline.addTo(map);
       }
+
+      // Add arrows along the trail - one arrow per segment
+      for (let i = 0; i < trail.length - 1; i++) {
+        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
+        trailLayers[device_id].push(arrow);
+        
+        if (deviceVisibility[device_id] !== false) {
+          arrow.addTo(map);
+        }
+      }
+    }
+
+    function getAgeLabel(ts) {
+      const iso = ts.replace(" ", "T") + "Z";
+      const pingTime = new Date(iso);
+      if (isNaN(pingTime)) {
+        console.warn("Bad timestamp:", ts);
+        return "——";
+      }
+
+      const nowSec = Date.now();
+      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
+      if (diffSec < 60)   return `${diffSec}s ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
+      return `${Math.floor(diffSec/3600)}h ago`;
+    }
+
+    function getRowClass(ts, sats) {
+      const pingTime = new Date(ts);
+      const now = new Date();
+      const diff = (now - pingTime) / 1000;
+
+      if (sats !== undefined && sats < 4) return "row-low-sats";
+
+      if (diff <= 180) return "row-active";
+      if (diff <= 360) return "row-warm";
+      return "row-stale";
+    }
+
+    function updateTable() {
+      const tbody1 = document.querySelector("#device-table tbody");
+      const tbody2 = document.querySelector("#device-table2 tbody");
+      tbody1.innerHTML = "";
+      tbody2.innerHTML = "";
+
+      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
+        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
+      );
+
+      // Devices I-XV go to first table, XVI-XXVII go to second table
+      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
+      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+
+      for (const id of sortedIDs) {
+        const packet = latestPackets[id];
+        const count  = packetCounts[id] || 0;
+        const sats   = packet.sats ?? "—";
+        const lat    = parseFloat(packet.latitude).toFixed(6);
+        const lon    = parseFloat(packet.longitude).toFixed(6);
+
+        const row = document.createElement("tr");
+        row.className = getRowClass(packet.timestamp, packet.sats);
+
+        row.innerHTML = `
+          <td>${id}</td>
+          <td>${lat}</td>
+          <td>${lon}</td>
+          <td>${count}</td>
+          <td>${sats}</td>
+        `;
+
+        row.style.cursor = "pointer";
+        row.addEventListener("click", () => {
+          toggleDeviceVisibility(id);
+          updateTable();
+        });
+
+        if (selectedDevice === id) {
+          row.style.border = "2px solid #3498DB";
+        }
+
+        // Add row to appropriate table
+        if (firstTableDevices.includes(id)) {
+          tbody1.appendChild(row);
+        } else if (secondTableDevices.includes(id)) {
+          tbody2.appendChild(row);
+        }
+      }
+    }
+
+    function updateDebugInfo() {
+      deviceCount.textContent = Object.keys(latestPackets).length;
+      pointCount.textContent = totalPoints;
+      lastUpdate.textContent = new Date().toLocaleTimeString();
+    }
+    
+    socket.on("gps_update", (data) => {
+      processGPSUpdate(data);
+    });
+
+    // Test data generator for debugging (remove in production) - now supports 27 devices
+    function generateTestData() {
+      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
+                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+      const baseLat = -33.87;
+      const baseLon = 151.21;
+      
+      testDevices.forEach((deviceId, index) => {
+        const lat = baseLat + (Math.random() - 0.5) * 0.01;
+        const lon = baseLon + (Math.random() - 0.5) * 0.01;
+        
+        const testData = {
+          device_id: deviceId,
+          latitude: lat.toString(),
+          longitude: lon.toString(),
+          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
+          sats: Math.floor(Math.random() * 12) + 4
+        };
+        
+        // Process test data directly instead of emitting through socket
+        processGPSUpdate(testData);
+      });
+    }
+
+    // Extract GPS processing logic into a separate function
+    function processGPSUpdate(data) {
+      console.log('📡 Processing GPS update:', data);
+      
+      const { latitude, longitude, device_id, timestamp } = data;
+      if (!latitude || !longitude || !device_id || !timestamp) {
+        console.warn('Missing required data:', data);
+        return;
+      }
+
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      
+      if (isNaN(lat) || isNaN(lon)) {
+        console.warn('Invalid coordinates:', data);
+        return;
+      }
+
+      // Store the packet with corrected timestamp
+      latestPackets[device_id] = {
+        ...data,
+        timestamp: timestamp.replace(" ", "T") + "Z"
+      };
+
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+
+      // Move the last "current" point into history
+      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
+        const lastPoint = {
+          ...latestPackets[device_id],
+          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
+          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
+        };
+        addDataPoint(lastPoint, false);
+      }
+      
+      // Add the new current marker
+      addDataPoint(data, true);
+
+      // Update map bounds
+      allPointsBounds.extend([lat, lon]);
+      
+      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
+      if (!hasInitialData) {
+        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+        hasInitialData = true;
+      }
+
+      // Build the trail
+      gpsTrails[device_id] = gpsTrails[device_id] || [];
+      gpsTrails[device_id].push([lat, lon]);
+      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
+
+      // Redraw trail with arrows
+      drawTrail(device_id);
+
+      // Update UI
+      updateTable();
+      updateDebugInfo();
+
+      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
+    }
+
+    // Uncomment the line below to generate test data every 5 seconds
+    // setInterval(generateTestData, 5000);
+
+    setInterval(updateTable, 10000);
+    
+    document.getElementById("build-time").textContent =
+      new Date().toLocaleString("en-AU", {
+        timeZone: "Australia/Sydney",
+        hour12: false,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+  </script>
+</body>
+</html>
