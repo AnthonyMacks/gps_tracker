@@ -453,19 +453,33 @@
     // Helper function to convert lat/lon to 8-figure grid reference
     function latLonToMGRS(lat, lon) {
       try {
-        const mgrsRef = mgrs.forward([lon, lat], 5); // 5 digits = 10-figure precision
-        // Extract just the numeric part (easting/northing) and truncate to 8 figures
-        const match = mgrsRef.match(/(\d{2}[A-Z]{3})(\d{5})(\d{5})/);
+        // MGRS library expects [longitude, latitude] order and precision level
+        const mgrsRef = mgrs.forward([lon, lat], 4); // 4 digits = 8-figure precision
+        console.log('MGRS conversion result:', mgrsRef);
+        
+        // Parse the MGRS string - format is like "56HLH12345678"
+        const match = mgrsRef.match(/^(\d{1,2}[A-Z][A-Z]{2})(\d{4})(\d{4})$/);
         if (match) {
-          const gridZone = match[1];
-          const easting = match[2].substring(0, 4);  // First 4 digits of easting
-          const northing = match[3].substring(0, 4); // First 4 digits of northing
+          const gridZone = match[1];     // Grid zone (e.g., "56HLH")
+          const easting = match[2];      // 4-digit easting
+          const northing = match[3];     // 4-digit northing
           return `${gridZone} ${easting} ${northing}`;
         }
-        return mgrsRef; // Fallback to full MGRS if parsing fails
+        
+        // If the regex doesn't match, try a different approach
+        // Sometimes the format includes spaces or different structure
+        if (mgrsRef.length >= 11) {
+          const gridZone = mgrsRef.substring(0, mgrsRef.length - 8);
+          const coords = mgrsRef.substring(mgrsRef.length - 8);
+          const easting = coords.substring(0, 4);
+          const northing = coords.substring(4, 8);
+          return `${gridZone} ${easting} ${northing}`;
+        }
+        
+        return mgrsRef; // Return as-is if we can't parse it
       } catch (error) {
-        console.warn('MGRS conversion failed:', error);
-        return 'Grid ref unavailable';
+        console.error('MGRS conversion error:', error, 'for coordinates:', lat, lon);
+        return `Error converting coordinates`;
       }
     }
 
@@ -720,8 +734,6 @@
         const popupContent = `
           <strong>Device ID:</strong> ${point.device_id}<br>
           <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-          <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-          <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
           <strong>Timestamp:</strong> ${point.timestamp}<br>
           <strong>Satellites:</strong> ${point.sats || 'N/A'}
         `;
@@ -771,8 +783,6 @@
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
             <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
           crestMarker.bindPopup(popupContent);
@@ -808,8 +818,6 @@
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
           pin.bindPopup(popupContent);
