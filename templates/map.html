@@ -772,13 +772,13 @@
             <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
-          triangle.bindPopup(popupContent);
+          crestMarker.bindPopup(popupContent);
 
           if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
-          allMarkers[point.device_id].history.push(triangle);
+          allMarkers[point.device_id].history.push(crestMarker);
           
           if (deviceVisibility[point.device_id] !== false) {
-            triangle.addTo(map);
+            crestMarker.addTo(map);
           }
           
           totalPoints++;
@@ -1109,4 +1109,5 @@
   </script>
 </body>
 </html>
+
 
