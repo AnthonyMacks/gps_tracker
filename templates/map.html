@@ -1108,12 +1108,27 @@
       });
   </script>
 
-<!-- Include MGRS library -->
 <script src="https://unpkg.com/mgrs/mgrs.js"></script>
 <script>
 function latLonToMGRS(lat, lon) {
   const mgrsRef = mgrs.forward([lon, lat], 5);
   return mgrsRef.replace(/(\d{4})(\d{4})\d*/, '$1 $2');
+}
+
+function updatePopupsWithMGRS() {
+  if (window.markers && Array.isArray(window.markers)) {
+    window.markers.forEach(marker => {
+      const latlng = marker.getLatLng();
+      const mgrsGR = latLonToMGRS(latlng.lat, latlng.lng);
+      marker.bindPopup(`<b>Grid Ref:</b> ${mgrsGR}`);
+    });
+  }
+}
+
+// Run after map is ready
+if (typeof map !== 'undefined') {
+  map.on('layeradd', updatePopupsWithMGRS);
+  setTimeout(updatePopupsWithMGRS, 1000);
 }
 </script>
 </body>
