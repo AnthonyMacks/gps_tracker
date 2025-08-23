@@ -1,11 +1,30 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 import signal
 import sys
 import os
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
+
+# Use environment variables for production security
+users = {
+    os.environ.get("AUTH_USERNAME"): generate_password_hash(os.environ.get("AUTH_PASSWORD"))
+}
+
+@auth.verify_password
+def verify_password(username,password):
+    if username in users and check_password_has h(users.get(username),password):
+    return username
+
+@app.route('/')
+@auth.login_required
+def index():
+    return "Hello, you are logged in!."
+
 socketio = SocketIO(app, async_mode="eventlet", cors_allowed_origins="*")
 
 # 📜 Logging
@@ -68,3 +87,4 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 10000))  # Render binds to $PORT
     socketio.run(app, host="0.0.0.0", port=PORT)
+
