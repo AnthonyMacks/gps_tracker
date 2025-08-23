@@ -1,11 +1,18 @@
 <!DOCTYPE html>
+
 <html>
-<head>
-  <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
+<head><style>
+.top-center-image {
+    display: block;
+    margin: 20px auto 10px auto;
+    max-width: 150px;
+}
+</style>
+<title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
+<style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100%; width: 100%; z-index: 0; }
 
@@ -385,69 +392,60 @@
     
   </style>
 </head>
-<body>
-  <div id="map"></div>
-  <div id="info">
-    <strong>📡 GPS MacksTrack Data (I-XV)</strong>
-    
-    <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
-   
-    <table id="device-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Lat</th>
-          <th>Lon</th>
-          <th>Count</th>
-          <th>Sats</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <div id="info2">
-    <strong>📡 GPS MacksTrack Data (XVI-XXVII)</strong>
-    
-    <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
-   
-    <table id="device-table2">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Lat</th>
-          <th>Lon</th>
-          <th>Count</th>
-          <th>Sats</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  
-  <div id="opacity-control">
-    <label for="opacity-slider">Base Layer Opacity:</label>
-    <input type="range" id="opacity-slider" min="0.1" max="1" step="0.1" value="1">
-    <span id="opacity-value">100%</span>
-  </div>
-  
-  <div id="debug">
-    <strong>Debug Info:</strong><br>
-    Connected: <span id="socket-status">❌</span><br>
-    Total Devices: <span id="device-count">0</span><br>
-    Total Points: <span id="point-count">0</span><br>
-    Last Update: <span id="last-update">never</span><br>
+<body><img alt="Top Center Icon" class="top-center-image" src="SCU Hat Badge.png"/>
+<div id="map"></div>
+<div id="info">
+<strong>📡 GPS MacksTrack Data (I-XV)</strong>
+<button id="toggle-button" onclick="toggleTable()">Hide Table</button>
+<table id="device-table">
+<thead>
+<tr>
+<th>ID</th>
+<th>Lat</th>
+<th>Lon</th>
+<th>Count</th>
+<th>Sats</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div id="info2">
+<strong>📡 GPS MacksTrack Data (XVI-XXVII)</strong>
+<button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
+<table id="device-table2">
+<thead>
+<tr>
+<th>ID</th>
+<th>Lat</th>
+<th>Lon</th>
+<th>Count</th>
+<th>Sats</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div id="opacity-control">
+<label for="opacity-slider">Base Layer Opacity:</label>
+<input id="opacity-slider" max="1" min="0.1" step="0.1" type="range" value="1"/>
+<span id="opacity-value">100%</span>
+</div>
+<div id="debug">
+<strong>Debug Info:</strong><br/>
+    Connected: <span id="socket-status">❌</span><br/>
+    Total Devices: <span id="device-count">0</span><br/>
+    Total Points: <span id="point-count">0</span><br/>
+    Last Update: <span id="last-update">never</span><br/>
     Current Zoom: <span id="current-zoom">13</span>
-  </div>
-
-  <footer>
+</div>
+<footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
-  </footer>
-  
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
-  <script>
+</footer>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+<script>
     // Toggle table visibility functions
     function toggleTable() {
       const table = document.getElementById("device-table");
@@ -1093,6 +1091,19 @@
         second: '2-digit'
       });
   </script>
-</body>
-</html>
+<script>
+// Replace triangle marker with custom icon
+const customIcon = L.icon({
+    iconUrl: 'SCU Hat Badge.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+});
 
+// Example coordinates for starting position
+const startLat = -33.865143;
+const startLon = 151.209900;
+
+// Add marker to map (assuming 'map' is the Leaflet map object)
+L.marker([startLat, startLon], { icon: customIcon }).addTo(map);
+</script></body>
+</html>
