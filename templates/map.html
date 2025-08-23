@@ -143,6 +143,21 @@
       animation: pulse 2s infinite;
     }
 
+    #debug-toggle {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 24px;
+      background: #333;
+      color: white;
+      padding: 8px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 1002;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
     #debug {
       position: absolute;
       bottom: 80px;
@@ -155,7 +170,10 @@
       font-size: 11px;
       max-width: 300px;
       z-index: 1001;
+      display: none;
+      transition: opacity 0.3s ease;
     }
+
 
     /* Animated dots on polyline */
     .animated-polyline {
@@ -448,7 +466,7 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mgrs/1.0.0/mgrs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mgrs@1.0.0/mgrs.min.js"></script>
 <script>
     // Helper function to convert lat/lon to 8-figure grid reference
     function latLonToMGRS(lat, lon) {
@@ -1011,6 +1029,92 @@
       lastUpdate.textContent = new Date().toLocaleTimeString();
     }
     
+    // Test data generator for debugging (remove in production) - now supports 27 devices
+    function generateTestData() {
+      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
+                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+      const baseLat = -33.87;
+      const baseLon = 151.21;
+      
+      testDevices.forEach((deviceId, index) => {
+        const lat = baseLat + (Math.random() - 0.5) * 0.01;
+        const lon = baseLon + (Math.random() - 0.5) * 0.01;
+        
+        const testData = {
+          device_id: deviceId,
+          latitude: lat.toString(),
+          longitude: lon.toString(),
+          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
+          sats: Math.floor(Math.random() * 12) + 4
+        };
+        
+        // Process test data directly instead of emitting through socket
+        processGPSUpdate(testData);
+      });
+    }
+
+    // Extract GPS processing logic into a separate function
+    function processGPSUpdate(data) {
+      console.log('📡 Processing GPS update:', data);
+      
+      const { latitude, longitude, device_id, timestamp } = data;
+      if (!latitude || !longitude || !device_id || !timestamp) {
+        console.warn('Missing required data:', data);
+        return;
+      }
+
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      
+      if (isNaN(lat) || isNaN(lon)) {
+        console.warn('Invalid coordinates:', data);
+        return;
+      }
+
+      // Store the packet with corrected timestamp
+      latestPackets[device_id] = {
+        ...data,
+        timestamp: timestamp.replace(" ", "T") + "Z"
+      };
+
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+
+      // Move the last "current" point into history
+      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
+        const lastPoint = {
+          ...latestPackets[device_id],
+          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
+          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
+        };
+        addDataPoint(lastPoint, false);
+      }
+      
+      // Add the new current marker
+      addDataPoint(data, true);
+
+      // Update map bounds
+      allPointsBounds.extend([lat, lon]);
+      
+      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
+      if (!hasInitialData) {
+        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+        hasInitialData = true;
+      }
+
+      // Build the trail
+      gpsTrails[device_id] = gpsTrails[device_id] || [];
+      gpsTrails[device_id].push([lat, lon]);
+      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
+
+      // Redraw trail with arrows
+      drawTrail(device_id);
+
+      // Update UI
+      updateTable();
+      updateDebugInfo();
+
+      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
+    }
     // Initialize everything after MGRS library loads
     waitForMGRS(() => {
       console.log('MGRS library loaded successfully');
