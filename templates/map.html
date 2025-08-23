@@ -448,7 +448,27 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+<script src="https://unpkg.com/mgrs/mgrs.js"></script>
 <script>
+    // Helper function to convert lat/lon to 8-figure grid reference
+    function latLonToMGRS(lat, lon) {
+      try {
+        const mgrsRef = mgrs.forward([lon, lat], 5); // 5 digits = 10-figure precision
+        // Extract just the numeric part (easting/northing) and truncate to 8 figures
+        const match = mgrsRef.match(/(\d{2}[A-Z]{3})(\d{5})(\d{5})/);
+        if (match) {
+          const gridZone = match[1];
+          const easting = match[2].substring(0, 4);  // First 4 digits of easting
+          const northing = match[3].substring(0, 4); // First 4 digits of northing
+          return `${gridZone} ${easting} ${northing}`;
+        }
+        return mgrsRef; // Fallback to full MGRS if parsing fails
+      } catch (error) {
+        console.warn('MGRS conversion failed:', error);
+        return 'Grid ref unavailable';
+      }
+    }
+
     // Toggle table visibility functions
     function toggleTable() {
       const table = document.getElementById("device-table");
@@ -685,7 +705,8 @@
       }
 
       const color = deviceColors[point.device_id] || "#7F8C8D";
-      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), isLatest: ${isLatest}`);
+      const mgrsGrid = latLonToMGRS(lat, lon);
+      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), MGRS: ${mgrsGrid}, isLatest: ${isLatest}`);
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
@@ -698,6 +719,7 @@
 
         const popupContent = `
           <strong>Device ID:</strong> ${point.device_id}<br>
+          <strong>Grid Reference:</strong> ${mgrsGrid}<br>
           <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
           <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
           <strong>Timestamp:</strong> ${point.timestamp}<br>
@@ -746,28 +768,9 @@
             interactive: true
           });
 
-            
-          // const triangleIcon = L.divIcon({
-            // html: `<div style="
-              // width: 0; 
-              // height: 0; 
-              // border-left: 12px solid transparent;
-              // border-right: 12px solid transparent;
-              // border-bottom: 20px solid ${color};
-              // filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-            // "></div>`,
-            // className: 'start-triangle',
-            // iconSize: [18, 18],
-            // iconAnchor: [9, 9]
-          // });
-
-          // const triangle = L.marker([lat, lon], { 
-            // icon: triangleIcon,
-            // interactive: true
-          // });
-
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
+            <strong>Grid Reference:</strong> ${mgrsGrid}<br>
             <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
             <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
@@ -804,6 +807,7 @@
 
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id}<br>
+            <strong>Grid Reference:</strong> ${mgrsGrid}<br>
             <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
             <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
@@ -1107,32 +1111,5 @@
         second: '2-digit'
       });
   </script>
-
-<script src="https://unpkg.com/mgrs/mgrs.js"></script>
-<script>
-function latLonToMGRS(lat, lon) {
-  const mgrsRef = mgrs.forward([lon, lat], 5);
-  const match = mgrsRef.match(/\d{5}(\d{5})/);
-  if (match) {
-    return match[1].slice(0, 8); // Return 8-digit Easting/Northing
-  }
-  return mgrsRef;
-}
-
-function updateMarkerPopupsWithMGRS() {
-  if (window.markers && Array.isArray(window.markers)) {
-    window.markers.forEach(marker => {
-      const latlng = marker.getLatLng();
-      const mgrsGR = latLonToMGRS(latlng.lat, latlng.lng);
-      marker.bindPopup(`<b>Grid Ref:</b> ${mgrsGR}`);
-    });
-  }
-}
-
-if (typeof map !== 'undefined') {
-  map.on('layeradd', updateMarkerPopupsWithMGRS);
-  setTimeout(updateMarkerPopupsWithMGRS, 1000);
-}
-</script>
 </body>
 </html>
