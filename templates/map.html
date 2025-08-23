@@ -157,7 +157,6 @@
       z-index: 1001;
     }
 
-
     /* Animated dots on polyline */
     .animated-polyline {
       stroke-dasharray: 1, 14;
@@ -449,7 +448,6 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mgrs@1.0.0/mgrs.min.js"></script>
 <script>
     // Helper function to convert lat/lon to 8-figure grid reference
     function latLonToMGRS(lat, lon) {
@@ -1098,37 +1096,34 @@
 
       console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     }
-    // Initialize everything after MGRS library loads
-    waitForMGRS(() => {
-      console.log('MGRS library loaded successfully');
-      
-      // Test MGRS conversion
-      const testMGRS = latLonToMGRS(-32.764156, 151.176543);
-      console.log('Test MGRS conversion:', testMGRS);
-      
-      // Initialize socket connection after MGRS is ready
-      socket.on("gps_update", (data) => {
-        processGPSUpdate(data);
-      });
-
-      // Uncomment the line below to generate test data every 5 seconds
-      // setInterval(generateTestData, 5000);
-
-      setInterval(updateTable, 10000);
-      
-      document.getElementById("build-time").textContent =
-        new Date().toLocaleString("en-AU", {
-          timeZone: "Australia/Sydney",
-          hour12: false,
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
+    // Initialize immediately - no need to wait for MGRS library
+    console.log('Initializing GPS tracker...');
+    
+    // Test grid conversion
+    const testGrid = latLonToMGRS(-32.764156, 151.176543);
+    console.log('Test grid conversion:', testGrid);
+    
+    // Initialize socket connection
+    socket.on("gps_update", (data) => {
+      processGPSUpdate(data);
     });
+
+    // Uncomment the line below to generate test data every 5 seconds
+    // setInterval(generateTestData, 5000);
+
+    setInterval(updateTable, 10000);
+    
+    document.getElementById("build-time").textContent =
+      new Date().toLocaleString("en-AU", {
+        timeZone: "Australia/Sydney",
+        hour12: false,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
   </script>
 </body>
 </html>
-
