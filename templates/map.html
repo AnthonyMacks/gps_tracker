@@ -1112,10 +1112,14 @@
 <script>
 function latLonToMGRS(lat, lon) {
   const mgrsRef = mgrs.forward([lon, lat], 5);
-  return mgrsRef.replace(/(\d{4})(\d{4})\d*/, '$1 $2');
+  const match = mgrsRef.match(/\d{5}(\d{5})/);
+  if (match) {
+    return match[1].slice(0, 8); // Return 8-digit Easting/Northing
+  }
+  return mgrsRef;
 }
 
-function updatePopupsWithMGRS() {
+function updateMarkerPopupsWithMGRS() {
   if (window.markers && Array.isArray(window.markers)) {
     window.markers.forEach(marker => {
       const latlng = marker.getLatLng();
@@ -1125,10 +1129,9 @@ function updatePopupsWithMGRS() {
   }
 }
 
-// Run after map is ready
 if (typeof map !== 'undefined') {
-  map.on('layeradd', updatePopupsWithMGRS);
-  setTimeout(updatePopupsWithMGRS, 1000);
+  map.on('layeradd', updateMarkerPopupsWithMGRS);
+  setTimeout(updateMarkerPopupsWithMGRS, 1000);
 }
 </script>
 </body>
