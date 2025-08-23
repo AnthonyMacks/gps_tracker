@@ -1107,18 +1107,14 @@
         second: '2-digit'
       });
   </script>
-<!-- Include Leaflet and MGRS -->
-<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Include MGRS library -->
 <script src="https://unpkg.com/mgrs/mgrs.js"></script>
-<div id="map" style="height: 500px;"></div>
 <script>
-  const map = L.map('map').setView([-33.8675, 151.2070], 13);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © OpenStreetMap contributors'
-  }).addTo(map);
-
+function latLonToMGRS(lat, lon) {
+  const mgrsRef = mgrs.forward([lon, lat], 5);
+  return mgrsRef.replace(/(\d{4})(\d{4})\d*/, '$1 $2');
+}
 </script>
 </body>
 </html>
