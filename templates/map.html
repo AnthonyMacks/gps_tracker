@@ -734,24 +734,36 @@
         const isFirstPoint = !allMarkers[point.device_id] || allMarkers[point.device_id].history.length === 0;
         
         if (isFirstPoint) {
-          const triangleIcon = L.divIcon({
-            html: `<div style="
-              width: 0; 
-              height: 0; 
-              border-left: 12px solid transparent;
-              border-right: 12px solid transparent;
-              border-bottom: 20px solid ${color};
-              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-            "></div>`,
-            className: 'start-triangle',
-            iconSize: [18, 18],
-            iconAnchor: [9, 9]
+        //  const triangleIcon = L.divIcon({
+         //   html: `<div style="
+           //   width: 0; 
+           // height: 0; 
+           //   border-left: 12px solid transparent;
+           //   border-right: 12px solid transparent;
+           //   border-bottom: 20px solid ${color};
+           //   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+           // "></div>`,
+           // className: 'start-triangle',
+           // iconSize: [18, 18],
+           // iconAnchor: [9, 9]
+         // });
+
+         // const triangle = L.marker([lat, lon], { 
+          //  icon: triangleIcon,
+          //  interactive: true
+         // });
+
+          const crestIcon = L.icon({
+             iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
+             iconSize: [32, 32],   // adjust size as needed
+             iconAnchor: [16, 32], // bottom center
+             popupAnchor: [0, -32] // popup above
           });
 
-          const triangle = L.marker([lat, lon], { 
-            icon: triangleIcon,
+          const crestMarker = L.marker([lat, lon], { 
+            icon: crestIcon,
             interactive: true
-          });
+          });  
 
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
@@ -1096,3 +1108,4 @@
   </script>
 </body>
 </html>
+
