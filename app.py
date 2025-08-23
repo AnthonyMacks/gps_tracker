@@ -39,10 +39,6 @@ buffer = []
 flush_buffer = True
 last_gps_packet = None
 
-@app.route("/")
-def index():
-    return render_template("map.html")
-
 @app.route("/gps", methods=["POST"])
 def gps():
     global last_gps_packet
@@ -87,3 +83,4 @@ signal.signal(signal.SIGTERM, handle_sigterm)
 if __name__ == "__main__":
     PORT = int(os.environ.get("PORT", 10000))  # Render binds to $PORT
     socketio.run(app, host="0.0.0.0", port=PORT)
+
