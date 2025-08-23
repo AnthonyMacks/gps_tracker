@@ -490,11 +490,7 @@
         const eastingGrid = Math.floor((easting % 100000) / 10).toString().padStart(4, '0');
         const northingGrid = Math.floor((northing % 100000) / 10).toString().padStart(4, '0');
         
-        // Simplified zone designation for NSW area
-        const zoneLetter = 'H';
-        const gridSquare = 'LH';
-        
-        const result = `${zone}${zoneLetter}${gridSquare} ${eastingGrid} ${northingGrid}`;
+        const result = ` ${eastingGrid} ${northingGrid}`;
         console.log('Grid reference result:', result);
         return result;
         
@@ -1125,3 +1121,4 @@
   </script>
 </body>
 </html>
+
