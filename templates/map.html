@@ -5,9 +5,9 @@
 .left-of-center-image {
     position: absolute;
     top: 20px;
-    left: 25%;
+    left: 15%;
     transform: translateX(-50%);
-    max-width: 80px;
+    max-width: 100px;
     z-index: 1000;
 }
 </style>
@@ -890,16 +890,16 @@
         } else {
           const pinIcon = L.divIcon({
             html: `<div style="
-              width: 6px; 
-              height: 6px; 
+              width: 12px; 
+              height: 12px; 
               background-color: ${color}; 
-              border: 1px solid white; 
+              border: 2px solid white; 
               border-radius: 50%;
-              box-shadow: 0 0 2px rgba(0,0,0,0.3);
+              box-shadow: 0 0 3px rgba(0,0,0,0.4);
             "></div>`,
             className: 'history-pin',
-            iconSize: [9, 9],
-            iconAnchor: [4.5, 4.5]
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
           });
 
           const pin = L.marker([lat, lon], { 
@@ -1247,5 +1247,6 @@
   </script>
 </body>
 </html>
+
 
 
