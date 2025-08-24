@@ -490,7 +490,8 @@
         const eastingGrid = Math.floor((easting % 100000) / 10).toString().padStart(4, '0');
         const northingGrid = Math.floor((northing % 100000) / 10).toString().padStart(4, '0');
         
-        const result = ` ${eastingGrid} ${northingGrid}`;
+        // Return just the 8-figure grid reference without zone prefix
+        const result = `${eastingGrid} ${northingGrid}`;
         console.log('Grid reference result:', result);
         return result;
         
@@ -1121,4 +1122,3 @@
   </script>
 </body>
 </html>
-
