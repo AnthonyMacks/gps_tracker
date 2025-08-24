@@ -1248,3 +1248,32 @@
   </script>
 </body>
 </html>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<div id="map" style="height: 500px;"></div>
+<script>
+const trails = [];
+
+const map = L.map('map').setView([-33.8675, 151.2070], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+trails.forEach(trail => {
+  L.polyline(trail, { color: 'blue' }).addTo(map);
+});
+
+trails.forEach(trail => {
+  let index = 0;
+  const dot = L.circleMarker(trail[0], {
+    radius: 6,
+    color: 'red',
+    fillColor: 'red',
+    fillOpacity: 0.8
+  }).addTo(map);
+
+  setInterval(() => {
+    index = (index + 1) % trail.length;
+    dot.setLatLng(trail[index]);
+  }, 500);
+});
+</script>
