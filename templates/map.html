@@ -5,9 +5,9 @@
 .left-of-center-image {
     position: absolute;
     top: 20px;
-    left: 25%;
+    left: 40%;
     transform: translateX(-50%);
-    max-width: 120px;
+    max-width: 80px;
     z-index: 1000;
 }
 </style>
@@ -190,32 +190,44 @@
       font-size: 10px;
     }
 
-    /* Animated dots on polyline - REMOVED */
+    /* Animated arrows moving along polyline */
     .animated-polyline {
-      /* Remove the animated dots styling */
+      stroke-dasharray: 1, 20;
+      stroke-linecap: round;
+      animation: moveArrows 4s linear infinite;
     }
 
-    .trail-arrow {
-      z-index: 1000;
-      animation: moveArrowAlongTrail 3s ease-in-out infinite;
-    }
-
-    @keyframes moveArrowAlongTrail {
+    @keyframes moveArrows {
       0% {
-        transform: translateX(-8px) translateY(-8px);
-        opacity: 0.5;
+        stroke-dashoffset: 21;
       }
-      50% {
-        transform: translateX(0px) translateY(0px);
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Arrow markers that move along the trail */
+    .moving-arrow {
+      z-index: 1000;
+      animation: moveArrowsAlongPath 4s linear infinite;
+    }
+
+    @keyframes moveArrowsAlongPath {
+      0% {
+        opacity: 0;
+        transform: translateX(-10px) translateY(-10px);
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
         opacity: 1;
       }
       100% {
-        transform: translateX(8px) translateY(8px);
-        opacity: 0.5;
+        opacity: 0;
+        transform: translateX(10px) translateY(10px);
       }
     }
-
-    /* Removed moveDots animation - using arrows only */
 
     @keyframes moveArrowAlongPath {
       0% {
@@ -930,46 +942,6 @@
       return (bearing + 360) % 360;
     }
 
-    function addArrowToSegment(p1, p2, color) {
-      const midLat = (p1[0] + p2[0]) / 2;
-      const midLon = (p1[1] + p2[1]) / 2;
-      
-      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-      console.log(`Creating arrow: P1=[${p1[0]}, ${p1[1]}], P2=[${p2[0]}, ${p2[1]}], Mid=[${midLat}, ${midLon}], bearing=${bearing}°`);
-      
-      // Create arrow with CSS animation that moves along the trail
-      const arrowHtml = `
-        <div style="
-          width: 0;
-          height: 0;
-          border-left: 10px solid transparent;
-          border-right: 10px solid transparent;
-          border-bottom: 20px solid ${color};
-          border-top: 3px solid white;
-          transform-origin: center bottom;
-          position: relative;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-          transform: rotate(${bearing}deg);
-        "></div>
-      `;
-
-      const arrowIcon = L.divIcon({
-        html: arrowHtml,
-        className: 'trail-arrow',
-        iconSize: [20, 23],
-        iconAnchor: [10, 20]
-      });
-
-      const arrow = L.marker([midLat, midLon], { 
-        icon: arrowIcon, 
-        interactive: false,
-        zIndexOffset: 1000
-      });
-
-      console.log(`Arrow created and will be added to map for bearing ${bearing}°`);
-      return arrow;
-    }
-
     function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
       if (!trail || trail.length < 2) return;
@@ -985,30 +957,67 @@
       }
       trailLayers[device_id] = [];
 
-      // Create the main polyline without animated dots
-      const polyline = L.polyline(trail, {
-        color: color,
-        weight: 4,
-        opacity: 0.8
-      });
+      // Create arrows along the trail at regular intervals
+      console.log(`Drawing moving arrows for device ${device_id}`);
       
-      trailLayers[device_id].push(polyline);
-      
-      if (deviceVisibility[device_id] !== false) {
-        polyline.addTo(map);
-      }
-
-      // Add arrows along the trail - one arrow per segment
-      console.log(`Drawing ${trail.length - 1} arrows for device ${device_id}`);
       for (let i = 0; i < trail.length - 1; i++) {
-        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
-        trailLayers[device_id].push(arrow);
+        const p1 = trail[i];
+        const p2 = trail[i + 1];
         
-        if (deviceVisibility[device_id] !== false) {
-          arrow.addTo(map);
-          console.log(`Arrow ${i + 1} added to map for device ${device_id}`);
+        // Calculate bearing for this segment
+        const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
+        
+        // Create multiple arrows along each segment
+        const numArrows = 3; // Number of arrows per segment
+        for (let j = 0; j < numArrows; j++) {
+          const progress = j / numArrows;
+          const lat = p1[0] + (p2[0] - p1[0]) * progress;
+          const lon = p1[1] + (p2[1] - p1[1]) * progress;
+          
+          const arrowHtml = `
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 6px solid transparent;
+              border-right: 6px solid transparent;
+              border-bottom: 12px solid ${color};
+              border-top: 1px solid white;
+              transform: rotate(${bearing}deg);
+              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+            "></div>
+          `;
+
+          const arrowIcon = L.divIcon({
+            html: arrowHtml,
+            className: 'moving-arrow',
+            iconSize: [12, 13],
+            iconAnchor: [6, 12]
+          });
+
+          const arrow = L.marker([lat, lon], { 
+            icon: arrowIcon, 
+            interactive: false,
+            zIndexOffset: 1000
+          });
+          
+          // Add delay to create flowing effect
+          arrow.getElement = function() {
+            const el = L.Marker.prototype.getElement.call(this);
+            if (el) {
+              el.style.animationDelay = `${(i * numArrows + j) * 0.2}s`;
+            }
+            return el;
+          };
+          
+          trailLayers[device_id].push(arrow);
+          
+          if (deviceVisibility[device_id] !== false) {
+            arrow.addTo(map);
+          }
         }
       }
+      
+      console.log(`Created ${trailLayers[device_id].length} moving arrows for device ${device_id}`);
     }
 
     function getAgeLabel(ts) {
@@ -1239,4 +1248,3 @@
   </script>
 </body>
 </html>
-
