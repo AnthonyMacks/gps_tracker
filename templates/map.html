@@ -199,20 +199,21 @@
 
     .trail-arrow {
       z-index: 1000;
-      animation: moveArrowAlongTrail 2s linear infinite;
+      animation: moveArrowAlongTrail 3s ease-in-out infinite;
     }
 
     @keyframes moveArrowAlongTrail {
       0% {
-        transform: translateX(-4px) translateY(-4px) rotate(var(--arrow-bearing));
-        opacity: 0.7;
+        transform: translateX(-8px) translateY(-8px) rotate(var(--arrow-bearing));
+        opacity: 0.5;
       }
       50% {
+        transform: translateX(0px) translateY(0px) rotate(var(--arrow-bearing));
         opacity: 1;
       }
       100% {
-        transform: translateX(4px) translateY(4px) rotate(var(--arrow-bearing));
-        opacity: 0.7;
+        transform: translateX(8px) translateY(8px) rotate(var(--arrow-bearing));
+        opacity: 0.5;
       }
     }
 
@@ -1247,6 +1248,7 @@
   </script>
 </body>
 </html>
+
 
 
 
