@@ -79,59 +79,101 @@
     .resize-handle {
       position: absolute;
       background: #3498DB;
-      opacity: 0.7;
+      opacity: 0.8;
       z-index: 1002;
-      border-radius: 3px;
+      border-radius: 4px;
       transition: all 0.2s;
+      touch-action: none;
+      user-select: none;
     }
 
     .resize-handle:hover,
-    .resize-handle:active {
+    .resize-handle:active,
+    .resize-handle.resizing {
       opacity: 1;
       background: #2980B9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
     .resize-se {
-      bottom: 0;
-      right: 0;
-      width: 20px;
-      height: 20px;
+      bottom: 2px;
+      right: 2px;
+      width: 24px;
+      height: 24px;
       cursor: nw-resize;
     }
 
+    .resize-se::after {
+      content: '⤢';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
     .resize-s {
-      bottom: 0;
+      bottom: 2px;
       left: 50%;
       transform: translateX(-50%);
-      width: 30px;
-      height: 8px;
+      width: 40px;
+      height: 12px;
       cursor: s-resize;
     }
 
+    .resize-s::after {
+      content: '↕';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
     .resize-e {
-      right: 0;
+      right: 2px;
       top: 50%;
       transform: translateY(-50%);
-      width: 8px;
-      height: 30px;
+      width: 12px;
+      height: 40px;
       cursor: e-resize;
     }
 
-    /* Show resize handles on mobile/touch devices */
+    .resize-e::after {
+      content: '↔';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    /* Always show resize handles on mobile/touch devices */
     @media (max-width: 768px), (hover: none) {
       .resize-handle {
-        display: block;
+        display: block !important;
       }
       
       #info, #info2 {
-        resize: none; /* Disable native resize on mobile */
+        resize: none !important; /* Disable native resize on mobile */
       }
     }
 
-    /* Hide handles on desktop by default */
+    /* Hide handles on desktop by default, show on hover */
     @media (min-width: 769px) and (hover: hover) {
       .resize-handle {
         display: none;
+      }
+      
+      #info:hover .resize-handle,
+      #info2:hover .resize-handle {
+        display: block;
       }
     }
 
@@ -365,10 +407,12 @@
         top: 10px;
         right: 10px;
         left: auto;
-        width: calc(45% - 10px);
+        width: 45vw;
         height: 35vh;
-        max-width: none;
-        max-height: 45vh;
+        min-width: 200px;
+        min-height: 150px;
+        max-width: 90vw;
+        max-height: 80vh;
         font-size: 11px;
         padding: 6px;
       }
@@ -378,9 +422,11 @@
         top: 50vh;
         right: 10px;
         left: auto;
-        width: calc(45% - 10px);
+        width: 45vw;
         height: 35vh;
-        max-width: none;
+        min-width: 200px;
+        min-height: 150px;
+        max-width: 90vw;
         max-height: 45vh;
         font-size: 11px;
         padding: 6px;
@@ -439,40 +485,40 @@
       }
 
       /* Larger resize handles for mobile */
-      .resize-handle {
-        opacity: 0.8;
-      }
-
       .resize-se {
-        width: 25px;
-        height: 25px;
+        width: 28px;
+        height: 28px;
+        bottom: 3px;
+        right: 3px;
       }
 
       .resize-s {
-        height: 12px;
-        width: 40px;
+        height: 14px;
+        width: 50px;
+        bottom: 3px;
       }
 
       .resize-e {
-        width: 12px;
-        height: 40px;
+        width: 14px;
+        height: 50px;
+        right: 3px;
       }
     }
 
     /* Portrait phone adjustments */
     @media (max-width: 480px) and (orientation: portrait) {
       #info {
-        width: calc(48% - 10px);
+        width: 48vw;
         height: 30vh;
-        max-height: 35vh;
+        max-height: 40vh;
         font-size: 10px;
       }
 
       #info2 {
         top: 35vh;
-        width: calc(48% - 10px);
+        width: 48vw;
         height: 30vh;
-        max-height: 35vh;
+        max-height: 40vh;
         font-size: 10px;
       }
 
@@ -523,18 +569,22 @@
 
       /* Extra large resize handles for small phones */
       .resize-se {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
+        bottom: 4px;
+        right: 4px;
       }
 
       .resize-s {
-        height: 15px;
-        width: 50px;
+        height: 16px;
+        width: 60px;
+        bottom: 4px;
       }
 
       .resize-e {
-        width: 15px;
-        height: 50px;
+        width: 16px;
+        height: 60px;
+        right: 4px;
       }
     }
 
@@ -545,21 +595,23 @@
         top: 10px;
         right: 10px;
         left: auto;
-        width: 220px;
-        height: 40vh;
-        max-width: 300px;
-        max-height: 60vh;
+        width: 30vw;
+        height: 45vh;
+        min-width: 220px;
+        max-width: 400px;
+        max-height: 70vh;
       }
 
       #info2 {
         position: absolute;
-        top: 50vh;
+        top: 55vh;
         right: 10px;
         left: auto;
-        width: 220px;
-        height: 40vh;
-        max-width: 300px;
-        max-height: 60vh;
+        width: 30vw;
+        height: 35vh;
+        min-width: 220px;
+        max-width: 400px;
+        max-height: 40vh;
       }
 
       #opacity-control {
@@ -763,7 +815,7 @@
           // Mouse events
           handle.addEventListener('mousedown', initResize);
           
-          // Touch events for mobile
+          // Touch events for mobile with better handling
           handle.addEventListener('touchstart', initResize, { passive: false });
           
           function initResize(e) {
@@ -771,12 +823,11 @@
             e.stopPropagation();
             
             isResizing = true;
+            handle.classList.add('resizing');
             
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            startX = clientX;
-            startY = clientY;
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
             
             const rect = panel.getBoundingClientRect();
             startWidth = rect.width;
@@ -784,17 +835,22 @@
             startLeft = rect.left;
             startTop = rect.top;
             
-            // Add global event listeners
+            console.log(`Starting resize for ${panelId}: W=${startWidth}, H=${startHeight}`);
+            
+            // Add global event listeners with proper options
             if (e.touches) {
               document.addEventListener('touchmove', doResize, { passive: false });
-              document.addEventListener('touchend', stopResize);
+              document.addEventListener('touchend', stopResize, { passive: false });
+              document.addEventListener('touchcancel', stopResize, { passive: false });
             } else {
               document.addEventListener('mousemove', doResize);
               document.addEventListener('mouseup', stopResize);
             }
             
-            // Prevent text selection during resize
+            // Prevent text selection and scrolling during resize
             document.body.style.userSelect = 'none';
+            document.body.style.touchAction = 'none';
+            document.body.style.overflow = 'hidden';
             panel.style.transition = 'none';
           }
           
@@ -802,69 +858,73 @@
             if (!isResizing) return;
             
             e.preventDefault();
+            e.stopPropagation();
             
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            
-            const deltaX = clientX - startX;
-            const deltaY = clientY - startY;
+            const touch = e.touches ? e.touches[0] : e;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
             
             let newWidth = startWidth;
             let newHeight = startHeight;
-            let newLeft = startLeft;
-            let newTop = startTop;
             
             // Handle different resize directions
             if (handle.classList.contains('resize-se')) {
               // Southeast corner - resize both width and height
-              newWidth = Math.max(200, startWidth + deltaX);
-              newHeight = Math.max(150, startHeight + deltaY);
+              newWidth = Math.max(200, Math.min(window.innerWidth * 0.9, startWidth + deltaX));
+              newHeight = Math.max(150, Math.min(window.innerHeight * 0.8, startHeight + deltaY));
             } else if (handle.classList.contains('resize-s')) {
               // South edge - resize height only
-              newHeight = Math.max(150, startHeight + deltaY);
+              newHeight = Math.max(150, Math.min(window.innerHeight * 0.8, startHeight + deltaY));
             } else if (handle.classList.contains('resize-e')) {
               // East edge - resize width only
-              newWidth = Math.max(200, startWidth + deltaX);
+              newWidth = Math.max(200, Math.min(window.innerWidth * 0.9, startWidth + deltaX));
             }
             
-            // Apply size constraints
-            const maxWidth = window.innerWidth * 0.9;
-            const maxHeight = window.innerHeight * 0.8;
-            
-            newWidth = Math.min(newWidth, maxWidth);
-            newHeight = Math.min(newHeight, maxHeight);
-            
-            // For info2 panel, we need to adjust position when resizing width
-            if (panelId === 'info2' && (handle.classList.contains('resize-se') || handle.classList.contains('resize-e'))) {
+            // Special handling for info2 to prevent overlap
+            if (panelId === 'info2') {
               const info1 = document.getElementById('info');
               const info1Rect = info1.getBoundingClientRect();
-              const minRight = info1Rect.left - 20; // 20px gap
               
-              // Adjust position to avoid overlap with info1
-              const currentRight = window.innerWidth - newLeft;
-              if (newLeft + newWidth > minRight) {
-                newLeft = Math.max(10, minRight - newWidth);
+              // Ensure panels don't overlap horizontally on wider screens
+              if (window.innerWidth > 480) {
+                const maxWidth = Math.max(200, info1Rect.left - 30 - 10); // 30px gap, 10px margin
+                if (newWidth > maxWidth) {
+                  newWidth = maxWidth;
+                }
               }
-              
-              panel.style.left = newLeft + 'px';
             }
             
             panel.style.width = newWidth + 'px';
             panel.style.height = newHeight + 'px';
+            
+            console.log(`Resizing ${panelId}: ${newWidth}x${newHeight}`);
           }
           
-          function stopResize() {
+          function stopResize(e) {
+            if (!isResizing) return;
+            
             isResizing = false;
+            handle.classList.remove('resizing');
+            
+            console.log(`Finished resizing ${panelId}`);
             
             // Remove global event listeners
             document.removeEventListener('mousemove', doResize);
             document.removeEventListener('mouseup', stopResize);
             document.removeEventListener('touchmove', doResize);
             document.removeEventListener('touchend', stopResize);
+            document.removeEventListener('touchcancel', stopResize);
             
-            // Restore text selection and transitions
+            // Restore document state
             document.body.style.userSelect = '';
+            document.body.style.touchAction = '';
+            document.body.style.overflow = '';
             panel.style.transition = '';
+            
+            // Force map resize after panel resize
+            setTimeout(() => {
+              map.invalidateSize();
+            }, 100);
           }
         });
       });
