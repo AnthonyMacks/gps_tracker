@@ -276,7 +276,7 @@
       font-weight: bold;
     }
 
-    /* Mobile responsive styles - auto resize panels */
+    /* Mobile responsive styles */
     @media (max-width: 768px) {
       #info {
         position: absolute;
@@ -284,20 +284,20 @@
         right: 10px;
         left: auto;
         max-width: none;
-        width: 45vw;
-        max-height: 40vh;
+        width: calc(45% - 10px);
+        max-height: 35%;
         font-size: 11px;
         padding: 6px;
       }
 
       #info2 {
         position: absolute;
-        top: 10px;
-        right: calc(45vw + 20px);
+        top: 50%;
+        right: 10px;
         left: auto;
         max-width: none;
-        width: 45vw;
-        max-height: 40vh;
+        width: calc(45% - 10px);
+        max-height: 35%;
         font-size: 11px;
         padding: 6px;
       }
@@ -358,18 +358,16 @@
     /* Portrait phone adjustments */
     @media (max-width: 480px) and (orientation: portrait) {
       #info {
-        width: 90vw;
-        max-height: 30vh;
+        max-height: 30%;
         font-size: 10px;
-        right: 5vw;
+        width: calc(48% - 10px);
       }
 
       #info2 {
-        top: calc(30vh + 60px);
-        right: 5vw;
-        width: 90vw;
-        max-height: 30vh;
+        top: 35%;
+        max-height: 30%;
         font-size: 10px;
+        width: calc(48% - 10px);
       }
 
       table {
@@ -425,19 +423,19 @@
         top: 10px;
         right: 10px;
         left: auto;
-        width: 40vw;
-        max-width: 40vw;
-        max-height: 80vh;
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
       }
 
       #info2 {
         position: absolute;
-        top: 10px;
-        right: calc(40vw + 20px);
+        top: 50%;
+        right: 10px;
         left: auto;
-        width: 40vw;
-        max-width: 40vw;
-        max-height: 80vh;
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
       }
 
       #opacity-control {
@@ -863,7 +861,6 @@
         
         if (isFirstPoint) {
           const crestIcon = L.icon({
-          const crestIcon = L.icon({
             iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
             iconSize: [32, 32],   // adjust size as needed
             iconAnchor: [16, 32], // bottom center
@@ -1250,3 +1247,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
