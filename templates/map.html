@@ -2,14 +2,14 @@
 
 <html>
 <head><style>
-.left-of-center-image {
+.lower-right-image {
     position: absolute;
-    top: 20px;
-    left: 40%;
-    transform: translateX(-50%);
-    max-width: 150px;
+    bottom: 20px;
+    right: 20px;
+    max-width: 120px;
     z-index: 1000;
 }
+
 </style>
 <title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
 <meta charset="utf-8"/>
@@ -145,8 +145,8 @@
 
     #debug {
       position: absolute;
-      bottom: 80px;
-      right: 10px;
+      bottom: 100px;
+      left: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
       padding: 10px;
@@ -155,6 +155,39 @@
       font-size: 11px;
       max-width: 300px;
       z-index: 1001;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      height: auto;
+      min-height: 20px;
+    }
+
+    #debug.collapsed {
+      height: 25px;
+      padding: 5px 10px;
+      overflow: hidden;
+    }
+
+    #debug .debug-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 200px;
+    }
+
+    #debug.collapsed .debug-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: -5px;
+    }
+
+    #debug .debug-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+
+    #debug.collapsed .debug-title {
+      margin-bottom: 0;
+      font-size: 10px;
     }
 
     /* Animated dots on polyline */
@@ -301,6 +334,19 @@
         max-width: 200px;
       }
 
+      #debug.collapsed {
+        height: 22px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
+
       footer {
         bottom: 10px;
         left: 10px;
@@ -352,6 +398,19 @@
         max-width: 150px;
       }
 
+      #debug.collapsed {
+        height: 18px;
+        padding: 3px 4px;
+      }
+
+      #debug .debug-title {
+        font-size: 8px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 7px;
+      }
+
       footer {
         font-size: 9px;
       }
@@ -391,11 +450,24 @@
         font-size: 9px;
         max-width: 180px;
       }
+
+      #debug.collapsed {
+        height: 20px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
     }
     
   </style>
 </head>
-<body><img alt="SCU Crest" class="left-of-center-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
+<body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
 <div id="map"></div>
 <div id="info">
 <strong>📡 GPS MacksTrack Data (I-XV)</strong>
@@ -434,13 +506,15 @@
 <input id="opacity-slider" max="1" min="0.1" step="0.1" type="range" value="1"/>
 <span id="opacity-value">100%</span>
 </div>
-<div id="debug">
-<strong>Debug Info:</strong><br/>
+<div id="debug" class="collapsed">
+<div class="debug-title">Debug Info</div>
+<div class="debug-content">
     Connected: <span id="socket-status">❌</span><br/>
     Total Devices: <span id="device-count">0</span><br/>
     Total Points: <span id="point-count">0</span><br/>
     Last Update: <span id="last-update">never</span><br/>
     Current Zoom: <span id="current-zoom">13</span>
+</div>
 </div>
 <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
@@ -448,24 +522,56 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
-<script src="https://unpkg.com/mgrs/mgrs.js"></script>
 <script>
-    // Helper function to convert lat/lon to 8-figure grid reference
+    // Grid reference conversion function for Australian coordinates
     function latLonToMGRS(lat, lon) {
       try {
-        const mgrsRef = mgrs.forward([lon, lat], 5); // 5 digits = 10-figure precision
-        // Extract just the numeric part (easting/northing) and truncate to 8 figures
-        const match = mgrsRef.match(/(\d{2}[A-Z]{3})(\d{5})(\d{5})/);
-        if (match) {
-          const gridZone = match[1];
-          const easting = match[2].substring(0, 4);  // First 4 digits of easting
-          const northing = match[3].substring(0, 4); // First 4 digits of northing
-          return `${gridZone} ${easting} ${northing}`;
-        }
-        return mgrsRef; // Fallback to full MGRS if parsing fails
+        console.log('Converting coordinates:', lat, lon);
+        
+        // Determine UTM zone for Australia
+        const zone = Math.floor((lon + 180) / 6) + 1;
+        
+        // Basic UTM conversion parameters
+        const a = 6378137; // WGS84 major axis
+        const e = 0.0818191908; // WGS84 eccentricity
+        const k0 = 0.9996; // UTM scale factor
+        
+        const lonRad = (lon * Math.PI) / 180;
+        const latRad = (lat * Math.PI) / 180;
+        
+        const lonOrigin = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+        
+        const N = a / Math.sqrt(1 - e * e * Math.sin(latRad) * Math.sin(latRad));
+        const T = Math.tan(latRad) * Math.tan(latRad);
+        const C = (e * e / (1 - e * e)) * Math.cos(latRad) * Math.cos(latRad);
+        const A = Math.cos(latRad) * (lonRad - lonOrigin);
+        
+        const M = a * ((1 - e * e / 4 - 3 * Math.pow(e, 4) / 64) * latRad
+          - (3 * e * e / 8 + 3 * Math.pow(e, 4) / 32) * Math.sin(2 * latRad)
+          + (15 * Math.pow(e, 4) / 256) * Math.sin(4 * latRad));
+        
+        let easting = k0 * N * (A + (1 - T + C) * Math.pow(A, 3) / 6
+          + (5 - 18 * T + T * T + 72 * C - 58 * (e * e / (1 - e * e))) * Math.pow(A, 5) / 120) + 500000;
+        
+        let northing = k0 * (M + N * Math.tan(latRad) * (Math.pow(A, 2) / 2
+          + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24
+          + (61 - 58 * T + T * T + 600 * C - 330 * (e * e / (1 - e * e))) * Math.pow(A, 6) / 720));
+        
+        // For southern hemisphere
+        if (lat < 0) northing += 10000000;
+        
+        // Convert to 4-digit grid coordinates
+        const eastingGrid = Math.floor((easting % 100000) / 10).toString().padStart(4, '0');
+        const northingGrid = Math.floor((northing % 100000) / 10).toString().padStart(4, '0');
+        
+        // Return just the 8-figure grid reference without zone prefix
+        const result = `${eastingGrid} ${northingGrid}`;
+        console.log('Grid reference result:', result);
+        return result;
+        
       } catch (error) {
-        console.warn('MGRS conversion failed:', error);
-        return 'Grid ref unavailable';
+        console.error('Grid conversion error:', error);
+        return `Grid: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
       }
     }
 
@@ -706,7 +812,7 @@
 
       const color = deviceColors[point.device_id] || "#7F8C8D";
       const mgrsGrid = latLonToMGRS(lat, lon);
-      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), MGRS: ${mgrsGrid}, isLatest: ${isLatest}`);
+      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), Grid: ${mgrsGrid}, isLatest: ${isLatest}`);
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
@@ -720,8 +826,6 @@
         const popupContent = `
           <strong>Device ID:</strong> ${point.device_id}<br>
           <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-          <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-          <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
           <strong>Timestamp:</strong> ${point.timestamp}<br>
           <strong>Satellites:</strong> ${point.sats || 'N/A'}
         `;
@@ -771,8 +875,6 @@
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
             <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
           crestMarker.bindPopup(popupContent);
@@ -788,16 +890,16 @@
         } else {
           const pinIcon = L.divIcon({
             html: `<div style="
-              width: 6px; 
-              height: 6px; 
+              width: 12px; 
+              height: 12px; 
               background-color: ${color}; 
-              border: 1px solid white; 
+              border: 2px solid white; 
               border-radius: 50%;
-              box-shadow: 0 0 2px rgba(0,0,0,0.3);
+              box-shadow: 0 0 3px rgba(0,0,0,0.4);
             "></div>`,
             className: 'history-pin',
-            iconSize: [6, 6],
-            iconAnchor: [3, 3]
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
           });
 
           const pin = L.marker([lat, lon], { 
@@ -808,8 +910,6 @@
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-            <strong>Latitude:</strong> ${lat.toFixed(6)}<br>
-            <strong>Longitude:</strong> ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
           pin.bindPopup(popupContent);
@@ -1003,35 +1103,6 @@
       lastUpdate.textContent = new Date().toLocaleTimeString();
     }
     
-    socket.on("gps_update", (data) => {
-      processGPSUpdate(data);
-    });
-
-    // Test data generator for debugging (remove in production) - now supports 27 devices
-    function generateTestData() {
-      const testDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV',
-                          'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-      const baseLat = -33.87;
-      const baseLon = 151.21;
-      
-      testDevices.forEach((deviceId, index) => {
-        const lat = baseLat + (Math.random() - 0.5) * 0.01;
-        const lon = baseLon + (Math.random() - 0.5) * 0.01;
-        
-        const testData = {
-          device_id: deviceId,
-          latitude: lat.toString(),
-          longitude: lon.toString(),
-          timestamp: new Date().toISOString().replace('T', ' ').replace('Z', ''),
-          sats: Math.floor(Math.random() * 12) + 4
-        };
-        
-        // Process test data directly instead of emitting through socket
-        processGPSUpdate(testData);
-      });
-    }
-
-    // Extract GPS processing logic into a separate function
     function processGPSUpdate(data) {
       console.log('📡 Processing GPS update:', data);
       
@@ -1094,6 +1165,69 @@
       console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
     }
 
+    // Initialize immediately
+    console.log('Initializing GPS tracker...');
+    
+    // Test grid conversion
+    const testGrid = latLonToMGRS(-32.764156, 151.176543);
+    console.log('Test grid conversion:', testGrid);
+    
+    // Setup debug panel hover/touch functionality
+    const debugPanel = document.getElementById('debug');
+    let debugTimeout;
+    
+    console.log('Setting up debug panel events...');
+    
+    // Start collapsed
+    debugPanel.classList.add('collapsed');
+    
+    // Mouse events for desktop
+    debugPanel.addEventListener('mouseenter', (e) => {
+      console.log('Mouse entered debug panel');
+      clearTimeout(debugTimeout);
+      debugPanel.classList.remove('collapsed');
+    });
+    
+    debugPanel.addEventListener('mouseleave', (e) => {
+      console.log('Mouse left debug panel');
+      debugTimeout = setTimeout(() => {
+        console.log('Collapsing debug panel after delay');
+        debugPanel.classList.add('collapsed');
+      }, 1500); // 1.5 second delay before collapsing
+    });
+    
+    // Click/Touch events for mobile and desktop
+    debugPanel.addEventListener('click', (e) => {
+      console.log('Debug panel clicked');
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeout(debugTimeout);
+      
+      if (debugPanel.classList.contains('collapsed')) {
+        console.log('Expanding debug panel');
+        debugPanel.classList.remove('collapsed');
+        // Auto-collapse after 4 seconds
+        debugTimeout = setTimeout(() => {
+          console.log('Auto-collapsing debug panel');
+          debugPanel.classList.add('collapsed');
+        }, 4000);
+      } else {
+        console.log('Collapsing debug panel immediately');
+        debugPanel.classList.add('collapsed');
+      }
+    });
+    
+    // Touch events for better mobile support
+    debugPanel.addEventListener('touchstart', (e) => {
+      console.log('Touch started on debug panel');
+      // Don't prevent default here as it might interfere with click
+    });
+    
+    // Initialize socket connection
+    socket.on("gps_update", (data) => {
+      processGPSUpdate(data);
+    });
+
     // Uncomment the line below to generate test data every 5 seconds
     // setInterval(generateTestData, 5000);
 
@@ -1113,3 +1247,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
