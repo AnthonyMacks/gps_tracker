@@ -23,8 +23,12 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      max-width: 340px;
-      max-height: 70%;
+      width: 340px;
+      height: 400px;
+      min-width: 200px;
+      min-height: 150px;
+      max-width: 90%;
+      max-height: 80%;
       overflow-y: auto;
       background: rgba(255,255,255,0.85);
       padding: 10px;
@@ -34,14 +38,25 @@
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+      resize: both;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    #info:hover {
+      border-color: #3498DB;
     }
 
     #info2 {
       position: absolute;
       top: 10px;
       right: 370px;
-      max-width: 340px;
-      max-height: 70%;
+      width: 340px;
+      height: 400px;
+      min-width: 200px;
+      min-height: 150px;
+      max-width: 90%;
+      max-height: 80%;
       overflow-y: auto;
       background: rgba(255,255,255,0.85);
       padding: 10px;
@@ -51,6 +66,115 @@
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+      resize: both;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    #info2:hover {
+      border-color: #3498DB;
+    }
+
+    /* Mobile resize handles */
+    .resize-handle {
+      position: absolute;
+      background: #3498DB;
+      opacity: 0.8;
+      z-index: 1002;
+      border-radius: 4px;
+      transition: all 0.2s;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .resize-handle:hover,
+    .resize-handle:active,
+    .resize-handle.resizing {
+      opacity: 1;
+      background: #2980B9;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .resize-se {
+      bottom: 2px;
+      right: 2px;
+      width: 24px;
+      height: 24px;
+      cursor: nw-resize;
+    }
+
+    .resize-se::after {
+      content: '⤢';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .resize-s {
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 12px;
+      cursor: s-resize;
+    }
+
+    .resize-s::after {
+      content: '↕';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .resize-e {
+      right: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 40px;
+      cursor: e-resize;
+    }
+
+    .resize-e::after {
+      content: '↔';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    /* Always show resize handles on mobile/touch devices */
+    @media (max-width: 768px), (hover: none) {
+      .resize-handle {
+        display: block !important;
+      }
+      
+      #info, #info2 {
+        resize: none !important;
+      }
+    }
+
+    /* Hide handles on desktop by default, show on hover */
+    @media (min-width: 769px) and (hover: hover) {
+      .resize-handle {
+        display: none;
+      }
+      
+      #info:hover .resize-handle,
+      #info2:hover .resize-handle {
+        display: block;
+      }
     }
 
     #toggle-button, #toggle-button2 {
@@ -283,21 +407,27 @@
         top: 10px;
         right: 10px;
         left: auto;
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
+        width: 45vw;
+        height: 35vh;
+        min-width: 200px;
+        min-height: 150px;
+        max-width: 90vw;
+        max-height: 80vh;
         font-size: 11px;
         padding: 6px;
       }
 
       #info2 {
         position: absolute;
-        top: 50%;
+        top: 50vh;
         right: 10px;
         left: auto;
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
+        width: 45vw;
+        height: 35vh;
+        min-width: 200px;
+        min-height: 150px;
+        max-width: 90vw;
+        max-height: 45vh;
         font-size: 11px;
         padding: 6px;
       }
@@ -353,21 +483,43 @@
         font-size: 10px;
         padding: 2px 4px;
       }
+
+      /* Larger resize handles for mobile */
+      .resize-se {
+        width: 28px;
+        height: 28px;
+        bottom: 3px;
+        right: 3px;
+      }
+
+      .resize-s {
+        height: 14px;
+        width: 50px;
+        bottom: 3px;
+      }
+
+      .resize-e {
+        width: 14px;
+        height: 50px;
+        right: 3px;
+      }
     }
 
     /* Portrait phone adjustments */
     @media (max-width: 480px) and (orientation: portrait) {
       #info {
-        max-height: 30%;
+        width: 48vw;
+        height: 30vh;
+        max-height: 40vh;
         font-size: 10px;
-        width: calc(48% - 10px);
       }
 
       #info2 {
-        top: 35%;
-        max-height: 30%;
+        top: 35vh;
+        width: 48vw;
+        height: 30vh;
+        max-height: 40vh;
         font-size: 10px;
-        width: calc(48% - 10px);
       }
 
       table {
@@ -414,6 +566,26 @@
       footer {
         font-size: 9px;
       }
+
+      /* Extra large resize handles for small phones */
+      .resize-se {
+        width: 32px;
+        height: 32px;
+        bottom: 4px;
+        right: 4px;
+      }
+
+      .resize-s {
+        height: 16px;
+        width: 60px;
+        bottom: 4px;
+      }
+
+      .resize-e {
+        width: 16px;
+        height: 60px;
+        right: 4px;
+      }
     }
 
     /* Landscape phone adjustments */
@@ -423,19 +595,23 @@
         top: 10px;
         right: 10px;
         left: auto;
-        width: 220px;
-        max-width: 220px;
-        max-height: 40%;
+        width: 30vw;
+        height: 45vh;
+        min-width: 220px;
+        max-width: 400px;
+        max-height: 70vh;
       }
 
       #info2 {
         position: absolute;
-        top: 50%;
+        top: 55vh;
         right: 10px;
         left: auto;
-        width: 220px;
-        max-width: 220px;
-        max-height: 40%;
+        width: 30vw;
+        height: 35vh;
+        min-width: 220px;
+        max-width: 400px;
+        max-height: 40vh;
       }
 
       #opacity-control {
@@ -464,6 +640,20 @@
         font-size: 8px;
       }
     }
+
+    /* Desktop specific styles */
+    @media (min-width: 769px) {
+      #info {
+        width: 340px;
+        height: 400px;
+      }
+
+      #info2 {
+        width: 340px;
+        height: 400px;
+        right: 370px;
+      }
+    }
     
   </style>
 </head>
@@ -484,6 +674,10 @@
 </thead>
 <tbody></tbody>
 </table>
+<!-- Mobile resize handles -->
+<div class="resize-handle resize-se"></div>
+<div class="resize-handle resize-s"></div>
+<div class="resize-handle resize-e"></div>
 </div>
 <div id="info2">
 <strong>📡 GPS MacksTrack Data (XVI-XXVII)</strong>
@@ -500,6 +694,10 @@
 </thead>
 <tbody></tbody>
 </table>
+<!-- Mobile resize handles -->
+<div class="resize-handle resize-se"></div>
+<div class="resize-handle resize-s"></div>
+<div class="resize-handle resize-e"></div>
 </div>
 <div id="opacity-control">
 <label for="opacity-slider">Base Layer Opacity:</label>
@@ -1247,12 +1445,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
