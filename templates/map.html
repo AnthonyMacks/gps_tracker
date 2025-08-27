@@ -23,12 +23,8 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      width: 340px;
-      height: 400px;
-      min-width: 200px;
-      min-height: 150px;
-      max-width: 90%;
-      max-height: 80%;
+      max-width: 340px;
+      max-height: 70%;
       overflow-y: auto;
       background: rgba(255,255,255,0.85);
       padding: 10px;
@@ -38,25 +34,14 @@
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
-      resize: both;
-      border: 2px solid transparent;
-      transition: border-color 0.2s;
-    }
-
-    #info:hover {
-      border-color: #3498DB;
     }
 
     #info2 {
       position: absolute;
       top: 10px;
       right: 370px;
-      width: 340px;
-      height: 400px;
-      min-width: 200px;
-      min-height: 150px;
-      max-width: 90%;
-      max-height: 80%;
+      max-width: 340px;
+      max-height: 70%;
       overflow-y: auto;
       background: rgba(255,255,255,0.85);
       padding: 10px;
@@ -66,115 +51,6 @@
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
-      resize: both;
-      border: 2px solid transparent;
-      transition: border-color 0.2s;
-    }
-
-    #info2:hover {
-      border-color: #3498DB;
-    }
-
-    /* Mobile resize handles */
-    .resize-handle {
-      position: absolute;
-      background: #3498DB;
-      opacity: 0.8;
-      z-index: 1002;
-      border-radius: 4px;
-      transition: all 0.2s;
-      touch-action: none;
-      user-select: none;
-    }
-
-    .resize-handle:hover,
-    .resize-handle:active,
-    .resize-handle.resizing {
-      opacity: 1;
-      background: #2980B9;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-
-    .resize-se {
-      bottom: 2px;
-      right: 2px;
-      width: 24px;
-      height: 24px;
-      cursor: nw-resize;
-    }
-
-    .resize-se::after {
-      content: '⤢';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .resize-s {
-      bottom: 2px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 40px;
-      height: 12px;
-      cursor: s-resize;
-    }
-
-    .resize-s::after {
-      content: '↕';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
-    .resize-e {
-      right: 2px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 12px;
-      height: 40px;
-      cursor: e-resize;
-    }
-
-    .resize-e::after {
-      content: '↔';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
-    /* Always show resize handles on mobile/touch devices */
-    @media (max-width: 768px), (hover: none) {
-      .resize-handle {
-        display: block !important;
-      }
-      
-      #info, #info2 {
-        resize: none !important;
-      }
-    }
-
-    /* Hide handles on desktop by default, show on hover */
-    @media (min-width: 769px) and (hover: hover) {
-      .resize-handle {
-        display: none;
-      }
-      
-      #info:hover .resize-handle,
-      #info2:hover .resize-handle {
-        display: block;
-      }
     }
 
     #toggle-button, #toggle-button2 {
@@ -400,34 +276,28 @@
       font-weight: bold;
     }
 
-    /* Mobile responsive styles */
+    /* Mobile responsive styles - auto resize panels */
     @media (max-width: 768px) {
       #info {
         position: absolute;
         top: 10px;
         right: 10px;
         left: auto;
+        max-width: none;
         width: 45vw;
-        height: 35vh;
-        min-width: 200px;
-        min-height: 150px;
-        max-width: 90vw;
-        max-height: 80vh;
+        max-height: 40vh;
         font-size: 11px;
         padding: 6px;
       }
 
       #info2 {
         position: absolute;
-        top: 50vh;
-        right: 10px;
+        top: 10px;
+        right: calc(45vw + 20px);
         left: auto;
+        max-width: none;
         width: 45vw;
-        height: 35vh;
-        min-width: 200px;
-        min-height: 150px;
-        max-width: 90vw;
-        max-height: 45vh;
+        max-height: 40vh;
         font-size: 11px;
         padding: 6px;
       }
@@ -483,42 +353,22 @@
         font-size: 10px;
         padding: 2px 4px;
       }
-
-      /* Larger resize handles for mobile */
-      .resize-se {
-        width: 28px;
-        height: 28px;
-        bottom: 3px;
-        right: 3px;
-      }
-
-      .resize-s {
-        height: 14px;
-        width: 50px;
-        bottom: 3px;
-      }
-
-      .resize-e {
-        width: 14px;
-        height: 50px;
-        right: 3px;
-      }
     }
 
     /* Portrait phone adjustments */
     @media (max-width: 480px) and (orientation: portrait) {
       #info {
-        width: 48vw;
-        height: 30vh;
-        max-height: 40vh;
+        width: 90vw;
+        max-height: 30vh;
         font-size: 10px;
+        right: 5vw;
       }
 
       #info2 {
-        top: 35vh;
-        width: 48vw;
-        height: 30vh;
-        max-height: 40vh;
+        top: calc(30vh + 60px);
+        right: 5vw;
+        width: 90vw;
+        max-height: 30vh;
         font-size: 10px;
       }
 
@@ -566,26 +416,6 @@
       footer {
         font-size: 9px;
       }
-
-      /* Extra large resize handles for small phones */
-      .resize-se {
-        width: 32px;
-        height: 32px;
-        bottom: 4px;
-        right: 4px;
-      }
-
-      .resize-s {
-        height: 16px;
-        width: 60px;
-        bottom: 4px;
-      }
-
-      .resize-e {
-        width: 16px;
-        height: 60px;
-        right: 4px;
-      }
     }
 
     /* Landscape phone adjustments */
@@ -595,23 +425,19 @@
         top: 10px;
         right: 10px;
         left: auto;
-        width: 30vw;
-        height: 45vh;
-        min-width: 220px;
-        max-width: 400px;
-        max-height: 70vh;
+        width: 40vw;
+        max-width: 40vw;
+        max-height: 80vh;
       }
 
       #info2 {
         position: absolute;
-        top: 55vh;
-        right: 10px;
+        top: 10px;
+        right: calc(40vw + 20px);
         left: auto;
-        width: 30vw;
-        height: 35vh;
-        min-width: 220px;
-        max-width: 400px;
-        max-height: 40vh;
+        width: 40vw;
+        max-width: 40vw;
+        max-height: 80vh;
       }
 
       #opacity-control {
@@ -640,20 +466,6 @@
         font-size: 8px;
       }
     }
-
-    /* Desktop specific styles */
-    @media (min-width: 769px) {
-      #info {
-        width: 340px;
-        height: 400px;
-      }
-
-      #info2 {
-        width: 340px;
-        height: 400px;
-        right: 370px;
-      }
-    }
     
   </style>
 </head>
@@ -674,10 +486,6 @@
 </thead>
 <tbody></tbody>
 </table>
-<!-- Mobile resize handles -->
-<div class="resize-handle resize-se"></div>
-<div class="resize-handle resize-s"></div>
-<div class="resize-handle resize-e"></div>
 </div>
 <div id="info2">
 <strong>📡 GPS MacksTrack Data (XVI-XXVII)</strong>
@@ -694,10 +502,6 @@
 </thead>
 <tbody></tbody>
 </table>
-<!-- Mobile resize handles -->
-<div class="resize-handle resize-se"></div>
-<div class="resize-handle resize-s"></div>
-<div class="resize-handle resize-e"></div>
 </div>
 <div id="opacity-control">
 <label for="opacity-slider">Base Layer Opacity:</label>
@@ -1059,389 +863,4 @@
         
         if (isFirstPoint) {
           const crestIcon = L.icon({
-            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
-            iconSize: [32, 32],   // adjust size as needed
-            iconAnchor: [16, 32], // bottom center
-            popupAnchor: [0, -32] // popup above
-          });
-
-          const crestMarker = L.marker([lat, lon], { 
-            icon: crestIcon,
-            interactive: true
-          });
-
-          const popupContent = `
-            <strong>Device ID:</strong> ${point.device_id} (START)<br>
-            <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-            <strong>Timestamp:</strong> ${point.timestamp}
-          `;
-          crestMarker.bindPopup(popupContent);
-
-          if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
-          allMarkers[point.device_id].history.push(crestMarker);
-          
-          if (deviceVisibility[point.device_id] !== false) {
-            crestMarker.addTo(map);
-          }
-          
-          totalPoints++;
-        } else {
-          const pinIcon = L.divIcon({
-            html: `<div style="
-              width: 12px; 
-              height: 12px; 
-              background-color: ${color}; 
-              border: 2px solid white; 
-              border-radius: 50%;
-              box-shadow: 0 0 3px rgba(0,0,0,0.4);
-            "></div>`,
-            className: 'history-pin',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          });
-
-          const pin = L.marker([lat, lon], { 
-            icon: pinIcon,
-            interactive: true
-          });
-
-          const popupContent = `
-            <strong>Device ID:</strong> ${point.device_id}<br>
-            <strong>Grid Reference:</strong> ${mgrsGrid}<br>
-            <strong>Timestamp:</strong> ${point.timestamp}
-          `;
-          pin.bindPopup(popupContent);
-
-          if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
-          allMarkers[point.device_id].history.push(pin);
-          
-          if (deviceVisibility[point.device_id] !== false) {
-            pin.addTo(map);
-          }
-          
-          totalPoints++;
-        }
-      }
-    }
-
-    function calculateBearing(lat1, lon1, lat2, lon2) {
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const lat1Rad = lat1 * Math.PI / 180;
-      const lat2Rad = lat2 * Math.PI / 180;
-      
-      const y = Math.sin(dLon) * Math.cos(lat2Rad);
-      const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
-      
-      const bearing = Math.atan2(y, x) * 180 / Math.PI;
-      return (bearing + 360) % 360;
-    }
-
-    function addArrowToSegment(p1, p2, color) {
-      const midLat = (p1[0] + p2[0]) / 2;
-      const midLon = (p1[1] + p2[1]) / 2;
-      
-      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-      console.log(`Creating arrow: P1=[${p1[0]}, ${p1[1]}], P2=[${p2[0]}, ${p2[1]}], Mid=[${midLat}, ${midLon}], bearing=${bearing}°`);
-      
-      // Create arrow with CSS animation that moves along the trail
-      const arrowHtml = `
-        <div style="
-          width: 0;
-          height: 0;
-          border-left: 8px solid transparent;
-          border-right: 8px solid transparent;
-          border-bottom: 16px solid ${color};
-          border-top: 2px solid white;
-          transform-origin: center bottom;
-          position: relative;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-          --arrow-bearing: ${bearing}deg;
-        "></div>
-      `;
-
-      const arrowIcon = L.divIcon({
-        html: arrowHtml,
-        className: 'trail-arrow',
-        iconSize: [16, 18],
-        iconAnchor: [8, 16]
-      });
-
-      const arrow = L.marker([midLat, midLon], { 
-        icon: arrowIcon, 
-        interactive: false 
-      });
-
-      console.log(`Animated Arrow placed at [${midLat}, ${midLon}] with ${bearing}° rotation`);
-      return arrow;
-    }
-
-    function drawTrail(device_id) {
-      const trail = gpsTrails[device_id];
-      if (!trail || trail.length < 2) return;
-      
-      const color = deviceColors[device_id] || "#7F8C8D";
-
-      if (trailLayers[device_id]) {
-        trailLayers[device_id].forEach(layer => {
-          if (map.hasLayer(layer)) {
-            map.removeLayer(layer);
-          }
-        });
-      }
-      trailLayers[device_id] = [];
-
-      // Create the main polyline with animated dots
-      const polyline = L.polyline(trail, {
-        color: color,
-        weight: 4,
-        opacity: 0.8,
-        className: 'animated-polyline'
-      });
-      
-      trailLayers[device_id].push(polyline);
-      
-      if (deviceVisibility[device_id] !== false) {
-        polyline.addTo(map);
-      }
-
-      // Add arrows along the trail - one arrow per segment
-      console.log(`Drawing ${trail.length - 1} arrows for device ${device_id}`);
-      for (let i = 0; i < trail.length - 1; i++) {
-        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
-        trailLayers[device_id].push(arrow);
-        
-        if (deviceVisibility[device_id] !== false) {
-          arrow.addTo(map);
-          console.log(`Arrow ${i + 1} added to map for device ${device_id}`);
-        }
-      }
-    }
-
-    function getAgeLabel(ts) {
-      const iso = ts.replace(" ", "T") + "Z";
-      const pingTime = new Date(iso);
-      if (isNaN(pingTime)) {
-        console.warn("Bad timestamp:", ts);
-        return "——";
-      }
-
-      const nowSec = Date.now();
-      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
-      if (diffSec < 60)   return `${diffSec}s ago`;
-      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
-      return `${Math.floor(diffSec/3600)}h ago`;
-    }
-
-    function getRowClass(ts, sats) {
-      const pingTime = new Date(ts);
-      const now = new Date();
-      const diff = (now - pingTime) / 1000;
-
-      if (sats !== undefined && sats < 4) return "row-low-sats";
-
-      if (diff <= 180) return "row-active";
-      if (diff <= 360) return "row-warm";
-      return "row-stale";
-    }
-
-    function updateTable() {
-      const tbody1 = document.querySelector("#device-table tbody");
-      const tbody2 = document.querySelector("#device-table2 tbody");
-      tbody1.innerHTML = "";
-      tbody2.innerHTML = "";
-
-      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
-        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
-      );
-
-      // Devices I-XV go to first table, XVI-XXVII go to second table
-      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
-
-      for (const id of sortedIDs) {
-        const packet = latestPackets[id];
-        const count  = packetCounts[id] || 0;
-        const sats   = packet.sats ?? "—";
-        const lat    = parseFloat(packet.latitude).toFixed(6);
-        const lon    = parseFloat(packet.longitude).toFixed(6);
-
-        const row = document.createElement("tr");
-        row.className = getRowClass(packet.timestamp, packet.sats);
-
-        row.innerHTML = `
-          <td>${id}</td>
-          <td>${lat}</td>
-          <td>${lon}</td>
-          <td>${count}</td>
-          <td>${sats}</td>
-        `;
-
-        row.style.cursor = "pointer";
-        row.addEventListener("click", () => {
-          toggleDeviceVisibility(id);
-          updateTable();
-        });
-
-        if (selectedDevice === id) {
-          row.style.border = "2px solid #3498DB";
-        }
-
-        // Add row to appropriate table
-        if (firstTableDevices.includes(id)) {
-          tbody1.appendChild(row);
-        } else if (secondTableDevices.includes(id)) {
-          tbody2.appendChild(row);
-        }
-      }
-    }
-
-    function updateDebugInfo() {
-      deviceCount.textContent = Object.keys(latestPackets).length;
-      pointCount.textContent = totalPoints;
-      lastUpdate.textContent = new Date().toLocaleTimeString();
-    }
-    
-    function processGPSUpdate(data) {
-      console.log('📡 Processing GPS update:', data);
-      
-      const { latitude, longitude, device_id, timestamp } = data;
-      if (!latitude || !longitude || !device_id || !timestamp) {
-        console.warn('Missing required data:', data);
-        return;
-      }
-
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      
-      if (isNaN(lat) || isNaN(lon)) {
-        console.warn('Invalid coordinates:', data);
-        return;
-      }
-
-      // Store the packet with corrected timestamp
-      latestPackets[device_id] = {
-        ...data,
-        timestamp: timestamp.replace(" ", "T") + "Z"
-      };
-
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-
-      // Move the last "current" point into history
-      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
-        const lastPoint = {
-          ...latestPackets[device_id],
-          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
-          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
-        };
-        addDataPoint(lastPoint, false);
-      }
-      
-      // Add the new current marker
-      addDataPoint(data, true);
-
-      // Update map bounds
-      allPointsBounds.extend([lat, lon]);
-      
-      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
-      if (!hasInitialData) {
-        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-        hasInitialData = true;
-      }
-
-      // Build the trail
-      gpsTrails[device_id] = gpsTrails[device_id] || [];
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
-
-      // Redraw trail with arrows
-      drawTrail(device_id);
-
-      // Update UI
-      updateTable();
-      updateDebugInfo();
-
-      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
-    }
-
-    // Initialize immediately
-    console.log('Initializing GPS tracker...');
-    
-    // Test grid conversion
-    const testGrid = latLonToMGRS(-32.764156, 151.176543);
-    console.log('Test grid conversion:', testGrid);
-    
-    // Setup debug panel hover/touch functionality
-    const debugPanel = document.getElementById('debug');
-    let debugTimeout;
-    
-    console.log('Setting up debug panel events...');
-    
-    // Start collapsed
-    debugPanel.classList.add('collapsed');
-    
-    // Mouse events for desktop
-    debugPanel.addEventListener('mouseenter', (e) => {
-      console.log('Mouse entered debug panel');
-      clearTimeout(debugTimeout);
-      debugPanel.classList.remove('collapsed');
-    });
-    
-    debugPanel.addEventListener('mouseleave', (e) => {
-      console.log('Mouse left debug panel');
-      debugTimeout = setTimeout(() => {
-        console.log('Collapsing debug panel after delay');
-        debugPanel.classList.add('collapsed');
-      }, 1500); // 1.5 second delay before collapsing
-    });
-    
-    // Click/Touch events for mobile and desktop
-    debugPanel.addEventListener('click', (e) => {
-      console.log('Debug panel clicked');
-      e.preventDefault();
-      e.stopPropagation();
-      clearTimeout(debugTimeout);
-      
-      if (debugPanel.classList.contains('collapsed')) {
-        console.log('Expanding debug panel');
-        debugPanel.classList.remove('collapsed');
-        // Auto-collapse after 4 seconds
-        debugTimeout = setTimeout(() => {
-          console.log('Auto-collapsing debug panel');
-          debugPanel.classList.add('collapsed');
-        }, 4000);
-      } else {
-        console.log('Collapsing debug panel immediately');
-        debugPanel.classList.add('collapsed');
-      }
-    });
-    
-    // Touch events for better mobile support
-    debugPanel.addEventListener('touchstart', (e) => {
-      console.log('Touch started on debug panel');
-      // Don't prevent default here as it might interfere with click
-    });
-    
-    // Initialize socket connection
-    socket.on("gps_update", (data) => {
-      processGPSUpdate(data);
-    });
-
-    // Uncomment the line below to generate test data every 5 seconds
-    // setInterval(generateTestData, 5000);
-
-    setInterval(updateTable, 10000);
-    
-    document.getElementById("build-time").textContent =
-      new Date().toLocaleString("en-AU", {
-        timeZone: "Australia/Sydney",
-        hour12: false,
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-  </script>
-</body>
-</html>
+            iconUrl: "https://raw.githubusercontent.com
