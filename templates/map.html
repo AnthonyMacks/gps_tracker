@@ -197,45 +197,12 @@
       animation: moveDots 4s linear infinite;
     }
 
-    .trail-arrow {
-      z-index: 1000;
-      animation: moveArrowAlongTrail 2s linear infinite;
-    }
-
-    @keyframes moveArrowAlongTrail {
-      0% {
-        transform: translateX(-4px) translateY(-4px) rotate(var(--arrow-bearing));
-        opacity: 0.7;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(4px) translateY(4px) rotate(var(--arrow-bearing));
-        opacity: 0.7;
-      }
-    }
-
     @keyframes moveDots {
       0% {
         stroke-dashoffset: 15;
       }
       100% {
         stroke-dashoffset: 0;
-      }
-    }
-
-    @keyframes moveArrowAlongPath {
-      0% {
-        transform: translateX(-7px) translateY(-7px);
-        opacity: 0.6;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(7px) translateY(7px);
-        opacity: 0.6;
       }
     }
 
@@ -486,7 +453,7 @@
 </table>
 </div>
 <div id="info2">
-<strong>📡 GPS MacksTrack Data (XVI-XXVII)</strong>
+<strong>📡 GPS MacksTrack Data (XVI-XXX)</strong>
 <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
 <table id="device-table2">
 <thead>
@@ -676,17 +643,23 @@
       currentBaseLayer.setOpacity(opacity);
     });
 
-    // Device colors - expanded for 27 devices with vibrant colors for better visibility
+    // Device colors - expanded for 30 devices with unique, vibrant colors
     const deviceColors = {
-      '1': '#E74C3C', '2': '#3498DB', '3': '#2ECC71', '4': '#F39C12', '5': '#9B59B6',
-      '6': '#1ABC9C', '7': '#E67E22', '8': '#34495E', '9': '#E91E63', '10': '#FF5722',
-      '11': '#795548', '12': '#607D8B', '13': '#FF9800', '14': '#4CAF50', '15': '#673AB7',
-      'I': '#E74C3C', 'II': '#3498DB', 'III': '#2ECC71', 'IV': '#F39C12', 'V': '#9B59B6',
-      'VI': '#1ABC9C', 'VII': '#E67E22', 'VIII': '#34495E', 'IX': '#E91E63', 'X': '#FF5722',
-      'XI': '#795548', 'XII': '#607D8B', 'XIII': '#FF9800', 'XIV': '#4CAF50', 'XV': '#673AB7',
-      'XVI': '#FF1744', 'XVII': '#448AFF', 'XVIII': '#00E676', 'XIX': '#FFC107', 'XX': '#AB47BC',
-      'XXI': '#26C6DA', 'XXII': '#FF6F00', 'XXIII': '#546E7A', 'XXIV': '#EC407A', 'XXV': '#8BC34A',
-      'XXVI': '#5E35B1', 'XXVII': '#FF5252'
+      // Numeric IDs (1-30)
+      '1': '#E74C3C',   '2': '#3498DB',   '3': '#2ECC71',   '4': '#F39C12',   '5': '#9B59B6',
+      '6': '#1ABC9C',   '7': '#E67E22',   '8': '#34495E',   '9': '#E91E63',   '10': '#FF5722',
+      '11': '#795548',  '12': '#607D8B',  '13': '#FF9800',  '14': '#4CAF50',  '15': '#673AB7',
+      '16': '#FF1744',  '17': '#448AFF',  '18': '#00E676',  '19': '#FFC107',  '20': '#AB47BC',
+      '21': '#26C6DA',  '22': '#FF6F00',  '23': '#546E7A',  '24': '#EC407A',  '25': '#8BC34A',
+      '26': '#5E35B1',  '27': '#FF5252',  '28': '#00BCD4',  '29': '#FFEB3B',  '30': '#795548',
+      
+      // Roman numerals (I-XXX)
+      'I': '#E74C3C',     'II': '#3498DB',    'III': '#2ECC71',   'IV': '#F39C12',    'V': '#9B59B6',
+      'VI': '#1ABC9C',    'VII': '#E67E22',   'VIII': '#34495E',  'IX': '#E91E63',    'X': '#FF5722',
+      'XI': '#795548',    'XII': '#607D8B',   'XIII': '#FF9800',  'XIV': '#4CAF50',   'XV': '#673AB7',
+      'XVI': '#FF1744',   'XVII': '#448AFF',  'XVIII': '#00E676', 'XIX': '#FFC107',   'XX': '#AB47BC',
+      'XXI': '#26C6DA',   'XXII': '#FF6F00',  'XXIII': '#546E7A', 'XXIV': '#EC407A',  'XXV': '#8BC34A',
+      'XXVI': '#5E35B1',  'XXVII': '#FF5252', 'XXVIII': '#00BCD4','XXIX': '#FFEB3B',  'XXX': '#8D6E63'
     };
 
     // Initialize socket connection
@@ -926,57 +899,6 @@
       }
     }
 
-    function calculateBearing(lat1, lon1, lat2, lon2) {
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const lat1Rad = lat1 * Math.PI / 180;
-      const lat2Rad = lat2 * Math.PI / 180;
-      
-      const y = Math.sin(dLon) * Math.cos(lat2Rad);
-      const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
-      
-      const bearing = Math.atan2(y, x) * 180 / Math.PI;
-      return (bearing + 360) % 360;
-    }
-
-    function addArrowToSegment(p1, p2, color) {
-      const midLat = (p1[0] + p2[0]) / 2;
-      const midLon = (p1[1] + p2[1]) / 2;
-      
-      const bearing = calculateBearing(p1[0], p1[1], p2[0], p2[1]);
-      console.log(`Creating arrow: P1=[${p1[0]}, ${p1[1]}], P2=[${p2[0]}, ${p2[1]}], Mid=[${midLat}, ${midLon}], bearing=${bearing}°`);
-      
-      // Create arrow with CSS animation that moves along the trail
-      const arrowHtml = `
-        <div style="
-          width: 0;
-          height: 0;
-          border-left: 8px solid transparent;
-          border-right: 8px solid transparent;
-          border-bottom: 16px solid ${color};
-          border-top: 2px solid white;
-          transform-origin: center bottom;
-          position: relative;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-          --arrow-bearing: ${bearing}deg;
-        "></div>
-      `;
-
-      const arrowIcon = L.divIcon({
-        html: arrowHtml,
-        className: 'trail-arrow',
-        iconSize: [16, 18],
-        iconAnchor: [8, 16]
-      });
-
-      const arrow = L.marker([midLat, midLon], { 
-        icon: arrowIcon, 
-        interactive: false 
-      });
-
-      console.log(`Animated Arrow placed at [${midLat}, ${midLon}] with ${bearing}° rotation`);
-      return arrow;
-    }
-
     function drawTrail(device_id) {
       const trail = gpsTrails[device_id];
       if (!trail || trail.length < 2) return;
@@ -992,7 +914,7 @@
       }
       trailLayers[device_id] = [];
 
-      // Create the main polyline with animated dots
+      // Create the main polyline with animated dots (no arrows)
       const polyline = L.polyline(trail, {
         color: color,
         weight: 4,
@@ -1006,17 +928,7 @@
         polyline.addTo(map);
       }
 
-      // Add arrows along the trail - one arrow per segment
-      console.log(`Drawing ${trail.length - 1} arrows for device ${device_id}`);
-      for (let i = 0; i < trail.length - 1; i++) {
-        const arrow = addArrowToSegment(trail[i], trail[i + 1], color);
-        trailLayers[device_id].push(arrow);
-        
-        if (deviceVisibility[device_id] !== false) {
-          arrow.addTo(map);
-          console.log(`Arrow ${i + 1} added to map for device ${device_id}`);
-        }
-      }
+      console.log(`Trail drawn for device ${device_id} with ${trail.length} points (no arrows)`);
     }
 
     function getAgeLabel(ts) {
@@ -1155,7 +1067,7 @@
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // Redraw trail with arrows
+      // Redraw trail (without arrows)
       drawTrail(device_id);
 
       // Update UI
@@ -1247,13 +1159,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
