@@ -1056,9 +1056,9 @@
         a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
       );
 
-      // Devices I-XV go to first table, XVI-XXVII go to second table
-      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-      const secondTableDevices = ['XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII'];
+      // Devices I-XII go to first table, XIII-XXX go to second table
+      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+      const secondTableDevices = ['XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII', 'XXVIII', 'XXIX', 'XXX'];
 
       for (const id of sortedIDs) {
         const packet = latestPackets[id];
@@ -1247,6 +1247,7 @@
   </script>
 </body>
 </html>
+
 
 
 
