@@ -174,8 +174,8 @@
 
     #debug {
       position: absolute;
-      bottom: 20%;
-      left: 10px;
+      bottom: 160px;
+      right: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
       padding: 10px;
@@ -329,8 +329,13 @@
         padding: 6px;
       }
 
+      #grid-control button {
+        font-size: 8px;
+        padding: 1px 4px;
+      }
+
       #debug {
-        bottom: 120px;
+        bottom: 200px;
         left: 10px;
         font-size: 9px;
         padding: 6px;
@@ -400,9 +405,15 @@
         padding: 4px;
       }
 
+      #grid-control button {
+        font-size: 7px;
+        padding: 1px 3px;
+      }
+
       #debug {
-        bottom: 110px;
-        left: 10px;
+        bottom: 130px;
+        right: 10px;
+        left: auto;
         font-size: 8px;
         padding: 4px;
         max-width: 150px;
@@ -460,9 +471,15 @@
         font-size: 10px;
       }
 
+      #grid-control button {
+        font-size: 8px;
+        padding: 1px 4px;
+      }
+
       #debug {
-        bottom: 60px;
-        left: 10px;
+        bottom: 140px;
+        right: 10px;
+        left: auto;
         font-size: 9px;
         max-width: 180px;
       }
@@ -535,6 +552,23 @@
   <input type="radio" name="datum" value="gda2020"/>
   GDA2020
 </label>
+<br/>
+<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
+  <div style="font-size: 10px; font-weight: bold; margin-bottom: 4px;">Fine Tune Alignment:</div>
+  <label style="font-size: 10px;">
+    E: <button onclick="adjustGrid(-100, 0)" style="font-size: 9px; padding: 2px 5px;">◄</button>
+    <span id="offset-e" style="display: inline-block; width: 35px; text-align: center;">0m</span>
+    <button onclick="adjustGrid(100, 0)" style="font-size: 9px; padding: 2px 5px;">►</button>
+  </label>
+  <br/>
+  <label style="font-size: 10px;">
+    N: <button onclick="adjustGrid(0, -100)" style="font-size: 9px; padding: 2px 5px;">▼</button>
+    <span id="offset-n" style="display: inline-block; width: 35px; text-align: center;">0m</span>
+    <button onclick="adjustGrid(0, 100)" style="font-size: 9px; padding: 2px 5px;">▲</button>
+  </label>
+  <br/>
+  <button onclick="resetGrid()" style="font-size: 9px; padding: 2px 8px; margin-top: 4px;">Reset</button>
+</div>
 </div>
 <div id="debug" class="collapsed">
 <div class="debug-title">Debug Info</div>
@@ -571,6 +605,8 @@
     const n100kLetters = "ABCDEFGHJKLMNPQRSTUV";
     
     let useGDA94 = true; // NSW Topo typically uses GDA94
+    let gridOffsetE = 0; // Easting offset in meters
+    let gridOffsetN = 0; // Northing offset in meters
 
     function getUTMZone(lon) {
       if (lon >= 150 && lon < 156) return 55;
@@ -661,26 +697,28 @@
         const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
         const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
 
-        // Round to exact 1km boundaries
-        const minE = Math.floor(sw[0] / 1000) * 1000;
-        const maxE = Math.ceil(ne[0] / 1000) * 1000;
-        const minN = Math.floor(sw[1] / 1000) * 1000;
-        const maxN = Math.ceil(ne[1] / 1000) * 1000;
+        // Round to exact 1km boundaries and apply offsets
+        const minE = Math.floor((sw[0] + gridOffsetE) / 1000) * 1000 - gridOffsetE;
+        const maxE = Math.ceil((ne[0] + gridOffsetE) / 1000) * 1000 - gridOffsetE;
+        const minN = Math.floor((sw[1] + gridOffsetN) / 1000) * 1000 - gridOffsetN;
+        const maxN = Math.ceil((ne[1] + gridOffsetN) / 1000) * 1000 - gridOffsetN;
 
         const gridInterval = zoom >= 15 ? 1000 : zoom >= 13 ? 2000 : 5000;
 
         const allLines = [];
         const labels = [];
 
-        console.log(`Drawing grid for zone ${zone}, datum: ${useGDA94 ? 'GDA94' : 'GDA2020'}, interval: ${gridInterval}m`);
+        console.log(`Drawing grid for zone ${zone}, datum: ${useGDA94 ? 'GDA94' : 'GDA2020'}, interval: ${gridInterval}m, offset: E=${gridOffsetE}m N=${gridOffsetN}m`);
 
-        // Draw vertical lines (easting) - using exact km values
+        // Draw vertical lines (easting) - using exact km values with offset
         for (let e = minE; e <= maxE; e += gridInterval) {
+          const eActual = e + gridOffsetE;
           const line = [];
           // Draw line from south to north with fine resolution
           for (let n = minN; n <= maxN; n += 250) {
+            const nActual = n + gridOffsetN;
             try {
-              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [eActual, nActual]);
               line.push([ll[1], ll[0]]);
             } catch (err) {
               console.warn('Grid conversion error:', err);
@@ -691,11 +729,12 @@
             allLines.push(line);
             
             // Add label at top of line
-            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 4);
+            const eastingLabel = (eActual % 100000).toString().padStart(5, '0').substring(0, 4);
             try {
-              const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 1000]);
+              const labelN = maxN + gridOffsetN - 1000;
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [eActual, labelN]);
               labels.push({
-                position: [labelPos[1], labelPos[0]],
+                position: [ll[1], ll[0]],
                 text: `E${eastingLabel}`,
                 color: '#ff0000'
               });
@@ -705,13 +744,15 @@
           }
         }
 
-        // Draw horizontal lines (northing) - using exact km values
+        // Draw horizontal lines (northing) - using exact km values with offset
         for (let n = minN; n <= maxN; n += gridInterval) {
+          const nActual = n + gridOffsetN;
           const line = [];
           // Draw line from west to east with fine resolution
           for (let e = minE; e <= maxE; e += 250) {
+            const eActual = e + gridOffsetE;
             try {
-              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [eActual, nActual]);
               line.push([ll[1], ll[0]]);
             } catch (err) {
               console.warn('Grid conversion error:', err);
@@ -722,11 +763,12 @@
             allLines.push(line);
             
             // Add label at left of line
-            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 4);
+            const northingLabel = (nActual % 100000).toString().padStart(5, '0').substring(0, 4);
             try {
-              const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 1000, n]);
+              const labelE = minE + gridOffsetE + 1000;
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [labelE, nActual]);
               labels.push({
-                position: [labelPos[1], labelPos[0]],
+                position: [ll[1], ll[0]],
                 text: `N${northingLabel}`,
                 color: '#ff0000'
               });
@@ -775,6 +817,24 @@
       } else {
         clearGridLines();
       }
+    }
+
+    function adjustGrid(deltaE, deltaN) {
+      gridOffsetE += deltaE;
+      gridOffsetN += deltaN;
+      document.getElementById('offset-e').textContent = gridOffsetE + 'm';
+      document.getElementById('offset-n').textContent = gridOffsetN + 'm';
+      console.log(`Grid offset adjusted: E=${gridOffsetE}m, N=${gridOffsetN}m`);
+      drawGridLines();
+    }
+
+    function resetGrid() {
+      gridOffsetE = 0;
+      gridOffsetN = 0;
+      document.getElementById('offset-e').textContent = '0m';
+      document.getElementById('offset-n').textContent = '0m';
+      console.log('Grid offset reset');
+      drawGridLines();
     }
 
     // Distance validation - store start points for each device
