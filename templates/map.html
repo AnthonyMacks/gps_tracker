@@ -34,6 +34,8 @@
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+      cursor: move;
+      user-select: none;
     }
 
     #info2 {
@@ -51,6 +53,13 @@
       color: #2C3E50;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+      cursor: move;
+      user-select: none;
+    }
+
+    #info.dragging, #info2.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
     }
 
     #toggle-button, #toggle-button2 {
@@ -275,10 +284,6 @@
     /* Mobile responsive styles */
     @media (max-width: 768px) {
       #info {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        left: auto;
         max-width: none;
         width: calc(45% - 10px);
         max-height: 35%;
@@ -287,10 +292,6 @@
       }
 
       #info2 {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        left: auto;
         max-width: none;
         width: calc(45% - 10px);
         max-height: 35%;
@@ -372,7 +373,6 @@
       }
 
       #info2 {
-        top: 35%;
         max-height: 30%;
         font-size: 10px;
         width: calc(48% - 10px);
@@ -440,20 +440,12 @@
     /* Landscape phone adjustments */
     @media (max-width: 768px) and (orientation: landscape) {
       #info {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        left: auto;
         width: 220px;
         max-width: 220px;
         max-height: 40%;
       }
 
       #info2 {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        left: auto;
         width: 220px;
         max-width: 220px;
         max-height: 40%;
@@ -503,7 +495,7 @@
 <body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
 <div id="map"></div>
 <div id="info">
-<strong>📡 GPS MacksTrack Data (I-XII)</strong>
+<strong>📡 GPS MacksTrack Data (I-XII) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
 <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
 <table id="device-table">
 <thead>
@@ -518,7 +510,7 @@
 </table>
 </div>
 <div id="info2">
-<strong>📡 GPS MacksTrack Data (XIII-XXX)</strong>
+<strong>📡 GPS MacksTrack Data (XIII-XXX) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
 <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
 <table id="device-table2">
 <thead>
@@ -934,6 +926,90 @@
       } else {
         table.style.display = "none";
         button.textContent = "Show Table";
+      }
+    }
+
+    // Make panels draggable
+    function makeDraggable(element) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      let isDragging = false;
+
+      element.onmousedown = dragMouseDown;
+      element.ontouchstart = dragTouchStart;
+
+      function dragMouseDown(e) {
+        // Don't drag if clicking on buttons or table
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+            e.target.closest('table') || e.target.closest('button')) {
+          return;
+        }
+        
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        isDragging = true;
+        element.classList.add('dragging');
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+      }
+
+      function dragTouchStart(e) {
+        // Don't drag if touching buttons or table
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+            e.target.closest('table') || e.target.closest('button')) {
+          return;
+        }
+        
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        isDragging = true;
+        element.classList.add('dragging');
+        document.ontouchend = closeDragElement;
+        document.ontouchmove = elementDragTouch;
+      }
+
+      function elementDrag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        const newTop = element.offsetTop - pos2;
+        const newLeft = element.offsetLeft - pos1;
+        
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+      }
+
+      function elementDragTouch(e) {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        
+        const newTop = element.offsetTop - pos2;
+        const newLeft = element.offsetLeft - pos1;
+        
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+      }
+
+      function closeDragElement() {
+        isDragging = false;
+        element.classList.remove('dragging');
+        document.onmouseup = null;
+        document.onmousemove = null;
+        document.ontouchend = null;
+        document.ontouchmove = null;
       }
     }
 
@@ -1480,6 +1556,10 @@
 
     // Initialize
     console.log('Initializing GPS tracker...');
+    
+    // Make info panels draggable
+    makeDraggable(document.getElementById('info'));
+    makeDraggable(document.getElementById('info2'));
     
     // Test grid conversion with known coordinates
     console.log('=== Testing Grid Conversion ===');
