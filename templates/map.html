@@ -443,8 +443,7 @@
 <thead>
 <tr>
 <th>ID</th>
-<th>Lat</th>
-<th>Lon</th>
+<th>Grid Ref</th>
 <th>Count</th>
 <th>Sats</th>
 </tr>
@@ -459,8 +458,7 @@
 <thead>
 <tr>
 <th>ID</th>
-<th>Lat</th>
-<th>Lon</th>
+<th>Grid Ref</th>
 <th>Count</th>
 <th>Sats</th>
 </tr>
@@ -490,7 +488,59 @@
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
 <script>
+    // Define MGA zones for NSW (GDA2020)
+    proj4.defs("EPSG:7854", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:7855", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:7856", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+
+    // Grid reference conversion using proj4js
+    const e100kLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const n100kLetters = "ABCDEFGHJKLMNPQRSTUV";
+
+    function getUTMZone(lon) {
+      if (lon >= 150 && lon < 156) return 55;
+      if (lon >= 156 && lon < 162) return 56;
+      return 54;
+    }
+
+    function get100kmGridSquare(easting, northing, zone) {
+      const set = ((zone - 1) % 6) + 1;
+      const e100k = Math.floor(easting / 100000);
+      const n100k = Math.floor(northing / 100000);
+      
+      let eIndex = (e100k - 1) % 8;
+      if (set % 2 === 0) eIndex = (eIndex + 8) % 24;
+      const nIndex = n100k % 20;
+      
+      return e100kLetters[eIndex] + n100kLetters[nIndex];
+    }
+
+    function latLonToGridReference(lat, lon) {
+      try {
+        const zone = getUTMZone(lon);
+        const epsg = 7854 + (zone - 54);
+        
+        const utm = proj4('EPSG:4326', `EPSG:${epsg}`, [lon, lat]);
+        const easting = utm[0];
+        const northing = utm[1];
+
+        const gridSquare = get100kmGridSquare(easting, northing, zone);
+        
+        const eastingRemainder = Math.floor(easting % 100000);
+        const northingRemainder = Math.floor(northing % 100000);
+        
+        const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
+        const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
+        
+        return `${zone}${gridSquare} ${eastingStr} ${northingStr}`;
+      } catch (error) {
+        console.error('Grid conversion error:', error);
+        return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      }
+    }
+
     // Distance validation - store start points for each device
     const deviceStartPoints = {};
     const MAX_DISTANCE_KM = 5;
@@ -531,58 +581,6 @@
       }
       
       return true;
-    }
-
-    // Grid reference conversion function for Australian coordinates
-    function latLonToMGRS(lat, lon) {
-      try {
-        console.log('Converting coordinates:', lat, lon);
-        
-        // Determine UTM zone for Australia
-        const zone = Math.floor((lon + 180) / 6) + 1;
-        
-        // Basic UTM conversion parameters
-        const a = 6378137; // WGS84 major axis
-        const e = 0.0818191908; // WGS84 eccentricity
-        const k0 = 0.9996; // UTM scale factor
-        
-        const lonRad = (lon * Math.PI) / 180;
-        const latRad = (lat * Math.PI) / 180;
-        
-        const lonOrigin = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
-        
-        const N = a / Math.sqrt(1 - e * e * Math.sin(latRad) * Math.sin(latRad));
-        const T = Math.tan(latRad) * Math.tan(latRad);
-        const C = (e * e / (1 - e * e)) * Math.cos(latRad) * Math.cos(latRad);
-        const A = Math.cos(latRad) * (lonRad - lonOrigin);
-        
-        const M = a * ((1 - e * e / 4 - 3 * Math.pow(e, 4) / 64) * latRad
-          - (3 * e * e / 8 + 3 * Math.pow(e, 4) / 32) * Math.sin(2 * latRad)
-          + (15 * Math.pow(e, 4) / 256) * Math.sin(4 * latRad));
-        
-        let easting = k0 * N * (A + (1 - T + C) * Math.pow(A, 3) / 6
-          + (5 - 18 * T + T * T + 72 * C - 58 * (e * e / (1 - e * e))) * Math.pow(A, 5) / 120) + 500000;
-        
-        let northing = k0 * (M + N * Math.tan(latRad) * (Math.pow(A, 2) / 2
-          + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24
-          + (61 - 58 * T + T * T + 600 * C - 330 * (e * e / (1 - e * e))) * Math.pow(A, 6) / 720));
-        
-        // For southern hemisphere
-        if (lat < 0) northing += 10000000;
-        
-        // Convert to 4-digit grid coordinates
-        const eastingGrid = Math.floor((easting % 100000) / 10).toString().padStart(4, '0');
-        const northingGrid = Math.floor((northing % 100000) / 10).toString().padStart(4, '0');
-        
-        // Return just the 8-figure grid reference without zone prefix
-        const result = `${eastingGrid} ${northingGrid}`;
-        console.log('Grid reference result:', result);
-        return result;
-        
-      } catch (error) {
-        console.error('Grid conversion error:', error);
-        return `Grid: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
-      }
     }
 
     // Toggle table visibility functions
@@ -828,8 +826,8 @@
       }
 
       const color = deviceColors[point.device_id] || "#7F8C8D";
-      const mgrsGrid = latLonToMGRS(lat, lon);
-      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), Grid: ${mgrsGrid}, isLatest: ${isLatest}`);
+      const gridRef = latLonToGridReference(lat, lon);
+      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), Grid: ${gridRef}, isLatest: ${isLatest}`);
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
@@ -842,7 +840,8 @@
 
         const popupContent = `
           <strong>Device ID:</strong> ${point.device_id}<br>
-          <strong>Grid Reference:</strong> ${mgrsGrid}<br>
+          <strong>Grid Reference:</strong> ${gridRef}<br>
+          <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
           <strong>Timestamp:</strong> ${point.timestamp}<br>
           <strong>Satellites:</strong> ${point.sats || 'N/A'}
         `;
@@ -879,9 +878,9 @@
         if (isFirstPoint) {
           const crestIcon = L.icon({
             iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
-            iconSize: [32, 32],   // adjust size as needed
-            iconAnchor: [16, 32], // bottom center
-            popupAnchor: [0, -32] // popup above
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
           });
 
           const crestMarker = L.marker([lat, lon], { 
@@ -891,7 +890,8 @@
 
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
-            <strong>Grid Reference:</strong> ${mgrsGrid}<br>
+            <strong>Grid Reference:</strong> ${gridRef}<br>
+            <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
           crestMarker.bindPopup(popupContent);
@@ -926,7 +926,8 @@
 
           const popupContent = `
             <strong>Device ID:</strong> ${point.device_id}<br>
-            <strong>Grid Reference:</strong> ${mgrsGrid}<br>
+            <strong>Grid Reference:</strong> ${gridRef}<br>
+            <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}
           `;
           pin.bindPopup(popupContent);
@@ -958,7 +959,6 @@
       }
       trailLayers[device_id] = [];
 
-      // Create the main polyline with animated dots (no arrows)
       const polyline = L.polyline(trail, {
         color: color,
         weight: 4,
@@ -972,7 +972,7 @@
         polyline.addTo(map);
       }
 
-      console.log(`Trail drawn for device ${device_id} with ${trail.length} points (no arrows)`);
+      console.log(`Trail drawn for device ${device_id} with ${trail.length} points`);
     }
 
     function getAgeLabel(ts) {
@@ -1020,16 +1020,16 @@
         const packet = latestPackets[id];
         const count  = packetCounts[id] || 0;
         const sats   = packet.sats ?? "—";
-        const lat    = parseFloat(packet.latitude).toFixed(6);
-        const lon    = parseFloat(packet.longitude).toFixed(6);
+        const lat    = parseFloat(packet.latitude);
+        const lon    = parseFloat(packet.longitude);
+        const gridRef = latLonToGridReference(lat, lon);
 
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
 
         row.innerHTML = `
           <td>${id}</td>
-          <td>${lat}</td>
-          <td>${lon}</td>
+          <td>${gridRef}</td>
           <td>${count}</td>
           <td>${sats}</td>
         `;
@@ -1079,8 +1079,8 @@
 
       // Validate distance from start point
       if (!isValidDistance(device_id, lat, lon)) {
-        updateDebugInfo(); // Update rejected count in debug info
-        return; // Reject this point
+        updateDebugInfo();
+        return;
       }
 
       // Store the packet with corrected timestamp
@@ -1107,7 +1107,7 @@
       // Update map bounds
       allPointsBounds.extend([lat, lon]);
       
-      // Only fit bounds on first data or if bounds are empty - allow user to zoom freely
+      // Only fit bounds on first data
       if (!hasInitialData) {
         map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
         hasInitialData = true;
@@ -1118,81 +1118,59 @@
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // Redraw trail (without arrows)
+      // Redraw trail
       drawTrail(device_id);
 
       // Update UI
       updateTable();
       updateDebugInfo();
 
-      console.log(`📍 ${device_id} → (${lat.toFixed(6)}, ${lon.toFixed(6)}) | count=${packetCounts[device_id]}`);
+      console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | count=${packetCounts[device_id]}`);
     }
 
-    // Initialize immediately
+    // Initialize
     console.log('Initializing GPS tracker...');
     
     // Test grid conversion
-    const testGrid = latLonToMGRS(-32.764156, 151.176543);
-    console.log('Test grid conversion:', testGrid);
+    const testGrid = latLonToGridReference(-33.8688, 151.2093);
+    console.log('Test grid conversion (Sydney):', testGrid);
     
-    // Setup debug panel hover/touch functionality
+    // Setup debug panel
     const debugPanel = document.getElementById('debug');
     let debugTimeout;
     
-    console.log('Setting up debug panel events...');
-    
-    // Start collapsed
     debugPanel.classList.add('collapsed');
     
-    // Mouse events for desktop
-    debugPanel.addEventListener('mouseenter', (e) => {
-      console.log('Mouse entered debug panel');
+    debugPanel.addEventListener('mouseenter', () => {
       clearTimeout(debugTimeout);
       debugPanel.classList.remove('collapsed');
     });
     
-    debugPanel.addEventListener('mouseleave', (e) => {
-      console.log('Mouse left debug panel');
+    debugPanel.addEventListener('mouseleave', () => {
       debugTimeout = setTimeout(() => {
-        console.log('Collapsing debug panel after delay');
         debugPanel.classList.add('collapsed');
-      }, 1500); // 1.5 second delay before collapsing
+      }, 1500);
     });
     
-    // Click/Touch events for mobile and desktop
     debugPanel.addEventListener('click', (e) => {
-      console.log('Debug panel clicked');
       e.preventDefault();
       e.stopPropagation();
       clearTimeout(debugTimeout);
       
       if (debugPanel.classList.contains('collapsed')) {
-        console.log('Expanding debug panel');
         debugPanel.classList.remove('collapsed');
-        // Auto-collapse after 4 seconds
         debugTimeout = setTimeout(() => {
-          console.log('Auto-collapsing debug panel');
           debugPanel.classList.add('collapsed');
         }, 4000);
       } else {
-        console.log('Collapsing debug panel immediately');
         debugPanel.classList.add('collapsed');
       }
-    });
-    
-    // Touch events for better mobile support
-    debugPanel.addEventListener('touchstart', (e) => {
-      console.log('Touch started on debug panel');
-      // Don't prevent default here as it might interfere with click
     });
     
     // Initialize socket connection
     socket.on("gps_update", (data) => {
       processGPSUpdate(data);
     });
-
-    // Uncomment the line below to generate test data every 5 seconds
-    // setInterval(generateTestData, 5000);
 
     setInterval(updateTable, 10000);
     
@@ -1210,7 +1188,3 @@
   </script>
 </body>
 </html>
-
-
-
-
