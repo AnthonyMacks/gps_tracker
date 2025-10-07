@@ -93,6 +93,35 @@
       margin-right: 10px;
     }
 
+    #grid-control {
+      position: absolute;
+      bottom: 120px;
+      left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 12px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+    }
+
+    #grid-control label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #grid-control input[type="checkbox"] {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    .grid-label-marker {
+      background: transparent !important;
+      border: none !important;
+    }
+
     .row-active { background-color: #D5F5E3; }
     .row-warm   { background-color: #FCF3CF; }
     .row-stale  { background-color: #FADBD8; }
@@ -293,6 +322,13 @@
         padding: 6px;
       }
 
+      #grid-control {
+        bottom: 110px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
       #debug {
         bottom: 120px;
         left: 10px;
@@ -357,6 +393,13 @@
         padding: 4px;
       }
 
+      #grid-control {
+        bottom: 100px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
+      }
+
       #debug {
         bottom: 110px;
         left: 10px;
@@ -407,6 +450,12 @@
 
       #opacity-control {
         bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+      }
+
+      #grid-control {
+        bottom: 50px;
         left: 10px;
         font-size: 10px;
       }
@@ -470,6 +519,12 @@
 <label for="opacity-slider">Base Layer Opacity:</label>
 <input id="opacity-slider" max="1" min="0.1" step="0.1" type="range" value="1"/>
 <span id="opacity-value">100%</span>
+</div>
+<div id="grid-control">
+<label>
+  <input type="checkbox" id="grid-toggle" checked/>
+  Show MGA Grid Lines
+</label>
 </div>
 <div id="debug" class="collapsed">
 <div class="debug-title">Debug Info</div>
@@ -538,6 +593,148 @@
       } catch (error) {
         console.error('Grid conversion error:', error);
         return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      }
+    }
+
+    // Grid line management
+    let gridLinesVisible = true;
+    let gridLineLayer = null;
+    let gridLabelMarkers = [];
+
+    function clearGridLines() {
+      if (gridLineLayer) {
+        map.removeLayer(gridLineLayer);
+        gridLineLayer = null;
+      }
+      gridLabelMarkers.forEach(marker => map.removeLayer(marker));
+      gridLabelMarkers = [];
+    }
+
+    function drawGridLines() {
+      if (!gridLinesVisible) return;
+
+      clearGridLines();
+
+      try {
+        const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+
+        // Don't draw grid at very low zoom levels
+        if (zoom < 12) {
+          console.log('Zoom too low for grid display');
+          return;
+        }
+
+        const lat = center.lat;
+        const lon = center.lng;
+        const zone = getUTMZone(lon);
+        const epsg = 7854 + (zone - 54);
+
+        // Convert bounds to UTM
+        const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
+        const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
+
+        const minE = Math.floor(sw[0] / 1000) * 1000;
+        const maxE = Math.ceil(ne[0] / 1000) * 1000;
+        const minN = Math.floor(sw[1] / 1000) * 1000;
+        const maxN = Math.ceil(ne[1] / 1000) * 1000;
+
+        const gridInterval = zoom >= 15 ? 1000 : zoom >= 13 ? 2000 : 5000;
+
+        const allLines = [];
+        const labels = [];
+
+        // Draw vertical lines (easting)
+        for (let e = minE; e <= maxE; e += gridInterval) {
+          const line = [];
+          for (let n = minN; n <= maxN; n += 500) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('Grid conversion error:', err);
+            }
+          }
+          
+          if (line.length > 1) {
+            allLines.push(line);
+            
+            // Add label at top of line
+            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 4);
+            const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 500]);
+            labels.push({
+              position: [labelPos[1], labelPos[0]],
+              text: `E${eastingLabel}`,
+              color: '#0066cc'
+            });
+          }
+        }
+
+        // Draw horizontal lines (northing)
+        for (let n = minN; n <= maxN; n += gridInterval) {
+          const line = [];
+          for (let e = minE; e <= maxE; e += 500) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('Grid conversion error:', err);
+            }
+          }
+          
+          if (line.length > 1) {
+            allLines.push(line);
+            
+            // Add label at left of line
+            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 4);
+            const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 500, n]);
+            labels.push({
+              position: [labelPos[1], labelPos[0]],
+              text: `N${northingLabel}`,
+              color: '#0066cc'
+            });
+          }
+        }
+
+        // Create multi-polyline for all grid lines
+        if (allLines.length > 0) {
+          gridLineLayer = L.polyline(allLines, {
+            color: '#0066cc',
+            weight: 1.5,
+            opacity: 0.6,
+            interactive: false
+          }).addTo(map);
+        }
+
+        // Add labels
+        labels.forEach(label => {
+          const marker = L.marker(label.position, {
+            icon: L.divIcon({
+              className: 'grid-label-marker',
+              html: `<div style="background: rgba(255,255,255,0.9); padding: 2px 5px; font-size: 10px; font-weight: bold; border: 1px solid ${label.color}; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); white-space: nowrap;">${label.text}</div>`,
+              iconSize: [50, 20],
+              iconAnchor: [25, 10]
+            }),
+            interactive: false
+          }).addTo(map);
+          
+          gridLabelMarkers.push(marker);
+        });
+
+        console.log(`Drew ${allLines.length} grid lines with ${labels.length} labels at zoom ${zoom}`);
+
+      } catch (error) {
+        console.error('Error drawing grid lines:', error);
+      }
+    }
+
+    function toggleGridLines() {
+      gridLinesVisible = !gridLinesVisible;
+      if (gridLinesVisible) {
+        drawGridLines();
+      } else {
+        clearGridLines();
       }
     }
 
@@ -665,6 +862,18 @@
     const currentZoomSpan = document.getElementById('current-zoom');
     map.on('zoomend', function() {
       currentZoomSpan.textContent = map.getZoom();
+      drawGridLines();
+    });
+
+    // Redraw grid lines when map moves
+    map.on('moveend', function() {
+      drawGridLines();
+    });
+
+    // Grid toggle control
+    const gridToggle = document.getElementById('grid-toggle');
+    gridToggle.addEventListener('change', function() {
+      toggleGridLines();
     });
 
     // Opacity control
@@ -1130,6 +1339,11 @@
 
     // Initialize
     console.log('Initializing GPS tracker...');
+    
+    // Draw initial grid lines
+    setTimeout(() => {
+      drawGridLines();
+    }, 500);
     
     // Test grid conversion
     const testGrid = latLonToGridReference(-33.8688, 151.2093);
