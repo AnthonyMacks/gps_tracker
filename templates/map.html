@@ -609,9 +609,15 @@
     let gridOffsetN = 0; // Northing offset in meters
 
     function getUTMZone(lon) {
-      if (lon >= 150 && lon < 156) return 55;
-      if (lon >= 156 && lon < 162) return 56;
-      return 54;
+      // Standard UTM zone calculation
+      // Zone 55: 144° to 150°
+      // Zone 56: 150° to 156°
+      // Zone 57: 156° to 162°
+      if (lon >= 144 && lon < 150) return 55;
+      if (lon >= 150 && lon < 156) return 56;
+      if (lon >= 156 && lon < 162) return 57;
+      // Default to zone 56 for NSW
+      return 56;
     }
     
     function getEPSG(zone) {
@@ -623,25 +629,38 @@
     }
 
     function get100kmGridSquare(easting, northing, zone) {
-      const set = ((zone - 1) % 6) + 1;
+      // MGA Grid Square calculation for Australian zones
       const e100k = Math.floor(easting / 100000);
       const n100k = Math.floor(northing / 100000);
       
-      // Column (easting) - cycles through 8 letters, offset by set
-      let eIndex = (e100k - 1);
-      if (set === 2) eIndex = (eIndex + 8) % 24;
-      else if (set === 3) eIndex = (eIndex + 16) % 24;
-      else if (set === 4) eIndex = (eIndex + 0) % 24;
-      else if (set === 5) eIndex = (eIndex + 8) % 24;
-      else if (set === 6) eIndex = (eIndex + 16) % 24;
-      eIndex = eIndex % 24;
+      // For Australian MGA (GDA94/GDA2020)
+      // Zone 54: columns start at 'Q'
+      // Zone 55: columns start at 'A' 
+      // Zone 56: columns start at 'J'
+      // Zone 57: columns start at 'S'
       
-      // Row (northing) - cycles through 20 letters from south to north
-      const nIndex = (n100k % 20);
+      let colStart;
+      if (zone === 54) colStart = 16; // Q
+      else if (zone === 55) colStart = 0;  // A
+      else if (zone === 56) colStart = 9;  // J
+      else if (zone === 57) colStart = 18; // S
+      else colStart = 0;
+      
+      // Easting index cycles through 8 letters
+      const eIndex = (colStart + (e100k - 1)) % 24;
+      
+      // Northing index - in southern hemisphere
+      // For southern zones, the northing letters count from south (A) at equator
+      // At equator N=10000000m, each letter is 100km
+      // For 6,295,000m: (10,000,000 - 6,295,000) / 100,000 = 37.05
+      // So we're 37 squares south of equator
+      
+      // The northing index in MGRS repeats every 2000km (20 letters × 100km)
+      const nIndex = (n100k) % 20;
       
       const gridSquare = e100kLetters[eIndex] + n100kLetters[nIndex];
       
-      console.log(`Grid Square Debug: Zone=${zone}, Set=${set}, E100k=${e100k}, N100k=${n100k}, eIndex=${eIndex}, nIndex=${nIndex}, Grid=${gridSquare}`);
+      console.log(`Grid Square Debug: Zone=${zone}, E100k=${e100k}, N100k=${n100k}, eIndex=${eIndex}(${e100kLetters[eIndex]}), nIndex=${nIndex}(${n100kLetters[nIndex]}), Grid=${gridSquare}`);
       
       return gridSquare;
     }
@@ -1461,6 +1480,41 @@
 
     // Initialize
     console.log('Initializing GPS tracker...');
+    
+    // Test grid conversion with known coordinates
+    console.log('=== Testing Grid Conversion ===');
+    const testLat = -33.451338;
+    const testLon = 150.138327;
+    console.log(`Test coords: ${testLat}, ${testLon}`);
+    console.log('Expected: 56H KH 34001 95014');
+    console.log('Expected 8-figure: 56KH 3400 9501');
+    
+    // Get zone
+    const testZone = getUTMZone(testLon);
+    console.log(`Calculated Zone: ${testZone}`);
+    
+    // Test with GDA94 Zone 56
+    const utmGDA94_56 = proj4('EPSG:4326', 'EPSG:28356', [testLon, testLat]);
+    console.log(`GDA94 Zone 56 UTM: E=${utmGDA94_56[0].toFixed(2)}, N=${utmGDA94_56[1].toFixed(2)}`);
+    console.log(`  E100k=${Math.floor(utmGDA94_56[0]/100000)}, N100k=${Math.floor(utmGDA94_56[1]/100000)}`);
+    
+    // Test with GDA2020 Zone 56
+    const utmGDA2020_56 = proj4('EPSG:4326', 'EPSG:7856', [testLon, testLat]);
+    console.log(`GDA2020 Zone 56 UTM: E=${utmGDA2020_56[0].toFixed(2)}, N=${utmGDA2020_56[1].toFixed(2)}`);
+    console.log(`  E100k=${Math.floor(utmGDA2020_56[0]/100000)}, N100k=${Math.floor(utmGDA2020_56[1]/100000)}`);
+    
+    // Test grid reference calculation
+    useGDA94 = true;
+    const testGridGDA94 = latLonToGridReference(testLat, testLon);
+    console.log(`GDA94 Result: ${testGridGDA94}`);
+    
+    useGDA94 = false;
+    const testGridGDA2020 = latLonToGridReference(testLat, testLon);
+    console.log(`GDA2020 Result: ${testGridGDA2020}`);
+    
+    // Reset to GDA94 as default
+    useGDA94 = true;
+    console.log('===============================');
     
     // Draw initial grid lines
     setTimeout(() => {
