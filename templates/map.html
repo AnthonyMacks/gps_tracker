@@ -525,6 +525,16 @@
   <input type="checkbox" id="grid-toggle" checked/>
   Show MGA Grid Lines
 </label>
+<br/>
+<label style="font-size: 11px; margin-top: 5px;">
+  <input type="radio" name="datum" value="gda94" checked/>
+  GDA94 (NSW Topo)
+</label>
+<br/>
+<label style="font-size: 11px;">
+  <input type="radio" name="datum" value="gda2020"/>
+  GDA2020
+</label>
 </div>
 <div id="debug" class="collapsed">
 <div class="debug-title">Debug Info</div>
@@ -545,19 +555,35 @@
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
 <script>
-    // Define MGA zones for NSW (GDA2020)
+    // Define MGA zones for both GDA94 and GDA2020
+    // GDA2020 (EPSG:78xx)
     proj4.defs("EPSG:7854", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     proj4.defs("EPSG:7855", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     proj4.defs("EPSG:7856", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    
+    // GDA94 (EPSG:283xx) - NSW Topo maps may use this
+    proj4.defs("EPSG:28354", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:28355", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:28356", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 
     // Grid reference conversion using proj4js
     const e100kLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const n100kLetters = "ABCDEFGHJKLMNPQRSTUV";
+    
+    let useGDA94 = true; // NSW Topo typically uses GDA94
 
     function getUTMZone(lon) {
       if (lon >= 150 && lon < 156) return 55;
       if (lon >= 156 && lon < 162) return 56;
       return 54;
+    }
+    
+    function getEPSG(zone) {
+      if (useGDA94) {
+        return 28354 + (zone - 54); // GDA94: 28354, 28355, 28356
+      } else {
+        return 7854 + (zone - 54);  // GDA2020: 7854, 7855, 7856
+      }
     }
 
     function get100kmGridSquare(easting, northing, zone) {
@@ -575,7 +601,7 @@
     function latLonToGridReference(lat, lon) {
       try {
         const zone = getUTMZone(lon);
-        const epsg = 7854 + (zone - 54);
+        const epsg = getEPSG(zone);
         
         const utm = proj4('EPSG:4326', `EPSG:${epsg}`, [lon, lat]);
         const easting = utm[0];
@@ -629,12 +655,13 @@
         const lat = center.lat;
         const lon = center.lng;
         const zone = getUTMZone(lon);
-        const epsg = 7854 + (zone - 54);
+        const epsg = getEPSG(zone);
 
         // Convert bounds to UTM
         const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
         const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
 
+        // Round to exact 1km boundaries
         const minE = Math.floor(sw[0] / 1000) * 1000;
         const maxE = Math.ceil(ne[0] / 1000) * 1000;
         const minN = Math.floor(sw[1] / 1000) * 1000;
@@ -645,10 +672,13 @@
         const allLines = [];
         const labels = [];
 
-        // Draw vertical lines (easting)
+        console.log(`Drawing grid for zone ${zone}, datum: ${useGDA94 ? 'GDA94' : 'GDA2020'}, interval: ${gridInterval}m`);
+
+        // Draw vertical lines (easting) - using exact km values
         for (let e = minE; e <= maxE; e += gridInterval) {
           const line = [];
-          for (let n = minN; n <= maxN; n += 500) {
+          // Draw line from south to north with fine resolution
+          for (let n = minN; n <= maxN; n += 250) {
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
               line.push([ll[1], ll[0]]);
@@ -662,19 +692,24 @@
             
             // Add label at top of line
             const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 4);
-            const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 500]);
-            labels.push({
-              position: [labelPos[1], labelPos[0]],
-              text: `E${eastingLabel}`,
-              color: '#0066cc'
-            });
+            try {
+              const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 1000]);
+              labels.push({
+                position: [labelPos[1], labelPos[0]],
+                text: `E${eastingLabel}`,
+                color: '#ff0000'
+              });
+            } catch (err) {
+              console.warn('Label position error:', err);
+            }
           }
         }
 
-        // Draw horizontal lines (northing)
+        // Draw horizontal lines (northing) - using exact km values
         for (let n = minN; n <= maxN; n += gridInterval) {
           const line = [];
-          for (let e = minE; e <= maxE; e += 500) {
+          // Draw line from west to east with fine resolution
+          for (let e = minE; e <= maxE; e += 250) {
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
               line.push([ll[1], ll[0]]);
@@ -688,21 +723,25 @@
             
             // Add label at left of line
             const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 4);
-            const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 500, n]);
-            labels.push({
-              position: [labelPos[1], labelPos[0]],
-              text: `N${northingLabel}`,
-              color: '#0066cc'
-            });
+            try {
+              const labelPos = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 1000, n]);
+              labels.push({
+                position: [labelPos[1], labelPos[0]],
+                text: `N${northingLabel}`,
+                color: '#ff0000'
+              });
+            } catch (err) {
+              console.warn('Label position error:', err);
+            }
           }
         }
 
         // Create multi-polyline for all grid lines
         if (allLines.length > 0) {
           gridLineLayer = L.polyline(allLines, {
-            color: '#0066cc',
-            weight: 1.5,
-            opacity: 0.6,
+            color: '#ff0000',
+            weight: 2,
+            opacity: 0.7,
             interactive: false
           }).addTo(map);
         }
@@ -712,9 +751,9 @@
           const marker = L.marker(label.position, {
             icon: L.divIcon({
               className: 'grid-label-marker',
-              html: `<div style="background: rgba(255,255,255,0.9); padding: 2px 5px; font-size: 10px; font-weight: bold; border: 1px solid ${label.color}; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); white-space: nowrap;">${label.text}</div>`,
-              iconSize: [50, 20],
-              iconAnchor: [25, 10]
+              html: `<div style="background: rgba(255,255,255,0.95); padding: 3px 6px; font-size: 11px; font-weight: bold; border: 2px solid ${label.color}; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); white-space: nowrap; color: ${label.color};">${label.text}</div>`,
+              iconSize: [55, 22],
+              iconAnchor: [27, 11]
             }),
             interactive: false
           }).addTo(map);
@@ -874,6 +913,17 @@
     const gridToggle = document.getElementById('grid-toggle');
     gridToggle.addEventListener('change', function() {
       toggleGridLines();
+    });
+
+    // Datum selection
+    const datumRadios = document.querySelectorAll('input[name="datum"]');
+    datumRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        useGDA94 = (this.value === 'gda94');
+        console.log(`Switched to ${useGDA94 ? 'GDA94' : 'GDA2020'}`);
+        drawGridLines();
+        updateTable(); // Redraw table with new datum
+      });
     });
 
     // Opacity control
