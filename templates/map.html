@@ -522,7 +522,12 @@
 <div id="grid-control">
 <label>
   <input type="checkbox" id="grid-toggle" checked/>
-  Show MGA Grid Lines
+  Show 1km Grid Lines
+</label>
+<br/>
+<label style="margin-top: 5px;">
+  <input type="checkbox" id="grid-100m-toggle"/>
+  Show 100m Grid Lines
 </label>
 </div>
 <div id="debug" class="collapsed">
@@ -644,7 +649,9 @@
 
     // Grid line management
     let gridLinesVisible = true;
+    let grid100mVisible = false;
     let gridLineLayer = null;
+    let grid100mLayer = null;
     let gridLabelMarkers = [];
 
     function clearGridLines() {
@@ -654,6 +661,13 @@
       }
       gridLabelMarkers.forEach(marker => map.removeLayer(marker));
       gridLabelMarkers = [];
+    }
+
+    function clearGrid100m() {
+      if (grid100mLayer) {
+        map.removeLayer(grid100mLayer);
+        grid100mLayer = null;
+      }
     }
 
     function drawGridLines() {
@@ -781,8 +795,104 @@
 
         console.log(`Drew ${allLines.length} grid lines with ${labels.length} labels at zoom ${zoom}`);
 
+        // Draw 100m grid if enabled
+        if (grid100mVisible) {
+          draw100mGrid();
+        }
+
       } catch (error) {
         console.error('Error drawing grid lines:', error);
+      }
+    }
+
+    function draw100mGrid() {
+      clearGrid100m();
+
+      try {
+        const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+
+        // Only draw 100m grid at high zoom levels
+        if (zoom < 15) {
+          console.log('Zoom too low for 100m grid display');
+          return;
+        }
+
+        const lat = center.lat;
+        const lon = center.lng;
+        const zone = getUTMZone(lon);
+        const epsg = getEPSG(zone);
+
+        // Convert bounds to UTM
+        const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
+        const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
+
+        // Round to exact 100m boundaries
+        const minE = Math.floor(sw[0] / 100) * 100;
+        const maxE = Math.ceil(ne[0] / 100) * 100;
+        const minN = Math.floor(sw[1] / 100) * 100;
+        const maxN = Math.ceil(ne[1] / 100) * 100;
+
+        const allLines = [];
+
+        console.log(`Drawing 100m grid for zone ${zone}`);
+
+        // Draw vertical lines every 100m
+        for (let e = minE; e <= maxE; e += 100) {
+          // Skip lines that are on 1km boundaries (already drawn)
+          if (e % 1000 === 0) continue;
+          
+          const line = [];
+          for (let n = minN; n <= maxN; n += 50) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('100m grid conversion error:', err);
+            }
+          }
+          
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        // Draw horizontal lines every 100m
+        for (let n = minN; n <= maxN; n += 100) {
+          // Skip lines that are on 1km boundaries (already drawn)
+          if (n % 1000 === 0) continue;
+          
+          const line = [];
+          for (let e = minE; e <= maxE; e += 50) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('100m grid conversion error:', err);
+            }
+          }
+          
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        // Create multi-polyline for all 100m grid lines (dashed, blue/gray)
+        if (allLines.length > 0) {
+          grid100mLayer = L.polyline(allLines, {
+            color: '#3366cc',
+            weight: 1,
+            opacity: 0.4,
+            dashArray: '4, 4',
+            interactive: false
+          }).addTo(map);
+        }
+
+        console.log(`Drew ${allLines.length} 100m grid lines at zoom ${zoom}`);
+
+      } catch (error) {
+        console.error('Error drawing 100m grid lines:', error);
       }
     }
 
@@ -792,6 +902,23 @@
         drawGridLines();
       } else {
         clearGridLines();
+        clearGrid100m(); // Also clear 100m grid if main grid is off
+      }
+    }
+
+    function toggle100mGrid() {
+      grid100mVisible = !grid100mVisible;
+      if (grid100mVisible) {
+        if (!gridLinesVisible) {
+          // Enable main grid first if it's off
+          gridLinesVisible = true;
+          document.getElementById('grid-toggle').checked = true;
+          drawGridLines(); // This will also draw 100m grid
+        } else {
+          draw100mGrid();
+        }
+      } else {
+        clearGrid100m();
       }
     }
 
@@ -1015,6 +1142,12 @@
     const gridToggle = document.getElementById('grid-toggle');
     gridToggle.addEventListener('change', function() {
       toggleGridLines();
+    });
+
+    // 100m grid toggle control
+    const grid100mToggle = document.getElementById('grid-100m-toggle');
+    grid100mToggle.addEventListener('change', function() {
+      toggle100mGrid();
     });
 
     // Opacity control
