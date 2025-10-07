@@ -627,11 +627,23 @@
       const e100k = Math.floor(easting / 100000);
       const n100k = Math.floor(northing / 100000);
       
-      let eIndex = (e100k - 1) % 8;
-      if (set % 2 === 0) eIndex = (eIndex + 8) % 24;
-      const nIndex = n100k % 20;
+      // Column (easting) - cycles through 8 letters, offset by set
+      let eIndex = (e100k - 1);
+      if (set === 2) eIndex = (eIndex + 8) % 24;
+      else if (set === 3) eIndex = (eIndex + 16) % 24;
+      else if (set === 4) eIndex = (eIndex + 0) % 24;
+      else if (set === 5) eIndex = (eIndex + 8) % 24;
+      else if (set === 6) eIndex = (eIndex + 16) % 24;
+      eIndex = eIndex % 24;
       
-      return e100kLetters[eIndex] + n100kLetters[nIndex];
+      // Row (northing) - cycles through 20 letters from south to north
+      const nIndex = (n100k % 20);
+      
+      const gridSquare = e100kLetters[eIndex] + n100kLetters[nIndex];
+      
+      console.log(`Grid Square Debug: Zone=${zone}, Set=${set}, E100k=${e100k}, N100k=${n100k}, eIndex=${eIndex}, nIndex=${nIndex}, Grid=${gridSquare}`);
+      
+      return gridSquare;
     }
 
     function latLonToGridReference(lat, lon) {
