@@ -1959,82 +1959,60 @@
       lastUpdate.textContent = new Date().toLocaleTimeString();
     }
     
-function processGPSUpdate(data) {
-      console.log('📡 Processing GPS update:', data);
-      
-      const { latitude, longitude, device_id, timestamp } = data;
-      if (!latitude || !longitude || !device_id || !timestamp) {
-        console.warn('Missing required data:', data);
-        return;
+    function processGPSUpdate(data) {
+      const { device_id, lat, lon, sats } = data;
+
+      // Initialise trail array if needed
+      if (!gpsTrails[device_id]) {
+        gpsTrails[device_id] = [];
       }
 
-      const lat = parseFloat(latitude);
-      const lon = parseFloat(longitude);
-      
-      if (isNaN(lat) || isNaN(lon)) {
-        console.warn('Invalid coordinates:', data);
-        return;
+      // Push new point
+      gpsTrails[device_id].push([lat, lon]);
+
+      // Limit history length (optional)
+      if (gpsTrails[device_id].length > 200) {
+        gpsTrails[device_id].shift();
       }
 
-      // Validate distance from start point
-      if (!isValidDistance(device_id, lat, lon)) {
-        updateDebugInfo();
-        return;
+      // --- First point: SCU Crest marker ---
+      if (!deviceMarkers[device_id]) {
+        const crestIcon = L.icon({
+          iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        deviceMarkers[device_id] = L.marker([lat, lon], { icon: crestIcon }).addTo(map);
+      } else {
+        // Update marker position
+        deviceMarkers[device_id].setLatLng([lat, lon]);
       }
 
-      // Store the packet with corrected timestamp
-      latestPackets[device_id] = {
-        ...data,
-        timestamp: timestamp.replace(" ", "T") + "Z"
-      };
-
-      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
-
-      // Move the last "current" point into history
-      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
-        const lastPoint = {
-          ...latestPackets[device_id],
-          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
-          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
-        };
-        addDataPoint(lastPoint, false);
-      }
-      
-      // Add the new current marker
-      addDataPoint(data, true);
-
-      // Update map bounds
-      allPointsBounds.extend([lat, lon]);
-      
-      // Only fit bounds on first data
-      if (!hasInitialData) {
-        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-        hasInitialData = true;
+      // --- Draw/update animated dotted trail ---
+      if (gpsTrails[device_id].length > 1) {
+        if (devicePolylines[device_id]) {
+          map.removeLayer(devicePolylines[device_id]);
+        }
+        devicePolylines[device_id] = L.polyline(gpsTrails[device_id], {
+          color: deviceColors[device_id] || "#0078D7",
+          weight: 3,
+          className: "animated-polyline"
+        }).addTo(map);
       }
 
-      // Build the trail
-      gpsTrails[device_id] = gpsTrails[device_id] || [];
-      // MODIFICATION: Push the entire data object for richer playback info
-      gpsTrails[device_id].push(data);
-      if (gpsTrails[device_id].length > 200) { // Increased history for better playback
-          gpsTrails[device_id].shift();
-      }
-      // Redraw trail
-      drawTrail(device_id);
-
-      // Update UI
+      // --- Update tables/debug info ---
       updateTable();
       updateDebugInfo();
 
-      console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | count=${packetCounts[device_id]}`);
+      // --- Auto-enable in playback dropdown ---
+      const opt = deviceSelect.querySelector(`option[value="${device_id}"]`);
+      if (opt) {
+        opt.disabled = false;
+        opt.textContent = `Device ${device_id} (${gpsTrails[device_id].length} points)`;
+      }
 
-      // --- Auto-enable device in playback dropdown if it was disabled ---
-    const opt = deviceSelect.querySelector(`option[value="${device_id}"]`);
-    if (opt) {
-      opt.disabled = false;
-      opt.textContent = `Device ${device_id} (${gpsTrails[device_id].length} points)`;
-    }  
-}
+      console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | sats=${sats} | count=${gpsTrails[device_id].length}`);
+    }
 
     // Initialize
     console.log('Initializing GPS tracker...');
@@ -2379,6 +2357,7 @@ function processGPSUpdate(data) {
   </script>
 </body>
 </html>
+
 
 
 
