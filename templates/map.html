@@ -102,92 +102,6 @@
       margin-right: 10px;
     }
 
-    body {
-     font-family: sans-serif;
-     margin: 0;
-     height: 100vh;
-     display: flex;
-     justify-content: center;
-     align-items: flex-end;
-     padding-bottom: 40px;
-    }
-
-    .panel {
-      position: relative;
-      background-color: #3366cc;
-      color: white;
-      padding: 12px 20px;
-      cursor: pointer;
-      border-radius: 6px;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
-    }
-
-    .panel:hover {
-      background-color: #2952a3;
-    }
-
-    .panel i {
-      margin-left: 8px;
-    }
-
-    .dropdown {
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background-color: white;
-      min-width: 180px;
-      box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-      border-radius: 6px;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      pointer-events: none;
-      z-index: 1002;
-    }
-
-    .panel.active .dropdown {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-      pointer-events: auto;
-    }
-
-    .dropdown button {
-      background: none;
-      border: none;
-      padding: 14px 18px;
-      width: 100%;
-      text-align: left;
-      font-size: 14px;
-      color: #333;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    .dropdown button:hover {
-      background-color: #f0f0f0;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #333;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-size: 14px;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      z-index: 1003;
-    }
-
-    .toast.show {
-      opacity: 1;
-    }
-    
     #grid-control {
       position: absolute;
       bottom: 270px;
@@ -651,7 +565,7 @@
 <tbody></tbody>
 </table>
 </div>
-<div class="panel" id="export-menu">
+<div id="export-menu">
   <div class="export-header">📥 Export GPX</div>
   <div class="export-options">
     <button onclick="exportAllToGPX()">🗺️ All Devices</button>
@@ -784,7 +698,7 @@
         const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
         const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
         
-        return `${eastingStr} ${northingStr}`;
+        return `${zone}${gridSquare} ${eastingStr} ${northingStr}`;
       } catch (error) {
         console.error('Grid conversion error:', error);
         return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
@@ -1988,7 +1902,3 @@
   </script>
 </body>
 </html>
-
-
-
-
