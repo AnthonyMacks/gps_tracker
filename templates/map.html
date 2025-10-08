@@ -545,6 +545,22 @@
       width: 100%;
     }
 
+    /* ▼ Rotating arrow animation */
+    .collapsible-panel .arrow {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 14px;
+      transition: transform 0.35s ease 0.05s;
+      color: #0078D7;
+    }
+
+    /* Rotate arrow when panel open or hovered */
+    .collapsible-panel:hover .arrow,
+    .collapsible-panel.open .arrow {
+      transform: rotate(180deg);
+      color: #005A9E;
+    }
+
 </style>
 </head>
 <body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
@@ -554,6 +570,7 @@
   <div class="panel-header">
     <strong>📡 GPS MacksTrack Data (I-XII)</strong>
     <! -- drag handle (still draggable) -->
+    <span class="arrow">▼</span>
     <span class="panel-drag-handle" aria-hidden="true" style="cursor: move; font-size: 18px;">☰</span>
   </div>
   <div class="panel-body">
@@ -570,6 +587,7 @@
 <div id="info2" class="collapsible-panel">
   <div class="panel-header">
     <strong>📡 GPS MacksTrack Data (XIII-XXX)</strong>
+    <span class="arrow">▼</span>
     <span class="panel-drag-handle" aria-hidden="true" style="cursor: move; font-size: 18px;">☰</span>
   </div>
   <div class="panel-body">
@@ -1942,6 +1960,7 @@
   </script>
 </body>
 </html>
+
 
 
 
