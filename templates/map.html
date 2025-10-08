@@ -583,6 +583,43 @@
         font-size: 10px;
       }
 
+      #export-menu {
+        width: auto;
+        right: 10px;
+        left: auto;
+        bottom: 10px;
+        transform: translateY(0) translateX(0);
+        border-radius: 10px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      /* In landscape mode, behaves like a slide-out panel */
+      #export-menu {
+        transition: all 0.35s ease-in-out;
+      }
+
+      #export-menu.collapsed {
+        width: 46px;
+        overflow: hidden;
+      }
+
+      #export-menu.collapsed .export-options {
+        display: none;
+      }
+
+      #export-menu .export-header {
+        font-size: 12px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      #export-menu button {
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+        
       #debug {
         bottom: 220px;
         right: 10px;
@@ -1979,13 +2016,20 @@
 
     // Tap-to-open behavior for mobile (and works on desktop clicks too)
     const exportMenu = document.getElementById('export-menu');
-    exportMenu.addEventListener('click', (e) => {
-      // Only toggle if the user clicked the header area
-      if (e.target.classList.contains('export-header')) {
-        exportMenu.classList.toggle('active');
-      }
-    });
+    
+    // Landscape mobile: toggle collapsed class
+    if (window.matchMedia("(max-width: 768px) and (orientation: landscape)").matches) {
+      exportMenu.classList.toggle('collapsed');
+      return;
+    }
+
+    // Portrait or desktop: toggle active (slide up)
+    if (e.target.classList.contains('export-header')) {
+      exportMenu.classList.toggle('active');
+    }
+  });
   </script>
 </body>
 </html>
+
 
