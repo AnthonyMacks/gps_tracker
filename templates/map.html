@@ -571,6 +571,138 @@
       color: #005A9E;
     }
 
+    /* Inside the <style> tag in the <head> */
+
+    /* ================================
+       PLAYBACK CONTROLS
+       ================================ */
+    #playback-start-container {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1002;
+    }
+
+    #playback-start-container button {
+        background-color: #2ECC71;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
+    }
+
+    #playback-start-container button:hover {
+        background-color: #27AE60;
+        transform: translateY(-2px);
+    }
+
+    #playback-controls {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 500px;
+        background: rgba(255,255,255,0.95);
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        z-index: 2000;
+        font-family: sans-serif;
+        font-size: 14px;
+        color: #333;
+        transition: opacity 0.3s, transform 0.3s;
+    }
+
+    #playback-controls.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    .playback-header {
+        background-color: #2ECC71;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    .playback-header .close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+
+    .playback-body {
+        padding: 15px;
+    }
+
+    .playback-body label {
+        font-weight: bold;
+        margin-right: 8px;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .playback-body select, .playback-body button {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    #playback-timeline {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    #playback-slider {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .playback-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 15px;
+    }
+
+    .playback-buttons {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .playback-buttons button {
+        background-color: #0078D7;
+        color: white;
+        flex-grow: 1;
+    }
+    .playback-buttons select {
+        margin-bottom: 0;
+    }
+    .playback-buttons label {
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+    
 </style>
 </head>
 <body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
@@ -647,6 +779,43 @@
 <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
 </footer>
+
+<div id="playback-start-container">
+    <button id="start-playback-btn">▶️ Review Past Tracks</button>
+</div>
+
+<div id="playback-controls" class="hidden">
+  <div class="playback-header">
+    <strong>Track Playback</strong>
+    <button id="close-playback-btn" class="close-btn">&times;</button>
+  </div>
+  <div class="playback-body">
+    <label for="playback-device-select">Device:</label>
+    <select id="playback-device-select">
+      <option value="">-- Select a Device --</option>
+    </select>
+    
+    <div id="playback-timeline" class="hidden">
+      <label for="playback-slider">Timeline:</label>
+      <input type="range" id="playback-slider" min="0" max="100" value="0" step="1">
+      <div class="playback-info">
+        <span id="playback-timestamp">--:--:--</span>
+        <span id="playback-step-display">Point 0 / 0</span>
+      </div>
+      <div class="playback-buttons">
+        <button id="playback-play-pause-btn">▶ Play</button>
+        <label for="playback-speed-select">Speed:</label>
+        <select id="playback-speed-select">
+          <option value="1000">1x</option>
+          <option value="500">2x</option>
+          <option value="200">5x</option>
+          <option value="100">10x</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
@@ -1185,8 +1354,10 @@
       
       // Add each point in the trail
       for (let i = 0; i < trail.length; i++) {
-        const lat = trail[i][0];
-        const lon = trail[i][1];
+        // MODIFICATION: Get the full point object from the trail array
+        const point = trail[i];
+        const lat = parseFloat(point.latitude);
+        const lon = parseFloat(point.longitude);
         const gridRef = latLonToGridReference(lat, lon);
         const sats = packet.sats || 0;
         const time = packet.timestamp.replace(' ', 'T') + 'Z';
@@ -1677,6 +1848,9 @@
       }
       trailLayers[device_id] = [];
 
+      // MODIFICATION: Map the array of point objects to an array of coordinates
+      const latLngs = trail.map(point => [parseFloat(point.latitude), parseFloat(point.longitude)]);
+
       const polyline = L.polyline(trail, {
         color: color,
         weight: 4,
@@ -1833,9 +2007,11 @@
 
       // Build the trail
       gpsTrails[device_id] = gpsTrails[device_id] || [];
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
-
+      // MODIFICATION: Push the entire data object for richer playback info
+      gpsTrails[device_id].push(data);
+      if (gpsTrails[device_id].length > 200) { // Increased history for better playback
+          gpsTrails[device_id].shift();
+      {
       // Redraw trail
       drawTrail(device_id);
 
@@ -1967,9 +2143,218 @@
         exportMenu.classList.toggle('active');
       }
     });
+
+    // Add this entire block at the end of your main <script> tag
+
+    // ===================================
+    // PLAYBACK MODE LOGIC
+    // ===================================
+
+    // --- Playback State Variables ---
+    let isPlaybackMode = false;
+    let playbackDeviceId = null;
+    let playbackTrack = [];
+    let playbackIndex = 0;
+    let playbackIntervalId = null;
+    let playbackSpeed = 1000; // ms per step
+    let playbackMarker = null;
+
+    // --- UI Element References ---
+    const startPlaybackBtn = document.getElementById('start-playback-btn');
+    const playbackControls = document.getElementById('playback-controls');
+    const closePlaybackBtn = document.getElementById('close-playback-btn');
+    const deviceSelect = document.getElementById('playback-device-select');
+    const timelineContainer = document.getElementById('playback-timeline');
+    const slider = document.getElementById('playback-slider');
+    const timestampDisplay = document.getElementById('playback-timestamp');
+    const stepDisplay = document.getElementById('playback-step-display');
+    const playPauseBtn = document.getElementById('playback-play-pause-btn');
+    const speedSelect = document.getElementById('playback-speed-select');
+
+    // --- Core Functions ---
+
+    function setLiveMarkersVisibility(visible) {
+        Object.keys(allMarkers).forEach(deviceId => {
+            // Hide/show current position marker (circle + label)
+            if (allMarkers[deviceId].current) {
+                const layers = [allMarkers[deviceId].current.circle, allMarkers[deviceId].current.label];
+                layers.forEach(layer => {
+                    if (visible) map.addLayer(layer);
+                    else map.removeLayer(layer);
+                });
+            }
+            // Hide/show historical pins
+            if (allMarkers[deviceId].history) {
+                allMarkers[deviceId].history.forEach(marker => {
+                     if (visible) map.addLayer(marker);
+                     else map.removeLayer(marker);
+                });
+            }
+            // Hide/show trails
+            if (trailLayers[deviceId]) {
+                trailLayers[deviceId].forEach(layer => {
+                    if (visible) map.addLayer(layer);
+                    else map.removeLayer(layer);
+                });
+            }
+        });
+    }
+
+    function enterPlaybackMode() {
+        isPlaybackMode = true;
+        setLiveMarkersVisibility(false);
+    
+        // Populate device dropdown
+        deviceSelect.innerHTML = '<option value="">-- Select a Device --</option>';
+        const sortedIDs = Object.keys(gpsTrails).sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true }));
+        sortedIDs.forEach(id => {
+            if (gpsTrails[id] && gpsTrails[id].length > 1) {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `Device ${id} (${gpsTrails[id].length} points)`;
+                deviceSelect.appendChild(option);
+            }
+        });
+
+        startPlaybackBtn.classList.add('hidden');
+        playbackControls.classList.remove('hidden');
+        timelineContainer.classList.add('hidden');
+    }
+
+    function exitPlaybackMode() {
+        isPlaybackMode = false;
+        pausePlayback();
+        if (playbackMarker) map.removeLayer(playbackMarker);
+        playbackMarker = null;
+    
+        // Clear the selected device's trail
+        if (trailLayers[playbackDeviceId]) {
+            trailLayers[playbackDeviceId].forEach(l => map.removeLayer(l));
+        }
+
+        setLiveMarkersVisibility(true);
+        // Redraw all original trails
+        Object.keys(gpsTrails).forEach(drawTrail);
+
+        playbackControls.classList.add('hidden');
+        startPlaybackBtn.classList.remove('hidden');
+    }
+
+    function setupPlaybackForDevice(deviceId) {
+        pausePlayback();
+        if (playbackMarker) map.removeLayer(playbackMarker);
+    
+        // Hide previous track if switching devices
+        if (trailLayers[playbackDeviceId]) {
+            trailLayers[playbackDeviceId].forEach(l => map.removeLayer(l));
+        }
+    
+        playbackDeviceId = deviceId;
+        if (!deviceId) {
+            timelineContainer.classList.add('hidden');
+            return;
+        }
+    
+        playbackTrack = gpsTrails[deviceId];
+    
+        // Redraw just this device's trail
+        drawTrail(deviceId);
+        map.fitBounds(L.polyline(playbackTrack.map(p => [p.latitude, p.longitude])).getBounds(), {padding: [50, 50]});
+    
+        // Setup slider
+        slider.max = playbackTrack.length - 1;
+        slider.value = 0;
+    
+        // Create playback marker
+        const startPoint = playbackTrack[0];
+        playbackMarker = L.circleMarker([startPoint.latitude, startPoint.longitude], {
+            radius: 12,
+            color: 'black',
+            weight: 3,
+            fillColor: deviceColors[deviceId] || '#7F8C8D',
+            fillOpacity: 0.9
+        }).addTo(map);
+    
+        updatePlaybackUI(0);
+        timelineContainer.classList.remove('hidden');
+    }
+
+    function updatePlaybackUI(index) {
+        playbackIndex = index;
+        slider.value = index;
+        const point = playbackTrack[index];
+
+        if (!point) return;
+
+        // Move marker
+        playbackMarker.setLatLng([point.latitude, point.longitude]);
+    
+        // Update info displays
+        const time = new Date(point.timestamp.replace(' ', 'T') + 'Z');
+        timestampDisplay.textContent = time.toLocaleTimeString('en-AU');
+        stepDisplay.textContent = `Point ${index + 1} / ${playbackTrack.length}`;
+    
+        const popupContent = `
+            <strong>Device: ${point.device_id} (Playback)</strong><br>
+            Grid: ${latLonToGridReference(point.latitude, point.longitude)}<br>
+            Time: ${time.toLocaleString('en-AU')}<br>
+            Sats: ${point.sats || 'N/A'}
+        `;
+        playbackMarker.bindPopup(popupContent).openPopup();
+    }
+
+    function playPlayback() {
+        if (playbackIntervalId) return; // Already playing
+        playPauseBtn.textContent = '❚❚ Pause';
+    
+        playbackIntervalId = setInterval(() => {
+            let nextIndex = playbackIndex + 1;
+            if (nextIndex >= playbackTrack.length) {
+                nextIndex = 0; // Loop back to start
+            }
+            updatePlaybackUI(nextIndex);
+        }, playbackSpeed);
+    }
+
+    function pausePlayback() {
+        clearInterval(playbackIntervalId);
+        playbackIntervalId = null;
+        playPauseBtn.textContent = '▶ Play';
+    }
+
+    // --- Event Listeners ---
+    startPlaybackBtn.addEventListener('click', enterPlaybackMode);
+    closePlaybackBtn.addEventListener('click', exitPlaybackMode);
+
+    deviceSelect.addEventListener('change', () => {
+        setupPlaybackForDevice(deviceSelect.value);
+    });
+
+    slider.addEventListener('input', () => {
+        pausePlayback();
+        updatePlaybackUI(parseInt(slider.value, 10));
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+        if (playbackIntervalId) {
+            pausePlayback();
+        } else {
+            playPlayback();
+        }
+    });
+
+    speedSelect.addEventListener('change', () => {
+        playbackSpeed = parseInt(speedSelect.value, 10);
+        if (playbackIntervalId) { // If playing, restart with new speed
+            pausePlayback();
+            playPlayback();
+        }
+    });
+    
   </script>
 </body>
 </html>
+
 
 
 
