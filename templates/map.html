@@ -933,6 +933,11 @@
     let grid100mLayer = null;
     let gridLabelMarkers = [];
 
+    // Device state management
+    let deviceMarkers = {};    // stores crest marker for each device
+    let devicePolylines = {};  // stores animated polyline for each device
+    let gpsTrails = {};        // stores arrays of lat/lon points for each device
+
     function clearGridLines() {
       if (gridLineLayer) {
         map.removeLayer(gridLineLayer);
@@ -2357,6 +2362,7 @@
   </script>
 </body>
 </html>
+
 
 
 
