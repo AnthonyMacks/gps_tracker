@@ -637,8 +637,8 @@
         const eastingRemainder = Math.floor(easting % 100000);
         const northingRemainder = Math.floor(northing % 100000);
         
-        const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 2);
-        const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 2);
+        const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
+        const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
         
         return `${eastingStr} ${northingStr}`;
       } catch (error) {
@@ -1715,5 +1715,6 @@
   </script>
 </body>
 </html>
+
 
 
