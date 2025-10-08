@@ -500,41 +500,87 @@
     }
   }
 }
+    /* ---------------------------
+       Collapsible info panels
+       --------------------------- */
+    #info.collapsible-panel,
+    #info2.collapsible-panel {
+      overflow: hidden;               /* clipped when collapsed */
+      max-height: 56px;               /* shows header only when collapsed */
+      transition: max-height 0.32s ease, box-shadow 0.22s ease;
+      will-change: max-height;
+      z-index: 1600;                  /* keep above map tiles */
+    }
 
-    
-  </style>
+    /* expand on hover (desktop) or when .open (touch toggle) */
+    #info.collapsible-panel:hover,
+    #info2.collapsible-panel:hover,
+    #info.collapsible-panel.open,
+    #info2.collapsible-panel.open {
+      max-height: 70vh;               /* expand to show full content */
+      box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+    }
+
+    /* header (always visible) */
+    .collapsible-panel .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;                /* hover/click target */
+      user-select: none;
+      background: rgba(255,255,255,0.9);
+    }
+
+    /* body (scrollable when panel expanded) */
+    .collapsible-panel .panel-body {
+      padding: 8px 10px 12px;
+      overflow-y: auto;
+      max-height: calc(70vh - 56px);  /* allows inner scrolling if content tall */
+    }
+
+    /* small visual tweaks so the table fits inside */
+    .collapsible-panel table {
+      margin: 0;
+      width: 100%;
+    }
+
+</style>
 </head>
 <body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
 <div id="map"></div>
-<div id="info">
-<strong>📡 GPS MacksTrack Data (I-XII) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
-<button id="toggle-button" onclick="toggleTable()">Hide Table</button>
-<table id="device-table">
-<thead>
-<tr>
-<th>ID</th>
-<th>Grid Ref</th>
-<th>Count</th>
-<th>Sats</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<!-- Info panel I - XII -->
+<div id="info" class="collapsible-panel">
+  <div class="panel-header">
+    <strong>📡 GPS MacksTrack Data (I-XII)</strong>
+    <! -- drag handle (still draggable) -->
+    <span class="panel-drag-handle" aria-hidden="true" style="cursor: move; font-size: 18px;">☰</span>
+  </div>
+  <div class="panel-body">
+    <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
+    <table id="device-table">
+      <thead>
+        <tr><th>ID</th><th>Grid Ref</th><th>Count</th><th>Sats</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+   </div>
 </div>
-<div id="info2">
-<strong>📡 GPS MacksTrack Data (XIII-XXX) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
-<button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
-<table id="device-table2">
-<thead>
-<tr>
-<th>ID</th>
-<th>Grid Ref</th>
-<th>Count</th>
-<th>Sats</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<!-- Info panel XIII - XXX -->
+<div id="info2" class="collapsible-panel">
+  <div class="panel-header">
+    <strong>📡 GPS MacksTrack Data (XIII-XXX)</strong>
+    <span class="panel-drag-handle" aria-hidden="true" style="cursor: move; font-size: 18px;">☰</span>
+  </div>
+  <div class="panel-body">
+    <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
+    <table id="device-table2">
+      <thead>
+        <tr><th>ID</th><th>Grid Ref</th><th>Count</th><th>Sats</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>
 <div id="export-menu">
   <div class="export-header">📥 Export GPX</div>
@@ -1154,11 +1200,14 @@
       let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
       let isDragging = false;
 
+      // Allow touch dragging without browser gesture interference
+      element.style.touchAction = "none";
+
       element.onmousedown = dragMouseDown;
       element.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
-        // Don't drag if clicking on buttons or table
+        // Don't drag if clicking on buttons or inputs or inside tables
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
             e.target.closest('table') || e.target.closest('button')) {
           return;
@@ -1871,6 +1920,17 @@
         second: '2-digit'
       });
 
+    // Toggle info panels on header click/tap (touch friendly)
+    document.querySelectorAll('.collapsible-panel .panel-header').forEach(header => {
+      header.addEventListener('click', (e) => {
+        // if user clicked the drag handle, don't toggle — allow drag
+        if (e.target.closest('.panel-drag-handle')) return;
+
+        const panel = header.parentElement;
+        panel.classList.toggle('open');
+      });
+    });
+    
     // Tap-to-open behavior for mobile (and works on desktop clicks too)
     const exportMenu = document.getElementById('export-menu');
     exportMenu.addEventListener('click', (e) => {
@@ -1882,4 +1942,5 @@
   </script>
 </body>
 </html>
+
 
