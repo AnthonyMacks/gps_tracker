@@ -342,271 +342,165 @@
       font-weight: bold;
     }
 
-    /* Mobile responsive styles */
-    @media (max-width: 768px) {
-      #info {
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
-        font-size: 11px;
-        padding: 6px;
-      }
+    /* ================================
+   UNIFIED MOBILE LAYOUT
+   ================================ */
+@media (max-width: 768px) {
 
-      #info2 {
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
-        font-size: 11px;
-        padding: 6px;
-      }
+  /* --- General Mobile Scaling --- */
+  body, html {
+    overflow: hidden;
+    touch-action: none;
+  }
 
-      #info strong, #info2 strong {
-        font-size: 12px;
-      }
+  #map {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+  }
 
-      table {
-        font-size: 10px;
-      }
+  /* Smaller font for panels */
+  #info, #info2, #debug, #opacity-control, #grid-control {
+    font-size: 12px;
+    border-radius: 8px;
+  }
 
-      th, td {
-        padding: 4px 2px;
-      }
+  /* --- Info Panels --- */
+  #info, #info2 {
+    width: 90%;
+    left: 5%;
+    top: 10px;
+    position: fixed;
+    touch-action: none; /* allow dragging */
+    z-index: 1600;
+  }
 
-      #export-menu {
-        width: 85%;
-        font-size: 12px;
-        transform: translateX(-50%) translateY(calc(100% - 36px));
-      }
+  #debug {
+    bottom: 160px;
+    right: 10px;
+    font-size: 11px;
+    padding: 6px;
+    z-index: 1600;
+  }
 
-      #export-menu .export-header {
-        padding: 8px;
-        font-size: 13px;
-      }
+  /* --- Controls --- */
+  #opacity-control {
+    bottom: 50px;
+    left: 10px;
+    z-index: 1500;
+  }
 
-      #export-menu button {
-        padding: 6px 10px;
-        font-size: 12px;
-      }
-        
-      #toggle-button, #toggle-button2 {
-        font-size: 12px;
-        padding: 6px 12px;
-      }
+  #grid-control {
+    bottom: 10px;
+    left: 10px;
+    z-index: 1500;
+  }
 
-      #export-menu {
-        bottom: 160px;
-        left: 10px;
-        font-size: 10px;
-      }
+  /* --- Export GPX Drawer --- */
+  #export-menu {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(100% - 36px));
+    width: 85%;
+    bottom: 120px;  /* Lift above grid/opacity controls */
+    border-radius: 14px 14px 0 0;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 1400;
+    overflow: hidden;
+    transition: transform 0.35s ease-in-out;
+  }
 
-      .export-header {
-        padding: 8px;
-        font-size: 11px;
-      }
+  #export-menu.active {
+    transform: translateX(-50%) translateY(0);
+  }
 
-      .export-options button {
-        font-size: 10px;
-        padding: 6px 10px;
-      }
+  #export-menu .export-header {
+    padding: 8px;
+    font-weight: bold;
+    background-color: #0078D7;
+    color: white;
+    border-radius: 14px 14px 0 0;
+  }
 
-      #export-menu {
-        bottom: 90px;
-        left: 10px;
-        font-size: 10px;
-      }
+  #export-menu:hover .export-header,
+  #export-menu.active .export-header {
+    background-color: #005A9E;
+  }
 
-      .export-header {
-        padding: 6px;
-        font-size: 10px;
-      }
+  #export-menu .export-options {
+    padding: 8px;
+  }
 
-      .export-options button {
-        font-size: 9px;
-        padding: 5px 8px;
-      }
+  #export-menu button {
+    background-color: #0078D7;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin: 4px;
+    transition: background 0.3s ease;
+  }
 
-      #opacity-control {
-        bottom: 350px;
-        left: 10px;
-        font-size: 10px;
-        padding: 6px;
-      }
+  #export-menu button:hover {
+    background-color: #005A9E;
+  }
 
-      #grid-control {
-        bottom: 260px;
-        left: 10px;
-        font-size: 10px;
-        padding: 6px;
-      }
-
-      #export-menu {
-        left: 10px;
-        font-size: 9px;
-        padding: 6px;
-        max-width: 200px;
-      }
-
-      #debug.collapsed {
-        height: 22px;
-        padding: 4px 6px;
-      }
-
-      #debug .debug-title {
-        font-size: 9px;
-      }
-
-      #debug.collapsed .debug-title {
-        font-size: 8px;
-      }
-
-      footer {
-        bottom: 410px;
-        left: 10px;
-        font-size: 10px;
-        padding: 2px 4px;
-      }
+  /* --- Portrait Orientation --- */
+  @media (orientation: portrait) {
+    #info, #info2 {
+      top: 8px;
+      width: 92%;
     }
 
-    /* Portrait phone adjustments */
-    @media (max-width: 480px) and (orientation: portrait) {
-      #info {
-        max-height: 30%;
-        font-size: 10px;
-        width: calc(48% - 10px);
-      }
-
-      #info2 {
-        max-height: 30%;
-        font-size: 10px;
-        width: calc(48% - 10px);
-      }
-
-      table {
-        font-size: 9px;
-      }
-
-      th, td {
-        padding: 3px 1px;
-      }
-
-      #toggle-button, #toggle-button2 {
-        font-size: 11px;
-        padding: 5px 10px;
-      }
-
-      #export-menu {
-        bottom: 150px;
-        left: 10px;
-        font-size: 9px;
-      }
-
-      .export-header {
-        padding: 6px;
-        font-size: 10px;
-      }
-
-      .export-options button {
-        font-size: 9px;
-        padding: 5px 8px;
-      }
-
-      #opacity-control {
-        bottom: 340px;
-        left: 10px;
-        font-size: 9px;
-        padding: 4px;
-      }
-
-      #grid-control {
-        bottom: 100px;
-        left: 10px;
-        font-size: 9px;
-        padding: 4px;
-      }
-
-      #grid-control button {
-        font-size: 7px;
-        padding: 1px 3px;
-      }
-
-      #debug {
-        bottom: 280px;
-        right: 10px;
-        left: auto;
-        font-size: 8px;
-        padding: 4px;
-        max-width: 150px;
-      }
-
-      #debug.collapsed {
-        height: 18px;
-        padding: 3px 4px;
-      }
-
-      #debug .debug-title {
-        font-size: 8px;
-      }
-
-      #debug.collapsed .debug-title {
-        font-size: 7px;
-      }
-
-      footer {
-        font-size: 9px;
-        bottom: 400px;
-      }
+    #export-menu {
+      width: 85%;
+      bottom: 120px;
     }
 
-    /* Landscape phone adjustments */
-    @media (max-width: 768px) and (orientation: landscape) {
-      #info {
-        width: 220px;
-        max-width: 220px;
-        max-height: 40%;
-      }
-
-      #info2 {
-        width: 220px;
-        max-width: 220px;
-        max-height: 40%;
-      }
-
-      #opacity-control {
-        bottom: 260px;
-        left: 10px;
-        font-size: 10px;
-      }
-
-      #grid-control {
-        bottom: 50px;
-        left: 10px;
-        font-size: 10px;
-      }
-
-      #debug {
-        bottom: 220px;
-        right: 10px;
-        left: auto;
-        font-size: 9px;
-        max-width: 180px;
-      }
-
-      #debug.collapsed {
-        height: 20px;
-        padding: 4px 6px;
-      }
-
-      #debug .debug-title {
-        font-size: 9px;
-      }
-
-      #debug.collapsed .debug-title {
-        font-size: 8px;
-      }
-      footer {
-        bottom: 320px;
-      }
+    #debug {
+      bottom: 170px;
     }
+  }
+
+  /* --- Landscape Orientation --- */
+  @media (orientation: landscape) {
+    #info, #info2 {
+      width: 60%;
+      top: 5px;
+      left: 20%;
+    }
+
+    #opacity-control {
+      bottom: 60px;
+      left: 10px;
+    }
+
+    #grid-control {
+      bottom: 20px;
+      left: 10px;
+    }
+
+    #export-menu {
+      right: 10px;
+      left: auto;
+      bottom: 80px;
+      width: 200px;
+      transform: translateY(calc(100% - 38px));
+    }
+
+    #export-menu.active {
+      transform: translateY(0);
+    }
+  }
+}
+
     
   </style>
 </head>
@@ -1988,3 +1882,4 @@
   </script>
 </body>
 </html>
+
