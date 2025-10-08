@@ -698,7 +698,7 @@
         const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
         const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
         
-        return `${zone}${gridSquare} ${eastingStr} ${northingStr}`;
+        return `${eastingStr} ${northingStr}`;
       } catch (error) {
         console.error('Grid conversion error:', error);
         return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
@@ -782,12 +782,12 @@
             allLines.push(line);
             
             // Add label at top of line
-            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 4);
+            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 2);
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 1000]);
               labels.push({
                 position: [ll[1], ll[0]],
-                text: `E${eastingLabel}`,
+                text: `${eastingLabel}`,
                 color: '#ff0000'
               });
             } catch (err) {
@@ -812,12 +812,12 @@
             allLines.push(line);
             
             // Add label at left of line
-            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 4);
+            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 2);
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 1000, n]);
               labels.push({
                 position: [ll[1], ll[0]],
-                text: `N${northingLabel}`,
+                text: `${northingLabel}`,
                 color: '#ff0000'
               });
             } catch (err) {
@@ -1902,4 +1902,5 @@
   </script>
 </body>
 </html>
+
 
