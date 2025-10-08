@@ -62,6 +62,67 @@
       cursor: grabbing;
     }
 
+    /* === Slide-Up Export GPX Drawer === */
+    #export-menu {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(calc(100% - 40px));
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
+      font-family: sans-serif;
+      font-size: 13px;
+      width: 240px;
+      text-align: center;
+      transition: transform 0.35s ease-in-out;
+      z-index: 2000;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* Slide up when hovered or tapped */
+    #export-menu:hover,
+    #export-menu.active {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Header stays visible when collapsed */
+    #export-menu .export-header {
+      background-color: #0078D7;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 16px 16px 0 0;
+      transition: background 0.3s ease;
+    }
+
+    #export-menu:hover .export-header,
+    #export-menu.active .export-header {
+      background-color: #005A9E;
+    }
+
+    /* Buttons inside the drawer */
+    #export-menu .export-options {
+      padding: 10px;
+    }
+
+    #export-menu button {
+      background-color: #0078D7;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      margin: 5px;
+      transition: background 0.3s ease;
+    }
+
+    #export-menu button:hover {
+      background-color: #005A9E;
+    }
+    
     #toggle-button, #toggle-button2 {
       background-color: #0078D7;
       color: white;
@@ -311,6 +372,22 @@
         padding: 4px 2px;
       }
 
+      #export-menu {
+        width: 85%;
+        font-size: 12px;
+        transform: translateX(-50%) translateY(calc(100% - 36px));
+      }
+
+      #export-menu .export-header {
+        padding: 8px;
+        font-size: 13px;
+      }
+
+      #export-menu button {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+        
       #toggle-button, #toggle-button2 {
         font-size: 12px;
         padding: 6px 12px;
@@ -1899,6 +1976,16 @@
         minute: '2-digit',
         second: '2-digit'
       });
+
+    // Tap-to-open behavior for mobile (and works on desktop clicks too)
+    const exportMenu = document.getElementById('export-menu');
+    exportMenu.addEventListener('click', (e) => {
+      // Only toggle if the user clicked the header area
+      if (e.target.classList.contains('export-header')) {
+        exportMenu.classList.toggle('active');
+      }
+    });
   </script>
 </body>
 </html>
+
