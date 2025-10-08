@@ -1962,16 +1962,29 @@
       rejectedCount.textContent = rejectedPointsCount;
       lastUpdate.textContent = new Date().toLocaleTimeString();
     }
-    
+
     function processGPSUpdate(data) {
-      const { device_id, lat, lon, sats } = data;
+      // Log raw data for debugging
+      console.log("Raw data received:", data);
+
+      // Match simulator keys
+      const device_id = data.id;            // e.g. "XXV"
+      const lat = data.latitude;            // e.g. -33.462418
+      const lon = data.longitude;           // e.g. 150.122108
+      const sats = data.sats;               // e.g. 16
+
+      // Guard against bad data
+      if (typeof lat !== "number" || typeof lon !== "number") {
+        console.warn(`Invalid coordinates for device ${device_id}:`, lat, lon);
+        return;
+      }
 
       // Initialise trail array if needed
       if (!gpsTrails[device_id]) {
         gpsTrails[device_id] = [];
       }
 
-      // Push new point
+      // Push new coordinate pair for plotting
       gpsTrails[device_id].push([lat, lon]);
 
       // Limit history length (optional)
@@ -2017,7 +2030,7 @@
 
       console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | sats=${sats} | count=${gpsTrails[device_id].length}`);
     }
-
+    
     // Initialize
     console.log('Initializing GPS tracker...');
     
@@ -2361,6 +2374,7 @@
   </script>
 </body>
 </html>
+
 
 
 
