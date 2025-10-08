@@ -640,7 +640,7 @@
         const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
         const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
         
-        return `${zone}${gridSquare} ${eastingStr} ${northingStr}`;
+        return `${eastingStr} ${northingStr}`;
       } catch (error) {
         console.error('Grid conversion error:', error);
         return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
@@ -937,7 +937,7 @@
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c; // Distance in kilometers
+      return R * c; // Distance in kilometres
     }
 
     // Validate if point is within acceptable distance from start
@@ -1715,3 +1715,4 @@
   </script>
 </body>
 </html>
+
