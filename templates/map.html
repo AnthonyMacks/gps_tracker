@@ -16,22 +16,8 @@
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
 <style>
-    html, body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* prevents scroll issues */
-        touch-action: none /* prevents browser gestures interferring with drag */
-    }
-    
-    #map { height: 100%;
-          width: 100%;
-          position: absolute;
-          top: 0;
-          left: 0;
-          z-index: 0;
-    }
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; width: 100%; z-index: 0; }
 
     #info {
       position: absolute;
@@ -509,14 +495,9 @@
       }
 
       #export-menu {
-        position: fixed;
-        bottom: 100px; /* Lift it above grid/opacity panels */
-        left: 50%;
-        transform: translateX(-50%) translateY(calc(100% - 36px));
-        width: 85%;
-        font-size: 12px;
-        border-radius: 14px 14px 0 0;
-        z-index: 1500;
+        bottom: 150px;
+        left: 10px;
+        font-size: 9px;
       }
 
       .export-header {
@@ -603,14 +584,14 @@
       }
 
       #export-menu {
-        position: fixed;
-        right: 10px;
-        bottom: 80px; /* just above grid control */
         width: auto;
-        background: rgba(255, 255, 255, 0.95);
+        right: 10px;
+        left: auto;
+        bottom: 10px;
+        transform: translateY(0) translateX(0);
         border-radius: 10px;
         padding: 6px 10px;
-        z-index: 1500;
+        background: rgba(255, 255, 255, 0.9);
       }
 
       /* In landscape mode, behaves like a slide-out panel */
@@ -1315,8 +1296,6 @@
     function makeDraggable(element) {
       let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
       let isDragging = false;
-
-      element.style.touchAction = "none";
 
       element.onmousedown = dragMouseDown;
       element.ontouchstart = dragTouchStart;
@@ -2052,6 +2031,4 @@
   </script>
 </body>
 </html>
-
-
 
