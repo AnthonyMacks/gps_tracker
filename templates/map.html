@@ -102,6 +102,28 @@
       margin-right: 10px;
     }
 
+    #export-menu:hover .export-options {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .export-options button {
+      background: none;
+      border: none;
+      padding: 14px 18px;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .export-options button:hover {
+      background-color: #f0f0f0;
+    }
+    
     #grid-control {
       position: absolute;
       bottom: 270px;
@@ -565,7 +587,7 @@
 <tbody></tbody>
 </table>
 </div>
-<div id="export-menu">
+<div class="panel" id="export-menu">
   <div class="export-header">📥 Export GPX</div>
   <div class="export-options">
     <button onclick="exportAllToGPX()">🗺️ All Devices</button>
@@ -1902,5 +1924,6 @@
   </script>
 </body>
 </html>
+
 
 
