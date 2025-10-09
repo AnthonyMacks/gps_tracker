@@ -949,52 +949,45 @@
           }).addTo(map);
         }
 
-        // Add separate easting and northing labels
-        // Easting labels (vertical lines) - centered vertically in grid
+        console.log(`Drawing labels: minE=${minE}, maxE=${maxE}, minN=${minN}, maxN=${maxN}`);
+
+        // Add easting labels ONLY at the TOP edge of the map
+        // One label per vertical grid line, positioned at the top
         for (let e = minE; e <= maxE; e += gridInterval) {
-          for (let n = minN; n < maxN; n += gridInterval) {
-            // Calculate center of grid square vertically
-            const centerN = n + gridInterval / 2;
+          try {
+            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN]);
+            const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
             
-            try {
-              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, centerN]);
-              
-              // Get 2-digit easting label
-              const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
-              
-              labels.push({
-                position: [ll[1], ll[0]],
-                text: eastingLabel,
-                color: '#ff0000'
-              });
-            } catch (err) {
-              console.warn('Label position error:', err);
-            }
+            labels.push({
+              position: [ll[1], ll[0]],
+              text: eastingLabel,
+              color: '#ff0000'
+            });
+            console.log(`Easting label: ${eastingLabel} at E=${e}, N=${maxN}`);
+          } catch (err) {
+            console.warn('Easting label error:', err);
           }
         }
 
-        // Northing labels (horizontal lines) - centered horizontally in grid
+        // Add northing labels ONLY at the LEFT edge of the map
+        // One label per horizontal grid line, positioned at the left
         for (let n = minN; n <= maxN; n += gridInterval) {
-          for (let e = minE; e < maxE; e += gridInterval) {
-            // Calculate center of grid square horizontally
-            const centerE = e + gridInterval / 2;
+          try {
+            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE, n]);
+            const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
             
-            try {
-              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [centerE, n]);
-              
-              // Get 2-digit northing label
-              const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
-              
-              labels.push({
-                position: [ll[1], ll[0]],
-                text: northingLabel,
-                color: '#ff0000'
-              });
-            } catch (err) {
-              console.warn('Label position error:', err);
-            }
+            labels.push({
+              position: [ll[1], ll[0]],
+              text: northingLabel,
+              color: '#0000ff'
+            });
+            console.log(`Northing label: ${northingLabel} at E=${minE}, N=${n}`);
+          } catch (err) {
+            console.warn('Northing label error:', err);
           }
         }
+
+        console.log(`Total labels created: ${labels.length}`);
 
         // Add labels
         labels.forEach(label => {
