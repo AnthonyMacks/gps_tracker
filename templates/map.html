@@ -153,11 +153,6 @@
       font-size: 11px;
     }
 
-    .arrow-icon {
-      font-weight: bold;
-      font-size: 8px;
-    }
-
     footer {
       position: absolute;
       bottom: 10px;
@@ -171,10 +166,9 @@
       z-index: 1001;
     }
 
-    /* Export dropdown button */
     #export-control {
       position: absolute;
-      bottom: 10px;
+      bottom: 20px;
       right: 150px;
       z-index: 1001;
     }
@@ -329,7 +323,6 @@
       font-size: 10px;
     }
 
-    /* Animated dots on polyline */
     .animated-polyline {
       stroke-dasharray: 1, 14;
       stroke-linecap: round;
@@ -382,7 +375,6 @@
       font-weight: bold;
     }
 
-    /* Mobile responsive styles */
     @media (max-width: 768px) {
       #info {
         max-width: none;
@@ -480,7 +472,6 @@
       }
     }
 
-    /* Portrait phone adjustments */
     @media (max-width: 480px) and (orientation: portrait) {
       #info {
         max-height: 30%;
@@ -577,7 +568,6 @@
       }
     }
 
-    /* Landscape phone adjustments */
     @media (max-width: 768px) and (orientation: landscape) {
       #info {
         width: 220px;
@@ -704,38 +694,38 @@
   <div class="export-dropdown">
     <button class="export-btn">📥 Export KML</button>
     <div class="export-dropdown-content">
-      <div class="export-option all-devices" onclick="exportGPX('all')">📦 Export All Devices</div>
+      <div class="export-option all-devices" onclick="exportKML('all')">📦 Export All Devices</div>
       <div class="export-section-header">Individual Devices</div>
-      <div class="export-option" onclick="exportGPX('I')">Device I</div>
-      <div class="export-option" onclick="exportGPX('II')">Device II</div>
-      <div class="export-option" onclick="exportGPX('III')">Device III</div>
-      <div class="export-option" onclick="exportGPX('IV')">Device IV</div>
-      <div class="export-option" onclick="exportGPX('V')">Device V</div>
-      <div class="export-option" onclick="exportGPX('VI')">Device VI</div>
-      <div class="export-option" onclick="exportGPX('VII')">Device VII</div>
-      <div class="export-option" onclick="exportGPX('VIII')">Device VIII</div>
-      <div class="export-option" onclick="exportGPX('IX')">Device IX</div>
-      <div class="export-option" onclick="exportGPX('X')">Device X</div>
-      <div class="export-option" onclick="exportGPX('XI')">Device XI</div>
-      <div class="export-option" onclick="exportGPX('XII')">Device XII</div>
-      <div class="export-option" onclick="exportGPX('XIII')">Device XIII</div>
-      <div class="export-option" onclick="exportGPX('XIV')">Device XIV</div>
-      <div class="export-option" onclick="exportGPX('XV')">Device XV</div>
-      <div class="export-option" onclick="exportGPX('XVI')">Device XVI</div>
-      <div class="export-option" onclick="exportGPX('XVII')">Device XVII</div>
-      <div class="export-option" onclick="exportGPX('XVIII')">Device XVIII</div>
-      <div class="export-option" onclick="exportGPX('XIX')">Device XIX</div>
-      <div class="export-option" onclick="exportGPX('XX')">Device XX</div>
-      <div class="export-option" onclick="exportGPX('XXI')">Device XXI</div>
-      <div class="export-option" onclick="exportGPX('XXII')">Device XXII</div>
-      <div class="export-option" onclick="exportGPX('XXIII')">Device XXIII</div>
-      <div class="export-option" onclick="exportGPX('XXIV')">Device XXIV</div>
-      <div class="export-option" onclick="exportGPX('XXV')">Device XXV</div>
-      <div class="export-option" onclick="exportGPX('XXVI')">Device XXVI</div>
-      <div class="export-option" onclick="exportGPX('XXVII')">Device XXVII</div>
-      <div class="export-option" onclick="exportGPX('XXVIII')">Device XXVIII</div>
-      <div class="export-option" onclick="exportGPX('XXIX')">Device XXIX</div>
-      <div class="export-option" onclick="exportGPX('XXX')">Device XXX</div>
+      <div class="export-option" onclick="exportKML('I')">Device I</div>
+      <div class="export-option" onclick="exportKML('II')">Device II</div>
+      <div class="export-option" onclick="exportKML('III')">Device III</div>
+      <div class="export-option" onclick="exportKML('IV')">Device IV</div>
+      <div class="export-option" onclick="exportKML('V')">Device V</div>
+      <div class="export-option" onclick="exportKML('VI')">Device VI</div>
+      <div class="export-option" onclick="exportKML('VII')">Device VII</div>
+      <div class="export-option" onclick="exportKML('VIII')">Device VIII</div>
+      <div class="export-option" onclick="exportKML('IX')">Device IX</div>
+      <div class="export-option" onclick="exportKML('X')">Device X</div>
+      <div class="export-option" onclick="exportKML('XI')">Device XI</div>
+      <div class="export-option" onclick="exportKML('XII')">Device XII</div>
+      <div class="export-option" onclick="exportKML('XIII')">Device XIII</div>
+      <div class="export-option" onclick="exportKML('XIV')">Device XIV</div>
+      <div class="export-option" onclick="exportKML('XV')">Device XV</div>
+      <div class="export-option" onclick="exportKML('XVI')">Device XVI</div>
+      <div class="export-option" onclick="exportKML('XVII')">Device XVII</div>
+      <div class="export-option" onclick="exportKML('XVIII')">Device XVIII</div>
+      <div class="export-option" onclick="exportKML('XIX')">Device XIX</div>
+      <div class="export-option" onclick="exportKML('XX')">Device XX</div>
+      <div class="export-option" onclick="exportKML('XXI')">Device XXI</div>
+      <div class="export-option" onclick="exportKML('XXII')">Device XXII</div>
+      <div class="export-option" onclick="exportKML('XXIII')">Device XXIII</div>
+      <div class="export-option" onclick="exportKML('XXIV')">Device XXIV</div>
+      <div class="export-option" onclick="exportKML('XXV')">Device XXV</div>
+      <div class="export-option" onclick="exportKML('XXVI')">Device XXVI</div>
+      <div class="export-option" onclick="exportKML('XXVII')">Device XXVII</div>
+      <div class="export-option" onclick="exportKML('XXVIII')">Device XXVIII</div>
+      <div class="export-option" onclick="exportKML('XXIX')">Device XXIX</div>
+      <div class="export-option" onclick="exportKML('XXX')">Device XXX</div>
       <div class="export-section-header">Data Management</div>
       <div class="export-option clear-data" onclick="clearStoredData()">🗑️ Clear All Stored Data</div>
     </div>
@@ -746,76 +736,46 @@
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
 <script>
-    // Define MGA zones for both GDA94 and GDA2020
-    // GDA2020 (EPSG:78xx)
     proj4.defs("EPSG:7854", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     proj4.defs("EPSG:7855", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     proj4.defs("EPSG:7856", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
-    
-    // GDA94 (EPSG:283xx) - NSW Topo maps may use this
     proj4.defs("EPSG:28354", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     proj4.defs("EPSG:28355", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     proj4.defs("EPSG:28356", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 
-    // Grid reference conversion using proj4js
     const e100kLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const n100kLetters = "ABCDEFGHJKLMNPQRSTUV";
-    
-    let useGDA94 = true; // Use GDA94 for NSW Topo compatibility
+    let useGDA94 = true;
 
     function getUTMZone(lon) {
-      // Standard UTM zone calculation
-      // Zone 55: 144° to 150°
-      // Zone 56: 150° to 156°
-      // Zone 57: 156° to 162°
       if (lon >= 144 && lon < 150) return 55;
       if (lon >= 150 && lon < 156) return 56;
       if (lon >= 156 && lon < 162) return 57;
-      // Default to zone 56 for NSW
       return 56;
     }
     
     function getEPSG(zone) {
       if (useGDA94) {
-        return 28354 + (zone - 54); // GDA94: 28354, 28355, 28356
+        return 28354 + (zone - 54);
       } else {
-        return 7854 + (zone - 54);  // GDA2020: 7854, 7855, 7856
+        return 7854 + (zone - 54);
       }
     }
 
     function get100kmGridSquare(easting, northing, zone) {
-      // MGA Grid Square calculation for Australian zones
       const e100k = Math.floor(easting / 100000);
       const n100k = Math.floor(northing / 100000);
       
-      // For Australian MGA (GDA94/GDA2020)
-      // Zone 54: columns start at 'Q'
-      // Zone 55: columns start at 'A' 
-      // Zone 56: columns start at 'J'
-      // Zone 57: columns start at 'S'
-      
       let colStart;
-      if (zone === 54) colStart = 16; // Q
-      else if (zone === 55) colStart = 0;  // A
-      else if (zone === 56) colStart = 9;  // J
-      else if (zone === 57) colStart = 18; // S
+      if (zone === 54) colStart = 16;
+      else if (zone === 55) colStart = 0;
+      else if (zone === 56) colStart = 9;
+      else if (zone === 57) colStart = 18;
       else colStart = 0;
       
-      // Easting index cycles through 8 letters
       const eIndex = (colStart + (e100k - 1)) % 24;
-      
-      // Northing index - in southern hemisphere
-      // For southern zones, the northing letters count from south (A) at equator
-      // At equator N=10000000m, each letter is 100km
-      // For 6,295,000m: (10,000,000 - 6,295,000) / 100,000 = 37.05
-      // So we're 37 squares south of equator
-      
-      // The northing index in MGRS repeats every 2000km (20 letters × 100km)
       const nIndex = (n100k) % 20;
-      
       const gridSquare = e100kLetters[eIndex] + n100kLetters[nIndex];
-      
-      console.log(`Grid Square Debug: Zone=${zone}, E100k=${e100k}, N100k=${n100k}, eIndex=${eIndex}(${e100kLetters[eIndex]}), nIndex=${nIndex}(${n100kLetters[nIndex]}), Grid=${gridSquare}`);
       
       return gridSquare;
     }
@@ -844,7 +804,6 @@
       }
     }
 
-    // Grid line management
     let gridLinesVisible = true;
     let grid100mVisible = false;
     let gridLineLayer = null;
@@ -877,7 +836,6 @@
         const center = map.getCenter();
         const zoom = map.getZoom();
 
-        // Don't draw grid at very low zoom levels
         if (zoom < 12) {
           console.log('Zoom too low for grid display');
           return;
@@ -888,11 +846,9 @@
         const zone = getUTMZone(lon);
         const epsg = getEPSG(zone);
 
-        // Convert bounds to UTM
         const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
         const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
 
-        // Round to exact 1km boundaries
         const minE = Math.floor(sw[0] / 1000) * 1000;
         const maxE = Math.ceil(ne[0] / 1000) * 1000;
         const minN = Math.floor(sw[1] / 1000) * 1000;
@@ -905,7 +861,6 @@
 
         console.log(`Drawing grid for zone ${zone}, datum: GDA94, interval: ${gridInterval}m`);
 
-        // Draw vertical lines (easting)
         for (let e = minE; e <= maxE; e += gridInterval) {
           const line = [];
           for (let n = minN; n <= maxN; n += 250) {
@@ -922,7 +877,6 @@
           }
         }
 
-        // Draw horizontal lines (northing)
         for (let n = minN; n <= maxN; n += gridInterval) {
           const line = [];
           for (let e = minE; e <= maxE; e += 250) {
@@ -939,7 +893,6 @@
           }
         }
 
-        // Create multi-polyline for all grid lines
         if (allLines.length > 0) {
           gridLineLayer = L.polyline(allLines, {
             color: '#ff0000',
@@ -951,11 +904,10 @@
 
         console.log(`Drawing labels: minE=${minE}, maxE=${maxE}, minN=${minN}, maxN=${maxN}`);
 
-        // Add easting labels ONLY at the TOP edge of the map
-        // One label per vertical grid line, positioned at the top
         for (let e = minE; e <= maxE; e += gridInterval) {
           try {
-            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN]);
+            const labelN = maxN - (maxN - minN) * 0.15;
+            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, labelN]);
             const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
             
             labels.push({
@@ -963,17 +915,15 @@
               text: eastingLabel,
               color: '#ff0000'
             });
-            console.log(`Easting label: ${eastingLabel} at E=${e}, N=${maxN}`);
           } catch (err) {
             console.warn('Easting label error:', err);
           }
         }
 
-        // Add northing labels ONLY at the LEFT edge of the map
-        // One label per horizontal grid line, positioned at the left
         for (let n = minN; n <= maxN; n += gridInterval) {
           try {
-            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE, n]);
+            const labelE = minE + (maxE - minE) * 0.15;
+            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [labelE, n]);
             const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
             
             labels.push({
@@ -981,7 +931,6 @@
               text: northingLabel,
               color: '#0000ff'
             });
-            console.log(`Northing label: ${northingLabel} at E=${minE}, N=${n}`);
           } catch (err) {
             console.warn('Northing label error:', err);
           }
@@ -989,7 +938,6 @@
 
         console.log(`Total labels created: ${labels.length}`);
 
-        // Add labels
         labels.forEach(label => {
           const marker = L.marker(label.position, {
             icon: L.divIcon({
@@ -1006,7 +954,6 @@
 
         console.log(`Drew ${allLines.length} grid lines with ${labels.length} labels at zoom ${zoom}`);
 
-        // Draw 100m grid if enabled
         if (grid100mVisible) {
           draw100mGrid();
         }
@@ -1024,7 +971,6 @@
         const center = map.getCenter();
         const zoom = map.getZoom();
 
-        // Only draw 100m grid at high zoom levels
         if (zoom < 15) {
           console.log('Zoom too low for 100m grid display');
           return;
@@ -1035,11 +981,9 @@
         const zone = getUTMZone(lon);
         const epsg = getEPSG(zone);
 
-        // Convert bounds to UTM
         const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
         const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
 
-        // Round to exact 100m boundaries
         const minE = Math.floor(sw[0] / 100) * 100;
         const maxE = Math.ceil(ne[0] / 100) * 100;
         const minN = Math.floor(sw[1] / 100) * 100;
@@ -1047,11 +991,7 @@
 
         const allLines = [];
 
-        console.log(`Drawing 100m grid for zone ${zone}`);
-
-        // Draw vertical lines every 100m
         for (let e = minE; e <= maxE; e += 100) {
-          // Skip lines that are on 1km boundaries (already drawn)
           if (e % 1000 === 0) continue;
           
           const line = [];
@@ -1069,9 +1009,7 @@
           }
         }
 
-        // Draw horizontal lines every 100m
         for (let n = minN; n <= maxN; n += 100) {
-          // Skip lines that are on 1km boundaries (already drawn)
           if (n % 1000 === 0) continue;
           
           const line = [];
@@ -1089,7 +1027,6 @@
           }
         }
 
-        // Create multi-polyline for all 100m grid lines (dashed, blue/gray)
         if (allLines.length > 0) {
           grid100mLayer = L.polyline(allLines, {
             color: '#3366cc',
@@ -1099,8 +1036,6 @@
             interactive: false
           }).addTo(map);
         }
-
-        console.log(`Drew ${allLines.length} 100m grid lines at zoom ${zoom}`);
 
       } catch (error) {
         console.error('Error drawing 100m grid lines:', error);
@@ -1113,7 +1048,7 @@
         drawGridLines();
       } else {
         clearGridLines();
-        clearGrid100m(); // Also clear 100m grid if main grid is off
+        clearGrid100m();
       }
     }
 
@@ -1121,10 +1056,9 @@
       grid100mVisible = !grid100mVisible;
       if (grid100mVisible) {
         if (!gridLinesVisible) {
-          // Enable main grid first if it's off
           gridLinesVisible = true;
           document.getElementById('grid-toggle').checked = true;
-          drawGridLines(); // This will also draw 100m grid
+          drawGridLines();
         } else {
           draw100mGrid();
         }
@@ -1133,14 +1067,12 @@
       }
     }
 
-    // Distance validation - store start points for each device
     const deviceStartPoints = {};
     const MAX_DISTANCE_KM = 5;
     let rejectedPointsCount = 0;
 
-    // Haversine formula to calculate distance between two lat/lon points in kilometers
     function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371; // Earth's radius in kilometers
+      const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = 
@@ -1148,23 +1080,18 @@
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c; // Distance in kilometres
+      return R * c;
     }
 
-    // Validate if point is within acceptable distance from start
     function isValidDistance(deviceId, lat, lon) {
-      // If this is the first point for this device, store it as the start point
       if (!deviceStartPoints[deviceId]) {
         deviceStartPoints[deviceId] = { lat: lat, lon: lon };
         console.log(`📍 Setting start point for device ${deviceId}: (${lat.toFixed(6)}, ${lon.toFixed(6)})`);
         return true;
       }
 
-      // Calculate distance from start point
       const startPoint = deviceStartPoints[deviceId];
       const distance = calculateDistance(startPoint.lat, startPoint.lon, lat, lon);
-      
-      console.log(`📏 Device ${deviceId} distance from start: ${distance.toFixed(2)}km`);
       
       if (distance > MAX_DISTANCE_KM) {
         console.warn(`🚫 Rejecting point for device ${deviceId}: ${distance.toFixed(2)}km > ${MAX_DISTANCE_KM}km limit`);
@@ -1175,7 +1102,6 @@
       return true;
     }
 
-    // LocalStorage management
     const STORAGE_KEYS = {
       GPS_TRAILS: 'mackstrack_gps_trails',
       PACKET_COUNTS: 'mackstrack_packet_counts',
@@ -1209,33 +1135,27 @@
         if (trails) {
           const loadedTrails = JSON.parse(trails);
           Object.assign(gpsTrails, loadedTrails);
-          console.log('📂 Loaded GPS trails from localStorage:', Object.keys(loadedTrails).length, 'devices');
         }
 
         if (counts) {
           const loadedCounts = JSON.parse(counts);
           Object.assign(packetCounts, loadedCounts);
-          console.log('📂 Loaded packet counts from localStorage');
         }
 
         if (packets) {
           const loadedPackets = JSON.parse(packets);
           Object.assign(latestPackets, loadedPackets);
-          console.log('📂 Loaded latest packets from localStorage');
         }
 
         if (startPoints) {
           const loadedStartPoints = JSON.parse(startPoints);
           Object.assign(deviceStartPoints, loadedStartPoints);
-          console.log('📂 Loaded device start points from localStorage');
         }
 
         if (rejectedCount) {
           rejectedPointsCount = parseInt(rejectedCount) || 0;
-          console.log('📂 Loaded rejected count from localStorage:', rejectedPointsCount);
         }
 
-        // Restore map markers and trails from loaded data
         restoreMapFromStorage();
         updateStoredCount();
         
@@ -1255,7 +1175,6 @@
           localStorage.removeItem(STORAGE_KEYS.DEVICE_START_POINTS);
           localStorage.removeItem(STORAGE_KEYS.REJECTED_COUNT);
           
-          // Clear runtime data
           Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
           Object.keys(packetCounts).forEach(key => delete packetCounts[key]);
           Object.keys(latestPackets).forEach(key => delete latestPackets[key]);
@@ -1263,7 +1182,6 @@
           rejectedPointsCount = 0;
           totalPoints = 0;
           
-          // Clear map
           Object.keys(allMarkers).forEach(deviceId => {
             hideDeviceMarkers(deviceId);
           });
@@ -1275,7 +1193,6 @@
           updateStoredCount();
           
           alert('✅ All stored data has been cleared!');
-          console.log('🗑️ All localStorage data cleared');
         } catch (error) {
           console.error('Error clearing localStorage:', error);
           alert('❌ Error clearing data: ' + error.message);
@@ -1286,11 +1203,9 @@
     function restoreMapFromStorage() {
       console.log('🔄 Restoring map from stored data...');
       
-      // Restore all trails and markers
       Object.keys(gpsTrails).forEach(deviceId => {
         const trail = gpsTrails[deviceId];
         if (trail && trail.length > 0) {
-          // Restore historical points
           trail.forEach((point, index) => {
             const isLast = index === trail.length - 1;
             const packet = {
@@ -1303,16 +1218,13 @@
             addDataPoint(packet, isLast);
           });
           
-          // Draw trail
           drawTrail(deviceId);
         }
       });
       
-      // Update UI
       updateTable();
       updateDebugInfo();
       
-      // Fit bounds if we have data
       if (Object.keys(gpsTrails).length > 0) {
         Object.keys(gpsTrails).forEach(deviceId => {
           gpsTrails[deviceId].forEach(point => {
@@ -1325,8 +1237,6 @@
           hasInitialData = true;
         }
       }
-      
-      console.log('✅ Map restoration complete');
     }
 
     function updateStoredCount() {
@@ -1338,7 +1248,6 @@
       storedCount.textContent = totalStoredPoints;
     }
 
-    // Toggle table visibility functions
     function toggleTable() {
       const table = document.getElementById("device-table");
       const button = document.getElementById("toggle-button");
@@ -1365,7 +1274,6 @@
       }
     }
 
-    // Make panels draggable
     function makeDraggable(element) {
       let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
       let isDragging = false;
@@ -1374,7 +1282,6 @@
       element.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
-        // Don't drag if clicking on buttons or table
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
             e.target.closest('table') || e.target.closest('button')) {
           return;
@@ -1390,7 +1297,6 @@
       }
 
       function dragTouchStart(e) {
-        // Don't drag if touching buttons or table
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
             e.target.closest('table') || e.target.closest('button')) {
           return;
@@ -1449,12 +1355,10 @@
       }
     }
 
-    // Initialize map with higher max zoom
     const map = L.map("map", {
       maxZoom: 22
     }).setView([-33.4452, 150.1528], 15);
     
-    // Base layers with increased maxZoom and maxNativeZoom
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
       maxNativeZoom: 19,
@@ -1477,18 +1381,15 @@
       opacity: 1
     });
 
-    // Google Satellite imagery
     const worldImageryGoogle = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
       attribution: '© Google',
       maxZoom: 22,
       maxNativeZoom: 20
     });
 
-    // Add NSW Topo as default
     nswTopoLayer.addTo(map);
     let currentBaseLayer = nswTopoLayer;
 
-    // Layer control with only the required maps
     const baseLayers = {
       "NSW Topographic": nswTopoLayer,
       "NSW Imagery": nswImageryLayer,
@@ -1500,31 +1401,26 @@
       position: 'topleft'
     }).addTo(map);
 
-    // Add zoom level display
     const currentZoomSpan = document.getElementById('current-zoom');
     map.on('zoomend', function() {
       currentZoomSpan.textContent = map.getZoom();
       drawGridLines();
     });
 
-    // Redraw grid lines when map moves
     map.on('moveend', function() {
       drawGridLines();
     });
 
-    // Grid toggle control
     const gridToggle = document.getElementById('grid-toggle');
     gridToggle.addEventListener('change', function() {
       toggleGridLines();
     });
 
-    // 100m grid toggle control
     const grid100mToggle = document.getElementById('grid-100m-toggle');
     grid100mToggle.addEventListener('change', function() {
       toggle100mGrid();
     });
 
-    // Opacity control
     const opacitySlider = document.getElementById('opacity-slider');
     const opacityValue = document.getElementById('opacity-value');
 
@@ -1534,24 +1430,19 @@
       opacityValue.textContent = Math.round(opacity * 100) + '%';
     });
 
-    // Update current base layer when user switches
     map.on('baselayerchange', function(e) {
       currentBaseLayer = e.layer;
       const opacity = parseFloat(opacitySlider.value);
       currentBaseLayer.setOpacity(opacity);
     });
 
-    // Device colors - expanded for 30 devices with unique, vibrant colors
     const deviceColors = {
-      // Numeric IDs (1-30)
       '1': '#E74C3C',   '2': '#3498DB',   '3': '#2ECC71',   '4': '#F39C12',   '5': '#9B59B6',
       '6': '#1ABC9C',   '7': '#E67E22',   '8': '#34495E',   '9': '#E91E63',   '10': '#FF5722',
       '11': '#795548',  '12': '#607D8B',  '13': '#FF9800',  '14': '#4CAF50',  '15': '#673AB7',
       '16': '#FF1744',  '17': '#448AFF',  '18': '#00E676',  '19': '#FFC107',  '20': '#AB47BC',
       '21': '#26C6DA',  '22': '#FF6F00',  '23': '#546E7A',  '24': '#EC407A',  '25': '#8BC34A',
       '26': '#5E35B1',  '27': '#FF5252',  '28': '#00BCD4',  '29': '#FFEB3B',  '30': '#795548',
-      
-      // Roman numerals (I-XXX)
       'I': '#E74C3C',     'II': '#3498DB',    'III': '#2ECC71',   'IV': '#F39C12',    'V': '#9B59B6',
       'VI': '#1ABC9C',    'VII': '#E67E22',   'VIII': '#34495E',  'IX': '#E91E63',    'X': '#FF5722',
       'XI': '#795548',    'XII': '#607D8B',   'XIII': '#FF9800',  'XIV': '#4CAF50',   'XV': '#673AB7',
@@ -1560,14 +1451,12 @@
       'XXVI': '#5E35B1',  'XXVII': '#FF5252', 'XXVIII': '#00BCD4','XXIX': '#FFEB3B',  'XXX': '#795548'
     };
 
-    // Initialize socket connection
     const socket = io({ 
       transports: ['websocket'],
       timeout: 5000,
       forceNew: true
     });
     
-    // Debug elements
     const socketStatus = document.getElementById('socket-status');
     const deviceCount = document.getElementById('device-count');
     const pointCount = document.getElementById('point-count');
@@ -1576,7 +1465,6 @@
     
     let totalPoints = 0;
 
-    // Socket connection handlers
     socket.on('connect', () => {
       console.log('✅ Socket connected');
       socketStatus.textContent = '✅';
@@ -1676,7 +1564,6 @@
       const lat = parseFloat(point.latitude);
       const lon = parseFloat(point.longitude);
       
-      // Validate coordinates
       if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
         console.warn('Invalid coordinates:', point);
         return;
@@ -1684,7 +1571,6 @@
 
       const color = deviceColors[point.device_id] || "#7F8C8D";
       const gridRef = latLonToGridReference(lat, lon);
-      console.log(`Adding point for ${point.device_id}: (${lat}, ${lon}), Grid: ${gridRef}, isLatest: ${isLatest}`);
 
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
@@ -1721,7 +1607,6 @@
         
         allMarkers[point.device_id].current = { circle, label: labelMarker };
         
-        // Add to map if device is visible
         if (deviceVisibility[point.device_id] !== false) {
           circle.addTo(map);
           labelMarker.addTo(map);
@@ -1828,23 +1713,6 @@
       if (deviceVisibility[device_id] !== false) {
         polyline.addTo(map);
       }
-
-      console.log(`Trail drawn for device ${device_id} with ${trail.length} points`);
-    }
-
-    function getAgeLabel(ts) {
-      const iso = ts.replace(" ", "T") + "Z";
-      const pingTime = new Date(iso);
-      if (isNaN(pingTime)) {
-        console.warn("Bad timestamp:", ts);
-        return "——";
-      }
-
-      const nowSec = Date.now();
-      const diffSec = Math.floor((nowSec - pingTime.getTime()) / 1000);
-      if (diffSec < 60)   return `${diffSec}s ago`;
-      if (diffSec < 3600) return `${Math.floor(diffSec/60)}m ago`;
-      return `${Math.floor(diffSec/3600)}h ago`;
     }
 
     function getRowClass(ts, sats) {
@@ -1869,7 +1737,6 @@
         a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
       );
 
-      // Devices I-XII go to first table, XIII-XXX go to second table
       const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
       const secondTableDevices = ['XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII', 'XXVIII', 'XXIX', 'XXX'];
 
@@ -1901,7 +1768,6 @@
           row.style.border = "2px solid #3498DB";
         }
 
-        // Add row to appropriate table
         if (firstTableDevices.includes(id)) {
           tbody1.appendChild(row);
         } else if (secondTableDevices.includes(id)) {
@@ -1935,13 +1801,11 @@
         return;
       }
 
-      // Validate distance from start point
       if (!isValidDistance(device_id, lat, lon)) {
         updateDebugInfo();
         return;
       }
 
-      // Store the packet with corrected timestamp
       latestPackets[device_id] = {
         ...data,
         timestamp: timestamp.replace(" ", "T") + "Z"
@@ -1949,7 +1813,6 @@
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
-      // Move the last "current" point into history
       if (gpsTrails[device_id] && gpsTrails[device_id].length) {
         const lastPoint = {
           ...latestPackets[device_id],
@@ -1959,45 +1822,37 @@
         addDataPoint(lastPoint, false);
       }
       
-      // Add the new current marker
       addDataPoint(data, true);
 
-      // Update map bounds
       allPointsBounds.extend([lat, lon]);
       
-      // Only fit bounds on first data
       if (!hasInitialData) {
         map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
         hasInitialData = true;
       }
 
-      // Build the trail
       gpsTrails[device_id] = gpsTrails[device_id] || [];
       gpsTrails[device_id].push([lat, lon]);
       if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // Redraw trail
       drawTrail(device_id);
 
-      // Update UI
       updateTable();
       updateDebugInfo();
 
-      // Save to localStorage
       saveToLocalStorage();
-
-      console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | count=${packetCounts[device_id]}`);
     }
 
-    // Export to GPX function
-    function exportGPX(deviceId) {
-      console.log(`Exporting GPX for: ${deviceId}`);
+    function exportKML(deviceId) {
+      console.log(`Exporting KML for: ${deviceId}`);
       
-      let gpxContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      gpxContent += '<gpx version="1.1" creator="GPS MacksTrack" xmlns="http://www.topografix.com/GPX/1/1">\n';
+      let kmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      kmlContent += '<kml xmlns="http://www.opengis.net/kml/2.2">\n';
+      kmlContent += '  <Document>\n';
+      kmlContent += '    <n>MacksTrack GPS Data</n>\n';
+      kmlContent += '    <description>Exported GPS tracks from MacksTrack</description>\n';
       
       if (deviceId === 'all') {
-        // Export all devices
         const deviceIds = Object.keys(gpsTrails).sort((a, b) =>
           a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
         );
@@ -2010,28 +1865,40 @@
         deviceIds.forEach(id => {
           const trail = gpsTrails[id];
           if (trail && trail.length > 0) {
-            gpxContent += `  <trk>\n`;
-            gpxContent += `    <name>Device ${id}</name>\n`;
-            gpxContent += `    <trkseg>\n`;
+            const deviceColor = deviceColors[id] || '#7F8C8D';
+            
+            kmlContent += '    <Placemark>\n';
+            kmlContent += `      <n>Device ${id}</n>\n`;
+            kmlContent += `      <description>Track for Device ${id} - ${trail.length} points</description>\n`;
+            kmlContent += '      <Style>\n';
+            kmlContent += '        <LineStyle>\n';
+            kmlContent += `          <color>ff${deviceColor.slice(5,7)}${deviceColor.slice(3,5)}${deviceColor.slice(1,3)}</color>\n`;
+            kmlContent += '          <width>4</width>\n';
+            kmlContent += '        </LineStyle>\n';
+            kmlContent += '      </Style>\n';
+            kmlContent += '      <LineString>\n';
+            kmlContent += '        <tessellate>1</tessellate>\n';
+            kmlContent += '        <coordinates>\n';
             
             trail.forEach(point => {
-              gpxContent += `      <trkpt lat="${point[0]}" lon="${point[1]}">\n`;
-              gpxContent += `      </trkpt>\n`;
+              const lat = point[0];
+              const lon = point[1];
+              kmlContent += `          ${lon},${lat},0\n`;
             });
             
-            gpxContent += `    </trkseg>\n`;
-            gpxContent += `  </trk>\n`;
+            kmlContent += '        </coordinates>\n';
+            kmlContent += '      </LineString>\n';
+            kmlContent += '    </Placemark>\n';
           }
         });
         
-        gpxContent += '</gpx>';
+        kmlContent += '  </Document>\n';
+        kmlContent += '</kml>';
         
-        // Create download
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        downloadGPX(gpxContent, `MacksTrack_All_Devices_${timestamp}.gpx`);
+        downloadKML(kmlContent, `MacksTrack_All_Devices_${timestamp}.kml`);
         
       } else {
-        // Export single device
         const trail = gpsTrails[deviceId];
         
         if (!trail || trail.length === 0) {
@@ -2039,27 +1906,40 @@
           return;
         }
         
-        gpxContent += `  <trk>\n`;
-        gpxContent += `    <name>Device ${deviceId}</name>\n`;
-        gpxContent += `    <trkseg>\n`;
+        const deviceColor = deviceColors[deviceId] || '#7F8C8D';
+        
+        kmlContent += '    <Placemark>\n';
+        kmlContent += `      <n>Device ${deviceId}</n>\n`;
+        kmlContent += `      <description>Track for Device ${deviceId} - ${trail.length} points</description>\n`;
+        kmlContent += '      <Style>\n';
+        kmlContent += '        <LineStyle>\n';
+        kmlContent += `          <color>ff${deviceColor.slice(5,7)}${deviceColor.slice(3,5)}${deviceColor.slice(1,3)}</color>\n`;
+        kmlContent += '          <width>4</width>\n';
+        kmlContent += '        </LineStyle>\n';
+        kmlContent += '      </Style>\n';
+        kmlContent += '      <LineString>\n';
+        kmlContent += '        <tessellate>1</tessellate>\n';
+        kmlContent += '        <coordinates>\n';
         
         trail.forEach(point => {
-          gpxContent += `      <trkpt lat="${point[0]}" lon="${point[1]}">\n`;
-          gpxContent += `      </trkpt>\n`;
+          const lat = point[0];
+          const lon = point[1];
+          kmlContent += `          ${lon},${lat},0\n`;
         });
         
-        gpxContent += `    </trkseg>\n`;
-        gpxContent += `  </trk>\n`;
-        gpxContent += '</gpx>';
+        kmlContent += '        </coordinates>\n';
+        kmlContent += '      </LineString>\n';
+        kmlContent += '    </Placemark>\n';
+        kmlContent += '  </Document>\n';
+        kmlContent += '</kml>';
         
-        // Create download
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        downloadGPX(gpxContent, `MacksTrack_Device_${deviceId}_${timestamp}.gpx`);
+        downloadKML(kmlContent, `MacksTrack_Device_${deviceId}_${timestamp}.kml`);
       }
     }
     
-    function downloadGPX(content, filename) {
-      const blob = new Blob([content], { type: 'application/gpx+xml' });
+    function downloadKML(content, filename) {
+      const blob = new Blob([content], { type: 'application/vnd.google-earth.kml+xml' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -2068,67 +1948,20 @@
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      console.log(`GPX exported: ${filename}`);
+      console.log(`KML exported: ${filename}`);
     }
 
-    // Initialize
     console.log('Initializing GPS tracker...');
     
-    // Load data from localStorage first
     const hasStoredData = loadFromLocalStorage();
-    if (hasStoredData) {
-      console.log('✅ Successfully restored data from localStorage');
-    }
     
-    // Make info panels draggable
     makeDraggable(document.getElementById('info'));
     makeDraggable(document.getElementById('info2'));
     
-    // Test grid conversion with known coordinates
-    console.log('=== Testing Grid Conversion ===');
-    const testLat = -33.451338;
-    const testLon = 150.138327;
-    console.log(`Test coords: ${testLat}, ${testLon}`);
-    console.log('Expected: 56H KH 34001 95014');
-    console.log('Expected 8-figure: 56KH 3400 9501');
-    
-    // Get zone
-    const testZone = getUTMZone(testLon);
-    console.log(`Calculated Zone: ${testZone}`);
-    
-    // Test with GDA94 Zone 56
-    const utmGDA94_56 = proj4('EPSG:4326', 'EPSG:28356', [testLon, testLat]);
-    console.log(`GDA94 Zone 56 UTM: E=${utmGDA94_56[0].toFixed(2)}, N=${utmGDA94_56[1].toFixed(2)}`);
-    console.log(`  E100k=${Math.floor(utmGDA94_56[0]/100000)}, N100k=${Math.floor(utmGDA94_56[1]/100000)}`);
-    
-    // Test with GDA2020 Zone 56
-    const utmGDA2020_56 = proj4('EPSG:4326', 'EPSG:7856', [testLon, testLat]);
-    console.log(`GDA2020 Zone 56 UTM: E=${utmGDA2020_56[0].toFixed(2)}, N=${utmGDA2020_56[1].toFixed(2)}`);
-    console.log(`  E100k=${Math.floor(utmGDA2020_56[0]/100000)}, N100k=${Math.floor(utmGDA2020_56[1]/100000)}`);
-    
-    // Test grid reference calculation
-    useGDA94 = true;
-    const testGridGDA94 = latLonToGridReference(testLat, testLon);
-    console.log(`GDA94 Result: ${testGridGDA94}`);
-    
-    useGDA94 = false;
-    const testGridGDA2020 = latLonToGridReference(testLat, testLon);
-    console.log(`GDA2020 Result: ${testGridGDA2020}`);
-    
-    // Reset to GDA94 as default
-    useGDA94 = true;
-    console.log('===============================');
-    
-    // Draw initial grid lines
     setTimeout(() => {
       drawGridLines();
     }, 500);
     
-    // Test grid conversion
-    const testGrid = latLonToGridReference(-33.8688, 151.2093);
-    console.log('Test grid conversion (Sydney):', testGrid);
-    
-    // Setup debug panel
     const debugPanel = document.getElementById('debug');
     let debugTimeout;
     
@@ -2160,7 +1993,6 @@
       }
     });
     
-    // Initialize socket connection
     socket.on("gps_update", (data) => {
       processGPSUpdate(data);
     });
