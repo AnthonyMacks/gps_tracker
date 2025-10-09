@@ -62,67 +62,6 @@
       cursor: grabbing;
     }
 
-    /* === Slide-Up Export GPX Drawer === */
-    #export-menu {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%) translateY(calc(100% - 40px));
-      background: rgba(255, 255, 255, 0.97);
-      border-radius: 16px 16px 0 0;
-      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
-      font-family: sans-serif;
-      font-size: 13px;
-      width: 240px;
-      text-align: center;
-      transition: transform 0.35s ease-in-out;
-      z-index: 2000;
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    /* Slide up when hovered or tapped */
-    #export-menu:hover,
-    #export-menu.active {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Header stays visible when collapsed */
-    #export-menu .export-header {
-      background-color: #0078D7;
-      color: white;
-      padding: 10px;
-      font-weight: bold;
-      border-radius: 16px 16px 0 0;
-      transition: background 0.3s ease;
-    }
-
-    #export-menu:hover .export-header,
-    #export-menu.active .export-header {
-      background-color: #005A9E;
-    }
-
-    /* Buttons inside the drawer */
-    #export-menu .export-options {
-      padding: 10px;
-    }
-
-    #export-menu button {
-      background-color: #0078D7;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      margin: 5px;
-      transition: background 0.3s ease;
-    }
-
-    #export-menu button:hover {
-      background-color: #005A9E;
-    }
-    
     #toggle-button, #toggle-button2 {
       background-color: #0078D7;
       color: white;
@@ -141,7 +80,7 @@
 
     #opacity-control {
       position: absolute;
-      bottom: 100px;
+      bottom: 60px;
       left: 10px;
       background: rgba(255,255,255,0.9);
       padding: 10px;
@@ -165,7 +104,7 @@
 
     #grid-control {
       position: absolute;
-      bottom: 270px;
+      bottom: 120px;
       left: 10px;
       background: rgba(255,255,255,0.9);
       padding: 10px;
@@ -190,16 +129,6 @@
     .grid-label-marker {
       background: transparent !important;
       border: none !important;
-    }
-
-    /* New rule for centering labels inside the marker box */
-    .grid-label-marker > div {
-      display: flex;
-      align-items: center;      /* Centers content vertically */
-      justify-content: center;  /* Centers content horizontally */
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;   /* Ensures padding/border are included in the 100% height/width */
     }
 
     .row-active { background-color: #D5F5E3; }
@@ -254,7 +183,7 @@
 
     #debug {
       position: absolute;
-      bottom: 330px;
+      bottom: 160px;
       right: 10px;
       background: rgba(0,0,0,0.7);
       color: white;
@@ -352,409 +281,238 @@
       font-weight: bold;
     }
 
-    /* ================================
-   UNIFIED MOBILE LAYOUT
-   ================================ */
-@media (max-width: 768px) {
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      #info {
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
 
-  /* --- General Mobile Scaling --- */
-  body, html {
-    overflow: hidden;
-    touch-action: none;
-  }
+      #info2 {
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
 
-  #map {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 0;
-  }
-
-  /* Smaller font for panels */
-  #info, #info2, #debug, #opacity-control, #grid-control {
-    font-size: 12px;
-    border-radius: 8px;
-  }
-
-  /* --- Info Panels --- */
-  #info, #info2 {
-    width: 90%;
-    left: 5%;
-    top: 10px;
-    position: fixed;
-    touch-action: none; /* allow dragging */
-    z-index: 1600;
-  }
-
-  #debug {
-    bottom: 160px;
-    right: 10px;
-    font-size: 11px;
-    padding: 6px;
-    z-index: 1600;
-  }
-
-  /* --- Controls --- */
-  #opacity-control {
-    bottom: 50px;
-    left: 10px;
-    z-index: 1500;
-  }
-
-  #grid-control {
-    bottom: 10px;
-    left: 10px;
-    z-index: 1500;
-  }
-
-  /* --- Export GPX Drawer --- */
-  #export-menu {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%) translateY(calc(100% - 36px));
-    width: 85%;
-    bottom: 120px;  /* Lift above grid/opacity controls */
-    border-radius: 14px 14px 0 0;
-    font-size: 12px;
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
-    z-index: 1400;
-    overflow: hidden;
-    transition: transform 0.35s ease-in-out;
-  }
-
-  #export-menu.active {
-    transform: translateX(-50%) translateY(0);
-  }
-
-  #export-menu .export-header {
-    padding: 8px;
-    font-weight: bold;
-    background-color: #0078D7;
-    color: white;
-    border-radius: 14px 14px 0 0;
-  }
-
-  #export-menu:hover .export-header,
-  #export-menu.active .export-header {
-    background-color: #005A9E;
-  }
-
-  #export-menu .export-options {
-    padding: 8px;
-  }
-
-  #export-menu button {
-    background-color: #0078D7;
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    margin: 4px;
-    transition: background 0.3s ease;
-  }
-
-  #export-menu button:hover {
-    background-color: #005A9E;
-  }
-
-  /* --- Portrait Orientation --- */
-  @media (orientation: portrait) {
-    #info, #info2 {
-      top: 8px;
-      width: 92%;
-    }
-
-    #export-menu {
-      width: 85%;
-      bottom: 120px;
-    }
-
-    #debug {
-      bottom: 170px;
-    }
-  }
-
-  /* --- Landscape Orientation --- */
-  @media (orientation: landscape) {
-    #info, #info2 {
-      width: 60%;
-      top: 5px;
-      left: 20%;
-    }
-
-    #opacity-control {
-      bottom: 60px;
-      left: 10px;
-    }
-
-    #grid-control {
-      bottom: 20px;
-      left: 10px;
-    }
-
-    #export-menu {
-      right: 10px;
-      left: auto;
-      bottom: 80px;
-      width: 200px;
-      transform: translateY(calc(100% - 38px));
-    }
-
-    #export-menu.active {
-      transform: translateY(0);
-    }
-  }
-}
-    /* ---------------------------
-       Collapsible info panels
-       --------------------------- */
-    #info.collapsible-panel,
-    #info2.collapsible-panel {
-      overflow: hidden;               /* clipped when collapsed */
-      max-height: 34px;               /* shows header only when collapsed */
-      transition: max-height 0.32s ease, box-shadow 0.22s ease;
-      will-change: max-height;
-      z-index: 1600;                  /* keep above map tiles */
-    }
-
-    /* expand on hover (desktop) or when .open (touch toggle) */
-    #info.collapsible-panel:hover,
-    #info2.collapsible-panel:hover,
-    #info.collapsible-panel.open,
-    #info2.collapsible-panel.open {
-      max-height: 75vh;               /* expand to show full content */
-      box-shadow: 0 6px 20px rgba(0,0,0,0.22);
-    }
-
-    /* header (always visible) */
-    .collapsible-panel .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      cursor: pointer;                /* hover/click target */
-      user-select: none;
-      background: rgba(255,255,255,0.9);
-    }
-
-    /* body (scrollable when panel expanded) */
-    .collapsible-panel .panel-body {
-      padding: 8px 10px 12px;
-      overflow-y: auto;
-      max-height: calc(70vh - 56px);  /* allows inner scrolling if content tall */
-    }
-
-    /* small visual tweaks so the table fits inside */
-    .collapsible-panel table {
-      margin: 0;
-      width: 100%;
-    }
-
-    /* ▼ Rotating arrow animation */
-    .collapsible-panel .arrow {
-      display: inline-block;
-      margin-left: 8px;
-      font-size: 14px;
-      transition: transform 0.35s ease 0.05s;
-      color: #0078D7;
-    }
-
-    /* Rotate arrow when panel open or hovered */
-    .collapsible-panel:hover .arrow,
-    .collapsible-panel.open .arrow {
-      transform: rotate(180deg);
-      color: #005A9E;
-    }
-
-    /* Inside the <style> tag in the <head> */
-
-    /* ================================
-       PLAYBACK CONTROLS
-       ================================ */
-    #playback-start-container {
-        position: absolute;
-        bottom: 50px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1002;
-    }
-
-    #playback-start-container button {
-        background-color: #2ECC71;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-size: 14px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        transition: all 0.2s ease;
-    }
-
-    #playback-start-container button:hover {
-        background-color: #27AE60;
-        transform: translateY(-2px);
-    }
-
-    #playback-controls {
-        position: absolute;
-        bottom: 50px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 500px;
-        background: rgba(255,255,255,0.95);
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        z-index: 2000;
-        font-family: sans-serif;
-        font-size: 14px;
-        color: #333;
-        transition: opacity 0.3s, transform 0.3s;
-    }
-
-    #playback-controls.hidden {
-        opacity: 0;
-        pointer-events: none;
-        transform: translateX(-50%) translateY(20px);
-    }
-
-    .playback-header {
-        background-color: #2ECC71;
-        color: white;
-        padding: 8px 15px;
-        border-radius: 12px 12px 0 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: bold;
-    }
-
-    .playback-header .close-btn {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 24px;
-        font-weight: bold;
-        cursor: pointer;
-        padding: 0 5px;
-    }
-
-    .playback-body {
-        padding: 15px;
-    }
-
-    .playback-body label {
-        font-weight: bold;
-        margin-right: 8px;
-        display: block;
-        margin-bottom: 5px;
-    }
-
-    .playback-body select, .playback-body button {
-        width: 100%;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-        margin-bottom: 15px;
-    }
-
-    #playback-timeline {
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid #eee;
-    }
-
-    #playback-slider {
-        width: 100%;
-        margin: 10px 0;
-    }
-
-    .playback-info {
-        display: flex;
-        justify-content: space-between;
+      #info strong, #info2 strong {
         font-size: 12px;
-        color: #666;
-        margin-bottom: 15px;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px 2px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      #opacity-control {
+        bottom: 60px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
+      #grid-control {
+        bottom: 110px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
+      #debug {
+        bottom: 140px;
+        left: 10px;
+        font-size: 9px;
+        padding: 6px;
+        max-width: 200px;
+      }
+
+      #debug.collapsed {
+        height: 22px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
+
+      footer {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+        padding: 2px 4px;
+      }
     }
 
-    .playback-buttons {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    .playback-buttons button {
-        background-color: #0078D7;
-        color: white;
-        flex-grow: 1;
-    }
-    .playback-buttons select {
-        margin-bottom: 0;
-    }
-    .playback-buttons label {
-        margin-bottom: 0;
-        white-space: nowrap;
+    /* Portrait phone adjustments */
+    @media (max-width: 480px) and (orientation: portrait) {
+      #info {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+
+      #info2 {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+
+      table {
+        font-size: 9px;
+      }
+
+      th, td {
+        padding: 3px 1px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+
+      #opacity-control {
+        bottom: 60px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
+      }
+
+      #grid-control {
+        bottom: 100px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
+      }
+
+      #grid-control button {
+        font-size: 7px;
+        padding: 1px 3px;
+      }
+
+      #debug {
+        bottom: 130px;
+        right: 10px;
+        left: auto;
+        font-size: 8px;
+        padding: 4px;
+        max-width: 150px;
+      }
+
+      #debug.collapsed {
+        height: 18px;
+        padding: 3px 4px;
+      }
+
+      #debug .debug-title {
+        font-size: 8px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 7px;
+      }
+
+      footer {
+        font-size: 9px;
+      }
     }
 
-    /* Grey out disabled devices in the playback dropdown */
-    #playback-device-select option:disabled {
-      color: #999;
-      background-color: #f5f5f5;
-      font-style: italic;
+    /* Landscape phone adjustments */
+    @media (max-width: 768px) and (orientation: landscape) {
+      #info {
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+
+      #info2 {
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+
+      #opacity-control {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+      }
+
+      #grid-control {
+        bottom: 50px;
+        left: 10px;
+        font-size: 10px;
+      }
+
+      #debug {
+        bottom: 140px;
+        right: 10px;
+        left: auto;
+        font-size: 9px;
+        max-width: 180px;
+      }
+
+      #debug.collapsed {
+        height: 20px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
     }
     
-</style>
+  </style>
 </head>
 <body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
 <div id="map"></div>
-<!-- Info panel I - XII -->
-<div id="info" class="collapsible-panel">
-  <div class="panel-header">
-    <strong>📡 GPS MacksTrack Data (I-XII)</strong>
-    <!-- drag handle (still draggable) -->
-    <span class="arrow">▼</span>
-    <span class="panel-drag-handle" aria-hidden="true" style="cursor: move; font-size: 18px;">☰</span>
-  </div>
-  <div class="panel-body">
-    <button id="toggle-button" onclick="toggleTable()">Hide Table</button>
-    <table id="device-table">
-      <thead>
-        <tr><th>ID</th><th>Grid Ref</th><th>Count</th><th>Sats</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-   </div>
+<div id="info">
+<strong>📡 GPS MacksTrack Data (I-XII) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
+<button id="toggle-button" onclick="toggleTable()">Hide Table</button>
+<table id="device-table">
+<thead>
+<tr>
+<th>ID</th>
+<th>Grid Ref</th>
+<th>Count</th>
+<th>Sats</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 </div>
-<!-- Info panel XIII - XXX -->
-<div id="info2" class="collapsible-panel">
-  <div class="panel-header">
-    <strong>📡 GPS MacksTrack Data (XIII-XXX)</strong>
-    <span class="arrow">▼</span>
-    <span class="panel-drag-handle" aria-hidden="true" style="cursor: move; font-size: 18px;">☰</span>
-  </div>
-  <div class="panel-body">
-    <button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
-    <table id="device-table2">
-      <thead>
-        <tr><th>ID</th><th>Grid Ref</th><th>Count</th><th>Sats</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</div>
-<div id="export-menu">
-  <div class="export-header">📥 Export GPX</div>
-  <div class="export-options">
-    <button onclick="exportAllToGPX()">🗺️ All Devices</button>
-    <button onclick="showExportGPXMenu()">🗺️ Single Device</button>
-  </div>
+<div id="info2">
+<strong>📡 GPS MacksTrack Data (XIII-XXX) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
+<button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
+<table id="device-table2">
+<thead>
+<tr>
+<th>ID</th>
+<th>Grid Ref</th>
+<th>Count</th>
+<th>Sats</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 </div>
 <div id="opacity-control">
 <label for="opacity-slider">Base Layer Opacity:</label>
@@ -786,43 +544,6 @@
 <footer>
     🚀 Last Render Build: <span id="build-time">loading...</span>
 </footer>
-
-<div id="playback-start-container">
-    <button id="start-playback-btn">▶️ Review Past Tracks</button>
-</div>
-
-<div id="playback-controls" class="hidden">
-  <div class="playback-header">
-    <strong>Track Playback</strong>
-    <button id="close-playback-btn" class="close-btn">&times;</button>
-  </div>
-  <div class="playback-body">
-    <label for="playback-device-select">Device:</label>
-    <select id="playback-device-select">
-      <option value="">-- Select a Device --</option>
-    </select>
-    
-    <div id="playback-timeline" class="hidden">
-      <label for="playback-slider">Timeline:</label>
-      <input type="range" id="playback-slider" min="0" max="100" value="0" step="1">
-      <div class="playback-info">
-        <span id="playback-timestamp">--:--:--</span>
-        <span id="playback-step-display">Point 0 / 0</span>
-      </div>
-      <div class="playback-buttons">
-        <button id="playback-play-pause-btn">▶ Play</button>
-        <label for="playback-speed-select">Speed:</label>
-        <select id="playback-speed-select">
-          <option value="1000">1x</option>
-          <option value="500">2x</option>
-          <option value="200">5x</option>
-          <option value="100">10x</option>
-        </select>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
@@ -919,7 +640,7 @@
         const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
         const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
         
-        return `${zone}${gridSquare} ${eastingStr} ${northingStr}`;
+        return `${eastingStr} ${northingStr}`;
       } catch (error) {
         console.error('Grid conversion error:', error);
         return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
@@ -932,11 +653,6 @@
     let gridLineLayer = null;
     let grid100mLayer = null;
     let gridLabelMarkers = [];
-
-    // Device state management
-    let deviceMarkers = {};    // stores crest marker for each device
-    let devicePolylines = {};  // stores animated polyline for each device
-    const gpsTrails = {};        // stores arrays of lat/lon points for each device
 
     function clearGridLines() {
       if (gridLineLayer) {
@@ -1008,12 +724,12 @@
             allLines.push(line);
             
             // Add label at top of line
-            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 2);
+            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 4);
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 1000]);
               labels.push({
                 position: [ll[1], ll[0]],
-                text: `${eastingLabel}`,
+                text: `E${eastingLabel}`,
                 color: '#ff0000'
               });
             } catch (err) {
@@ -1038,12 +754,12 @@
             allLines.push(line);
             
             // Add label at left of line
-            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 2);
+            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 4);
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 1000, n]);
               labels.push({
                 position: [ll[1], ll[0]],
-                text: `${northingLabel}`,
+                text: `N${northingLabel}`,
                 color: '#ff0000'
               });
             } catch (err) {
@@ -1098,7 +814,7 @@
         const zoom = map.getZoom();
 
         // Only draw 100m grid at high zoom levels
-        if (zoom < 12) {
+        if (zoom < 15) {
           console.log('Zoom too low for 100m grid display');
           return;
         }
@@ -1221,7 +937,7 @@
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
         Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c; // Distance in kilometers
+      return R * c; // Distance in kilometres
     }
 
     // Validate if point is within acceptable distance from start
@@ -1275,150 +991,16 @@
       }
     }
 
-    // GPX Export Functions
-    function exportAllToGPX() {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-      const filename = `GPS_All_Devices_${timestamp}.gpx`;
-      
-      // Get all devices sorted
-      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
-        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
-      );
-      
-      if (sortedIDs.length === 0) {
-        alert('No device data available to export');
-        return;
-      }
-      
-      // Build GPX content
-      let gpxContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      gpxContent += '<gpx version="1.1" creator="GPS MacksTrack" xmlns="http://www.topografix.com/GPX/1/1">\n';
-      gpxContent += '  <metadata>\n';
-      gpxContent += '    <name>All Devices Current Positions</name>\n';
-      gpxContent += `    <time>${new Date().toISOString()}</time>\n`;
-      gpxContent += '  </metadata>\n';
-      
-      // Add each device as a waypoint
-      for (const deviceId of sortedIDs) {
-        const packet = latestPackets[deviceId];
-        const lat = parseFloat(packet.latitude);
-        const lon = parseFloat(packet.longitude);
-        const gridRef = latLonToGridReference(lat, lon);
-        const sats = packet.sats || 0;
-        const time = packet.timestamp.replace(' ', 'T') + 'Z';
-        
-        gpxContent += `  <wpt lat="${lat}" lon="${lon}">\n`;
-        gpxContent += `    <name>${deviceId}</name>\n`;
-        gpxContent += `    <desc>Grid: ${gridRef}, Sats: ${sats}</desc>\n`;
-        gpxContent += `    <time>${time}</time>\n`;
-        gpxContent += `    <sat>${sats}</sat>\n`;
-        gpxContent += `  </wpt>\n`;
-      }
-      
-      gpxContent += '</gpx>';
-      
-      downloadGPX(gpxContent, filename);
-      console.log(`Exported all ${sortedIDs.length} devices to ${filename}`);
-    }
-
-    function showExportGPXMenu() {
-      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
-        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
-      );
-      
-      if (sortedIDs.length === 0) {
-        alert('No device data available to export');
-        return;
-      }
-      
-      const deviceList = sortedIDs.join(', ');
-      const selectedDevice = prompt(`Enter Device ID to export (${deviceList}):`, sortedIDs[0]);
-      
-      if (selectedDevice && latestPackets[selectedDevice]) {
-        exportDeviceToGPX(selectedDevice);
-      } else if (selectedDevice) {
-        alert(`Device "${selectedDevice}" not found`);
-      }
-    }
-
-    function exportDeviceToGPX(deviceId) {
-      if (!gpsTrails[deviceId] || gpsTrails[deviceId].length === 0) {
-        alert(`No track data available for device ${deviceId}`);
-        return;
-      }
-      
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-      const filename = `GPS_Device_${deviceId}_${timestamp}.gpx`;
-      
-      const trail = gpsTrails[deviceId];
-      const packet = latestPackets[deviceId];
-      
-      // Build GPX content with track
-      let gpxContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      gpxContent += '<gpx version="1.1" creator="GPS MacksTrack" xmlns="http://www.topografix.com/GPX/1/1">\n';
-      gpxContent += '  <metadata>\n';
-      gpxContent += `    <name>Device ${deviceId} Track</name>\n`;
-      gpxContent += `    <time>${new Date().toISOString()}</time>\n`;
-      gpxContent += '  </metadata>\n';
-      gpxContent += '  <trk>\n';
-      gpxContent += `    <name>Device ${deviceId}</name>\n`;
-      gpxContent += '    <trkseg>\n';
-      
-      // Add each point in the trail
-      for (let i = 0; i < trail.length; i++) {
-        // MODIFICATION: Get the full point object from the trail array
-        const point = trail[i];
-        const lat = parseFloat(point.latitude);
-        const lon = parseFloat(point.longitude);
-        const gridRef = latLonToGridReference(lat, lon);
-        const sats = packet.sats || 0;
-        const time = packet.timestamp.replace(' ', 'T') + 'Z';
-        
-        gpxContent += `      <trkpt lat="${lat}" lon="${lon}">\n`;
-        gpxContent += `        <time>${time}</time>\n`;
-        gpxContent += `        <sat>${sats}</sat>\n`;
-        gpxContent += `        <desc>Grid: ${gridRef}</desc>\n`;
-        gpxContent += `      </trkpt>\n`;
-      }
-      
-      gpxContent += '    </trkseg>\n';
-      gpxContent += '  </trk>\n';
-      gpxContent += '</gpx>';
-      
-      downloadGPX(gpxContent, filename);
-      console.log(`Exported ${trail.length} points for device ${deviceId} to ${filename}`);
-    }
-
-    function downloadGPX(gpxContent, filename) {
-      const blob = new Blob([gpxContent], { type: 'application/gpx+xml;charset=utf-8;' });
-      const link = document.createElement('a');
-      
-      if (navigator.msSaveBlob) {
-        // IE 10+
-        navigator.msSaveBlob(blob, filename);
-      } else {
-        link.href = URL.createObjectURL(blob);
-        link.download = filename;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    }
-
     // Make panels draggable
     function makeDraggable(element) {
       let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
       let isDragging = false;
 
-      // Allow touch dragging without browser gesture interference
-      element.style.touchAction = "none";
-
       element.onmousedown = dragMouseDown;
       element.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
-        // Don't drag if clicking on buttons or inputs or inside tables
+        // Don't drag if clicking on buttons or table
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
             e.target.closest('table') || e.target.closest('button')) {
           return;
@@ -1639,6 +1221,7 @@
       socketStatus.style.color = '#F39C12';
     });
 
+    const gpsTrails = {};
     const packetCounts = {};
     const latestPackets = {};
     const allPointsBounds = L.latLngBounds();
@@ -1859,9 +1442,6 @@
       }
       trailLayers[device_id] = [];
 
-      // MODIFICATION: Map the array of point objects to an array of coordinates
-      const latLngs = trail.map(point => [parseFloat(point.latitude), parseFloat(point.longitude)]);
-
       const polyline = L.polyline(trail, {
         color: color,
         weight: 4,
@@ -1962,75 +1542,75 @@
       rejectedCount.textContent = rejectedPointsCount;
       lastUpdate.textContent = new Date().toLocaleTimeString();
     }
-
+    
     function processGPSUpdate(data) {
-      // Log raw data for debugging
-      console.log("Raw data received:", data);
-
-      // Match simulator keys
-      const device_id = data.id;            // e.g. "XXV"
-      const lat = data.latitude;            // e.g. -33.462418
-      const lon = data.longitude;           // e.g. 150.122108
-      const sats = data.sats;               // e.g. 16
-
-      // Guard against bad data
-      if (typeof lat !== "number" || typeof lon !== "number") {
-        console.warn(`Invalid coordinates for device ${device_id}:`, lat, lon);
+      console.log('📡 Processing GPS update:', data);
+      
+      const { latitude, longitude, device_id, timestamp } = data;
+      if (!latitude || !longitude || !device_id || !timestamp) {
+        console.warn('Missing required data:', data);
         return;
       }
 
-      // Initialise trail array if needed
-      if (!gpsTrails[device_id]) {
-        gpsTrails[device_id] = [];
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+      
+      if (isNaN(lat) || isNaN(lon)) {
+        console.warn('Invalid coordinates:', data);
+        return;
       }
 
-      // Push new coordinate pair for plotting
+      // Validate distance from start point
+      if (!isValidDistance(device_id, lat, lon)) {
+        updateDebugInfo();
+        return;
+      }
+
+      // Store the packet with corrected timestamp
+      latestPackets[device_id] = {
+        ...data,
+        timestamp: timestamp.replace(" ", "T") + "Z"
+      };
+
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+
+      // Move the last "current" point into history
+      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
+        const lastPoint = {
+          ...latestPackets[device_id],
+          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
+          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
+        };
+        addDataPoint(lastPoint, false);
+      }
+      
+      // Add the new current marker
+      addDataPoint(data, true);
+
+      // Update map bounds
+      allPointsBounds.extend([lat, lon]);
+      
+      // Only fit bounds on first data
+      if (!hasInitialData) {
+        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+        hasInitialData = true;
+      }
+
+      // Build the trail
+      gpsTrails[device_id] = gpsTrails[device_id] || [];
       gpsTrails[device_id].push([lat, lon]);
+      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
 
-      // Limit history length (optional)
-      if (gpsTrails[device_id].length > 200) {
-        gpsTrails[device_id].shift();
-      }
+      // Redraw trail
+      drawTrail(device_id);
 
-      // --- First point: SCU Crest marker ---
-      if (!deviceMarkers[device_id]) {
-        const crestIcon = L.icon({
-          iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
-        });
-        deviceMarkers[device_id] = L.marker([lat, lon], { icon: crestIcon }).addTo(map);
-      } else {
-        // Update marker position
-        deviceMarkers[device_id].setLatLng([lat, lon]);
-      }
-
-      // --- Draw/update animated dotted trail ---
-      if (gpsTrails[device_id].length > 1) {
-        if (devicePolylines[device_id]) {
-          map.removeLayer(devicePolylines[device_id]);
-        }
-        devicePolylines[device_id] = L.polyline(gpsTrails[device_id], {
-          color: deviceColors[device_id] || "#0078D7",
-          weight: 3,
-          className: "animated-polyline"
-        }).addTo(map);
-      }
-
-      // --- Update tables/debug info ---
+      // Update UI
       updateTable();
       updateDebugInfo();
 
-      // --- Auto-enable in playback dropdown ---
-      const opt = deviceSelect.querySelector(`option[value="${device_id}"]`);
-      if (opt) {
-        opt.disabled = false;
-        opt.textContent = `Device ${device_id} (${gpsTrails[device_id].length} points)`;
-      }
-
-      console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | sats=${sats} | count=${gpsTrails[device_id].length}`);
+      console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | count=${packetCounts[device_id]}`);
     }
-    
+
     // Initialize
     console.log('Initializing GPS tracker...');
     
@@ -2132,259 +1712,6 @@
         minute: '2-digit',
         second: '2-digit'
       });
-
-    // Toggle info panels on header click/tap (touch friendly)
-    document.querySelectorAll('.collapsible-panel .panel-header').forEach(header => {
-      header.addEventListener('click', (e) => {
-        // if user clicked the drag handle, don't toggle — allow drag
-        if (e.target.closest('.panel-drag-handle')) return;
-
-        const panel = header.parentElement;
-        panel.classList.toggle('open');
-      });
-    });
-    
-    // Tap-to-open behavior for mobile (and works on desktop clicks too)
-    const exportMenu = document.getElementById('export-menu');
-    exportMenu.addEventListener('click', (e) => {
-      // Only toggle if the user clicked the header area
-      if (e.target.classList.contains('export-header')) {
-        exportMenu.classList.toggle('active');
-      }
-    });
-
-    // Add this entire block at the end of your main <script> tag
-
-    // ===================================
-    // PLAYBACK MODE LOGIC
-    // ===================================
-
-    // --- Playback State Variables ---
-    let isPlaybackMode = false;
-    let playbackDeviceId = null;
-    let playbackTrack = [];
-    let playbackIndex = 0;
-    let playbackIntervalId = null;
-    let playbackSpeed = 1000; // ms per step
-    let playbackMarker = null;
-
-    // --- UI Element References ---
-    const startPlaybackBtn = document.getElementById('start-playback-btn');
-    const playbackControls = document.getElementById('playback-controls');
-    const closePlaybackBtn = document.getElementById('close-playback-btn');
-    const deviceSelect = document.getElementById('playback-device-select');
-    const timelineContainer = document.getElementById('playback-timeline');
-    const slider = document.getElementById('playback-slider');
-    const timestampDisplay = document.getElementById('playback-timestamp');
-    const stepDisplay = document.getElementById('playback-step-display');
-    const playPauseBtn = document.getElementById('playback-play-pause-btn');
-    const speedSelect = document.getElementById('playback-speed-select');
-
-    // --- Core Functions ---
-
-    function setLiveMarkersVisibility(visible) {
-        Object.keys(allMarkers).forEach(deviceId => {
-            // Hide/show current position marker (circle + label)
-            if (allMarkers[deviceId].current) {
-                const layers = [allMarkers[deviceId].current.circle, allMarkers[deviceId].current.label];
-                layers.forEach(layer => {
-                    if (visible) map.addLayer(layer);
-                    else map.removeLayer(layer);
-                });
-            }
-            // Hide/show historical pins
-            if (allMarkers[deviceId].history) {
-                allMarkers[deviceId].history.forEach(marker => {
-                     if (visible) map.addLayer(marker);
-                     else map.removeLayer(marker);
-                });
-            }
-            // Hide/show trails
-            if (trailLayers[deviceId]) {
-                trailLayers[deviceId].forEach(layer => {
-                    if (visible) map.addLayer(layer);
-                    else map.removeLayer(layer);
-                });
-            }
-        });
-    }
-
-    function enterPlaybackMode() {
-        isPlaybackMode = true;
-        setLiveMarkersVisibility(false);
-
-        // Populate device dropdown with Roman numerals only
-        deviceSelect.innerHTML = '<option value="">-- Select a Device --</option>';
-
-        const romanDeviceIDs = [
-          "I","II","III","IV","V","VI","VII","VIII","IX","X",
-          "XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX",
-          "XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX"
-        ];
-
-        romanDeviceIDs.forEach(id => {
-            const option = document.createElement("option");
-            option.value = id;
-
-            if (gpsTrails[id] && gpsTrails[id].length > 1) {
-                option.textContent = `Device ${id} (${gpsTrails[id].length} points)`;
-            } else {
-                option.textContent = `Device ${id} (no data yet)`;
-                option.disabled = true; // greyed out until data arrives
-            }
-
-            deviceSelect.appendChild(option);
-        });
-
-        startPlaybackBtn.classList.add('hidden');
-        playbackControls.classList.remove('hidden');
-        timelineContainer.classList.add('hidden');
-    }   
-
-    function exitPlaybackMode() {
-        isPlaybackMode = false;
-        pausePlayback();
-        if (playbackMarker) map.removeLayer(playbackMarker);
-        playbackMarker = null;
-    
-        // Clear the selected device's trail
-        if (trailLayers[playbackDeviceId]) {
-            trailLayers[playbackDeviceId].forEach(l => map.removeLayer(l));
-        }
-
-        setLiveMarkersVisibility(true);
-        // Redraw all original trails
-        Object.keys(gpsTrails).forEach(drawTrail);
-
-        playbackControls.classList.add('hidden');
-        startPlaybackBtn.classList.remove('hidden');
-    }
-
-    function setupPlaybackForDevice(deviceId) {
-        pausePlayback();
-        if (playbackMarker) map.removeLayer(playbackMarker);
-    
-        // Hide previous track if switching devices
-        if (trailLayers[playbackDeviceId]) {
-            trailLayers[playbackDeviceId].forEach(l => map.removeLayer(l));
-        }
-    
-        playbackDeviceId = deviceId;
-        if (!deviceId) {
-            timelineContainer.classList.add('hidden');
-            return;
-        }
-    
-        playbackTrack = gpsTrails[deviceId];
-    
-        // Redraw just this device's trail
-        drawTrail(deviceId);
-        map.fitBounds(L.polyline(playbackTrack.map(p => [p.latitude, p.longitude])).getBounds(), {padding: [50, 50]});
-    
-        // Setup slider
-        slider.max = playbackTrack.length - 1;
-        slider.value = 0;
-    
-        // Create playback marker
-        const startPoint = playbackTrack[0];
-        playbackMarker = L.circleMarker([startPoint.latitude, startPoint.longitude], {
-            radius: 12,
-            color: 'black',
-            weight: 3,
-            fillColor: deviceColors[deviceId] || '#7F8C8D',
-            fillOpacity: 0.9
-        }).addTo(map);
-    
-        updatePlaybackUI(0);
-        timelineContainer.classList.remove('hidden');
-    }
-
-    function updatePlaybackUI(index) {
-        playbackIndex = index;
-        slider.value = index;
-        const point = playbackTrack[index];
-
-        if (!point) return;
-
-        // Move marker
-        playbackMarker.setLatLng([point.latitude, point.longitude]);
-    
-        // Update info displays
-        const time = new Date(point.timestamp.replace(' ', 'T') + 'Z');
-        timestampDisplay.textContent = time.toLocaleTimeString('en-AU');
-        stepDisplay.textContent = `Point ${index + 1} / ${playbackTrack.length}`;
-    
-        const popupContent = `
-            <strong>Device: ${point.device_id} (Playback)</strong><br>
-            Grid: ${latLonToGridReference(point.latitude, point.longitude)}<br>
-            Time: ${time.toLocaleString('en-AU')}<br>
-            Sats: ${point.sats || 'N/A'}
-        `;
-        playbackMarker.bindPopup(popupContent).openPopup();
-    }
-
-    function playPlayback() {
-        if (playbackIntervalId) return; // Already playing
-        playPauseBtn.textContent = '❚❚ Pause';
-    
-        playbackIntervalId = setInterval(() => {
-            let nextIndex = playbackIndex + 1;
-            if (nextIndex >= playbackTrack.length) {
-                nextIndex = 0; // Loop back to start
-            }
-            updatePlaybackUI(nextIndex);
-        }, playbackSpeed);
-    }
-
-    function pausePlayback() {
-        clearInterval(playbackIntervalId);
-        playbackIntervalId = null;
-        playPauseBtn.textContent = '▶ Play';
-    }
-
-    // --- Event Listeners ---
-    startPlaybackBtn.addEventListener('click', enterPlaybackMode);
-    closePlaybackBtn.addEventListener('click', exitPlaybackMode);
-
-    deviceSelect.addEventListener('change', () => {
-        setupPlaybackForDevice(deviceSelect.value);
-    });
-
-    slider.addEventListener('input', () => {
-        pausePlayback();
-        updatePlaybackUI(parseInt(slider.value, 10));
-    });
-
-    playPauseBtn.addEventListener('click', () => {
-        if (playbackIntervalId) {
-            pausePlayback();
-        } else {
-            playPlayback();
-        }
-    });
-
-    speedSelect.addEventListener('change', () => {
-        playbackSpeed = parseInt(speedSelect.value, 10);
-        if (playbackIntervalId) { // If playing, restart with new speed
-            pausePlayback();
-            playPlayback();
-        }
-    });
-    
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
