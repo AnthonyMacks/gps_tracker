@@ -174,7 +174,7 @@
     /* Export dropdown button */
     #export-control {
       position: absolute;
-      bottom: 20px;
+      bottom: 10px;
       right: 150px;
       z-index: 1001;
     }
@@ -249,6 +249,17 @@
 
     .export-option.all-devices:hover {
       background-color: #D6EAF8;
+    }
+
+    .export-option.clear-data {
+      background-color: #FFEBEE;
+      font-weight: bold;
+      border-top: 2px solid #E74C3C;
+      color: #C0392B;
+    }
+
+    .export-option.clear-data:hover {
+      background-color: #FFCDD2;
     }
 
     .export-section-header {
@@ -682,7 +693,8 @@
     Total Points: <span id="point-count">0</span><br/>
     Rejected Points: <span id="rejected-count">0</span><br/>
     Last Update: <span id="last-update">never</span><br/>
-    Current Zoom: <span id="current-zoom">13</span>
+    Current Zoom: <span id="current-zoom">13</span><br/>
+    Stored Points: <span id="stored-count">0</span>
 </div>
 </div>
 <footer>
@@ -724,6 +736,8 @@
       <div class="export-option" onclick="exportGPX('XXVIII')">Device XXVIII</div>
       <div class="export-option" onclick="exportGPX('XXIX')">Device XXIX</div>
       <div class="export-option" onclick="exportGPX('XXX')">Device XXX</div>
+      <div class="export-section-header">Data Management</div>
+      <div class="export-option clear-data" onclick="clearStoredData()">🗑️ Clear All Stored Data</div>
     </div>
   </div>
 </div>
@@ -905,19 +919,6 @@
           
           if (line.length > 1) {
             allLines.push(line);
-            
-            // Add label at top of line
-            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 2);
-            try {
-              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 1000]);
-              labels.push({
-                position: [ll[1], ll[0]],
-                text: `${eastingLabel}`,
-                color: '#ff0000'
-              });
-            } catch (err) {
-              console.warn('Label position error:', err);
-            }
           }
         }
 
@@ -935,19 +936,6 @@
           
           if (line.length > 1) {
             allLines.push(line);
-            
-            // Add label at left of line
-            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 2);
-            try {
-              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 1000, n]);
-              labels.push({
-                position: [ll[1], ll[0]],
-                text: `${northingLabel}`,
-                color: '#ff0000'
-              });
-            } catch (err) {
-              console.warn('Label position error:', err);
-            }
           }
         }
 
@@ -961,14 +949,61 @@
           }).addTo(map);
         }
 
+        // Add separate easting and northing labels
+        // Easting labels (vertical lines) - centered vertically in grid
+        for (let e = minE; e <= maxE; e += gridInterval) {
+          for (let n = minN; n < maxN; n += gridInterval) {
+            // Calculate center of grid square vertically
+            const centerN = n + gridInterval / 2;
+            
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, centerN]);
+              
+              // Get 2-digit easting label
+              const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
+              
+              labels.push({
+                position: [ll[1], ll[0]],
+                text: eastingLabel,
+                color: '#ff0000'
+              });
+            } catch (err) {
+              console.warn('Label position error:', err);
+            }
+          }
+        }
+
+        // Northing labels (horizontal lines) - centered horizontally in grid
+        for (let n = minN; n <= maxN; n += gridInterval) {
+          for (let e = minE; e < maxE; e += gridInterval) {
+            // Calculate center of grid square horizontally
+            const centerE = e + gridInterval / 2;
+            
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [centerE, n]);
+              
+              // Get 2-digit northing label
+              const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
+              
+              labels.push({
+                position: [ll[1], ll[0]],
+                text: northingLabel,
+                color: '#0000ff'
+              });
+            } catch (err) {
+              console.warn('Label position error:', err);
+            }
+          }
+        }
+
         // Add labels
         labels.forEach(label => {
           const marker = L.marker(label.position, {
             icon: L.divIcon({
               className: 'grid-label-marker',
               html: `<div style="background: rgba(255,255,255,0.95); padding: 3px 6px; font-size: 11px; font-weight: bold; border: 2px solid ${label.color}; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); white-space: nowrap; color: ${label.color};">${label.text}</div>`,
-              iconSize: [55, 22],
-              iconAnchor: [27, 11]
+              iconSize: [30, 22],
+              iconAnchor: [15, 11]
             }),
             interactive: false
           }).addTo(map);
@@ -997,7 +1032,7 @@
         const zoom = map.getZoom();
 
         // Only draw 100m grid at high zoom levels
-        if (zoom < 12) {
+        if (zoom < 15) {
           console.log('Zoom too low for 100m grid display');
           return;
         }
@@ -1145,6 +1180,169 @@
       }
       
       return true;
+    }
+
+    // LocalStorage management
+    const STORAGE_KEYS = {
+      GPS_TRAILS: 'mackstrack_gps_trails',
+      PACKET_COUNTS: 'mackstrack_packet_counts',
+      LATEST_PACKETS: 'mackstrack_latest_packets',
+      DEVICE_START_POINTS: 'mackstrack_device_start_points',
+      REJECTED_COUNT: 'mackstrack_rejected_count'
+    };
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.GPS_TRAILS, JSON.stringify(gpsTrails));
+        localStorage.setItem(STORAGE_KEYS.PACKET_COUNTS, JSON.stringify(packetCounts));
+        localStorage.setItem(STORAGE_KEYS.LATEST_PACKETS, JSON.stringify(latestPackets));
+        localStorage.setItem(STORAGE_KEYS.DEVICE_START_POINTS, JSON.stringify(deviceStartPoints));
+        localStorage.setItem(STORAGE_KEYS.REJECTED_COUNT, rejectedPointsCount.toString());
+        console.log('💾 Data saved to localStorage');
+        updateStoredCount();
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const trails = localStorage.getItem(STORAGE_KEYS.GPS_TRAILS);
+        const counts = localStorage.getItem(STORAGE_KEYS.PACKET_COUNTS);
+        const packets = localStorage.getItem(STORAGE_KEYS.LATEST_PACKETS);
+        const startPoints = localStorage.getItem(STORAGE_KEYS.DEVICE_START_POINTS);
+        const rejectedCount = localStorage.getItem(STORAGE_KEYS.REJECTED_COUNT);
+
+        if (trails) {
+          const loadedTrails = JSON.parse(trails);
+          Object.assign(gpsTrails, loadedTrails);
+          console.log('📂 Loaded GPS trails from localStorage:', Object.keys(loadedTrails).length, 'devices');
+        }
+
+        if (counts) {
+          const loadedCounts = JSON.parse(counts);
+          Object.assign(packetCounts, loadedCounts);
+          console.log('📂 Loaded packet counts from localStorage');
+        }
+
+        if (packets) {
+          const loadedPackets = JSON.parse(packets);
+          Object.assign(latestPackets, loadedPackets);
+          console.log('📂 Loaded latest packets from localStorage');
+        }
+
+        if (startPoints) {
+          const loadedStartPoints = JSON.parse(startPoints);
+          Object.assign(deviceStartPoints, loadedStartPoints);
+          console.log('📂 Loaded device start points from localStorage');
+        }
+
+        if (rejectedCount) {
+          rejectedPointsCount = parseInt(rejectedCount) || 0;
+          console.log('📂 Loaded rejected count from localStorage:', rejectedPointsCount);
+        }
+
+        // Restore map markers and trails from loaded data
+        restoreMapFromStorage();
+        updateStoredCount();
+        
+        return true;
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        return false;
+      }
+    }
+
+    function clearStoredData() {
+      if (confirm('⚠️ Are you sure you want to clear all stored GPS data? This cannot be undone!')) {
+        try {
+          localStorage.removeItem(STORAGE_KEYS.GPS_TRAILS);
+          localStorage.removeItem(STORAGE_KEYS.PACKET_COUNTS);
+          localStorage.removeItem(STORAGE_KEYS.LATEST_PACKETS);
+          localStorage.removeItem(STORAGE_KEYS.DEVICE_START_POINTS);
+          localStorage.removeItem(STORAGE_KEYS.REJECTED_COUNT);
+          
+          // Clear runtime data
+          Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
+          Object.keys(packetCounts).forEach(key => delete packetCounts[key]);
+          Object.keys(latestPackets).forEach(key => delete latestPackets[key]);
+          Object.keys(deviceStartPoints).forEach(key => delete deviceStartPoints[key]);
+          rejectedPointsCount = 0;
+          totalPoints = 0;
+          
+          // Clear map
+          Object.keys(allMarkers).forEach(deviceId => {
+            hideDeviceMarkers(deviceId);
+          });
+          Object.keys(allMarkers).forEach(key => delete allMarkers[key]);
+          Object.keys(trailLayers).forEach(key => delete trailLayers[key]);
+          
+          updateTable();
+          updateDebugInfo();
+          updateStoredCount();
+          
+          alert('✅ All stored data has been cleared!');
+          console.log('🗑️ All localStorage data cleared');
+        } catch (error) {
+          console.error('Error clearing localStorage:', error);
+          alert('❌ Error clearing data: ' + error.message);
+        }
+      }
+    }
+
+    function restoreMapFromStorage() {
+      console.log('🔄 Restoring map from stored data...');
+      
+      // Restore all trails and markers
+      Object.keys(gpsTrails).forEach(deviceId => {
+        const trail = gpsTrails[deviceId];
+        if (trail && trail.length > 0) {
+          // Restore historical points
+          trail.forEach((point, index) => {
+            const isLast = index === trail.length - 1;
+            const packet = {
+              device_id: deviceId,
+              latitude: point[0],
+              longitude: point[1],
+              timestamp: latestPackets[deviceId]?.timestamp || new Date().toISOString(),
+              sats: latestPackets[deviceId]?.sats
+            };
+            addDataPoint(packet, isLast);
+          });
+          
+          // Draw trail
+          drawTrail(deviceId);
+        }
+      });
+      
+      // Update UI
+      updateTable();
+      updateDebugInfo();
+      
+      // Fit bounds if we have data
+      if (Object.keys(gpsTrails).length > 0) {
+        Object.keys(gpsTrails).forEach(deviceId => {
+          gpsTrails[deviceId].forEach(point => {
+            allPointsBounds.extend([point[0], point[1]]);
+          });
+        });
+        
+        if (allPointsBounds.isValid()) {
+          map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+          hasInitialData = true;
+        }
+      }
+      
+      console.log('✅ Map restoration complete');
+    }
+
+    function updateStoredCount() {
+      const storedCount = document.getElementById('stored-count');
+      let totalStoredPoints = 0;
+      Object.values(gpsTrails).forEach(trail => {
+        totalStoredPoints += trail.length;
+      });
+      storedCount.textContent = totalStoredPoints;
     }
 
     // Toggle table visibility functions
@@ -1724,6 +1922,7 @@
       pointCount.textContent = totalPoints;
       rejectedCount.textContent = rejectedPointsCount;
       lastUpdate.textContent = new Date().toLocaleTimeString();
+      updateStoredCount();
     }
     
     function processGPSUpdate(data) {
@@ -1790,6 +1989,9 @@
       // Update UI
       updateTable();
       updateDebugInfo();
+
+      // Save to localStorage
+      saveToLocalStorage();
 
       console.log(`📍 ${device_id} → Grid: ${latLonToGridReference(lat, lon)} | count=${packetCounts[device_id]}`);
     }
@@ -1878,6 +2080,12 @@
 
     // Initialize
     console.log('Initializing GPS tracker...');
+    
+    // Load data from localStorage first
+    const hasStoredData = loadFromLocalStorage();
+    if (hasStoredData) {
+      console.log('✅ Successfully restored data from localStorage');
+    }
     
     // Make info panels draggable
     makeDraggable(document.getElementById('info'));
@@ -1980,5 +2188,3 @@
   </script>
 </body>
 </html>
-
-
