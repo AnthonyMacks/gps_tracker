@@ -1844,98 +1844,63 @@
     }
 
     function exportKML(deviceId) {
-      console.log(`Exporting KML for: ${deviceId}`);
-      
-      let kmlContent = '<?xml version="1.0" encoding="UTF-8"?>\n';
-      kmlContent += '<kml xmlns="http://www.opengis.net/kml/2.2">\n';
-      kmlContent += '  <Document>\n';
-      kmlContent += '    <n>MacksTrack GPS Data</n>\n';
-      kmlContent += '    <description>Exported GPS tracks from MacksTrack</description>\n';
-      
-      if (deviceId === 'all') {
-        const deviceIds = Object.keys(gpsTrails).sort((a, b) =>
-          a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
-        );
-        
-        if (deviceIds.length === 0) {
-          alert('No GPS data available to export');
-          return;
+      let kmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
+      <kml xmlns="http://www.opengis.net/kml/2.2">
+      <Document>
+        <name>GPS Device Export</name>`;
+
+      let kmlFooter = `</Document></kml>`;
+      let placemarks = '';
+
+      const devices = deviceId === 'all' ? Object.keys(deviceStartPoints) : [deviceId];
+
+      devices.forEach(id => {
+        const start = deviceStartPoints[id];
+        const points = devicePoints[id] || [];
+
+        // Start point marker  
+        if (start) {
+          placemarks += `
+          <Placemark>
+            <name>Device ${id} Start Point</name>
+            <description>Start location for device ${id}</description>
+            <Point>
+              <coordinates>${start.lon},${start.lat},0</coordinates>
+            </Point>
+          </Placemark>`;
         }
-        
-        deviceIds.forEach(id => {
-          const trail = gpsTrails[id];
-          if (trail && trail.length > 0) {
-            const deviceColor = deviceColors[id] || '#7F8C8D';
-            
-            kmlContent += '    <Placemark>\n';
-            kmlContent += `      <n>Device ${id}</n>\n`;
-            kmlContent += `      <description>Track for Device ${id} - ${trail.length} points</description>\n`;
-            kmlContent += '      <Style>\n';
-            kmlContent += '        <LineStyle>\n';
-            kmlContent += `          <color>ff${deviceColor.slice(5,7)}${deviceColor.slice(3,5)}${deviceColor.slice(1,3)}</color>\n`;
-            kmlContent += '          <width>4</width>\n';
-            kmlContent += '        </LineStyle>\n';
-            kmlContent += '      </Style>\n';
-            kmlContent += '      <LineString>\n';
-            kmlContent += '        <tessellate>1</tessellate>\n';
-            kmlContent += '        <coordinates>\n';
-            
-            trail.forEach(point => {
-              const lat = point[0];
-              const lon = point[1];
-              kmlContent += `          ${lon},${lat},0\n`;
-            });
-            
-            kmlContent += '        </coordinates>\n';
-            kmlContent += '      </LineString>\n';
-            kmlContent += '    </Placemark>\n';
-          }
-        });
-        
-        kmlContent += '  </Document>\n';
-        kmlContent += '</kml>';
-        
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        downloadKML(kmlContent, `MacksTrack_All_Devices_${timestamp}.kml`);
-        
-      } else {
-        const trail = gpsTrails[deviceId];
-        
-        if (!trail || trail.length === 0) {
-          alert(`No GPS data available for Device ${deviceId}`);
-          return;
+
+        // Trail line
+        if (points.length > 1) {
+          const coordList = points.map(p => `${p.lon},${p.lat},0`).join(' ');
+          placemarks += `
+          <Placemark>
+            <name>Device ${id} Trail</name>
+            <description>Trail for device ${id}</description>
+            <Style>
+              <LineStyle>
+                <color>ff0000ff</color> <!-- Red line -->
+                <width>2</width>
+              </LineStyle>
+            </Style>
+            <LineString>
+              <tessellate>1</tessellate>
+              <coordinates>${coordList}</coordinates>
+            </LineString>
+          </Placemark>`;
         }
-        
-        const deviceColor = deviceColors[deviceId] || '#7F8C8D';
-        
-        kmlContent += '    <Placemark>\n';
-        kmlContent += `      <n>Device ${deviceId}</n>\n`;
-        kmlContent += `      <description>Track for Device ${deviceId} - ${trail.length} points</description>\n`;
-        kmlContent += '      <Style>\n';
-        kmlContent += '        <LineStyle>\n';
-        kmlContent += `          <color>ff${deviceColor.slice(5,7)}${deviceColor.slice(3,5)}${deviceColor.slice(1,3)}</color>\n`;
-        kmlContent += '          <width>4</width>\n';
-        kmlContent += '        </LineStyle>\n';
-        kmlContent += '      </Style>\n';
-        kmlContent += '      <LineString>\n';
-        kmlContent += '        <tessellate>1</tessellate>\n';
-        kmlContent += '        <coordinates>\n';
-        
-        trail.forEach(point => {
-          const lat = point[0];
-          const lon = point[1];
-          kmlContent += `          ${lon},${lat},0\n`;
-        });
-        
-        kmlContent += '        </coordinates>\n';
-        kmlContent += '      </LineString>\n';
-        kmlContent += '    </Placemark>\n';
-        kmlContent += '  </Document>\n';
-        kmlContent += '</kml>';
-        
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        downloadKML(kmlContent, `MacksTrack_Device_${deviceId}_${timestamp}.kml`);
-      }
+      });
+
+      const kmlContent = kmlHeader + placemarks + kmlFooter;
+      const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `gps_export_${deviceId}.kml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
     
     function downloadKML(content, filename) {
@@ -2013,4 +1978,5 @@
   </script>
 </body>
 </html>
+
 
