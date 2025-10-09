@@ -1858,7 +1858,7 @@
 
       devices.forEach(id => {
         const start = deviceStartPoints[id];
-        const points = devicePoints[id] || [];
+        const trail = gpsTrails[id] || [];  // Changed from devicePoints
 
         // Start point marker  
         if (start) {
@@ -1873,7 +1873,8 @@
         }
 
         // Trail line
-        if (points.length > 1) {
+        if (trail.length > 1) {  // ✅ Now checks gpsTrails
+          // Convert [[lat,lon], [lat,lon]] to "lon,lat,0 lon,lat,0"
           const coordList = points.map(p => `${p.lon},${p.lat},0`).join(' ');
           placemarks += `
           <Placemark>
@@ -1980,6 +1981,7 @@
   </script>
 </body>
 </html>
+
 
 
 
