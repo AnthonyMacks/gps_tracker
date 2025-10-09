@@ -907,12 +907,12 @@
             allLines.push(line);
             
             // Add label at top of line
-            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 4);
+            const eastingLabel = (e % 100000).toString().padStart(5, '0').substring(0, 2);
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, maxN - 1000]);
               labels.push({
                 position: [ll[1], ll[0]],
-                text: `E${eastingLabel}`,
+                text: `${eastingLabel}`,
                 color: '#ff0000'
               });
             } catch (err) {
@@ -937,12 +937,12 @@
             allLines.push(line);
             
             // Add label at left of line
-            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 4);
+            const northingLabel = (n % 100000).toString().padStart(5, '0').substring(0, 2);
             try {
               const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [minE + 1000, n]);
               labels.push({
                 position: [ll[1], ll[0]],
-                text: `N${northingLabel}`,
+                text: `${northingLabel}`,
                 color: '#ff0000'
               });
             } catch (err) {
@@ -997,7 +997,7 @@
         const zoom = map.getZoom();
 
         // Only draw 100m grid at high zoom levels
-        if (zoom < 15) {
+        if (zoom < 12) {
           console.log('Zoom too low for 100m grid display');
           return;
         }
@@ -1980,3 +1980,4 @@
   </script>
 </body>
 </html>
+
