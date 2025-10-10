@@ -2145,28 +2145,28 @@
         }
     
         let kmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
-    <kml xmlns="http://www.opengis.net/kml/2.2">
-      <Document>
-        <name>GPS MacksTrack Export - ${deviceId === 'all' ? 'All Devices' : 'Device ' + deviceId}</name>
-        <description>Exported on ${new Date().toLocaleString('en-AU', {timeZone: 'Australia/Sydney'})}</description>`;
+        <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+          <Document>
+            <name>GPS MacksTrack Export - ${deviceId === 'all' ? 'All Devices' : 'Device ' + deviceId}</name>
+            <description>Exported on ${new Date().toLocaleString('en-AU', {timeZone: 'Australia/Sydney'})}. Use Google Earth's time slider to animate trails.</description>
 
-        <Style id="startPoint">
-          <IconStyle>
-            <Icon>
-              <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
-            </Icon>
-          </IconStyle>
-        </Style>
+            <Style id="startPoint">
+              <IconStyle>
+                <Icon>
+                  <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
+                </Icon>
+              </IconStyle>
+            </Style>
     
-        <Style id="currentPoint">
-          <IconStyle>
-            <Icon>
-              <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
-            </Icon>
-          </IconStyle>
-        </Style>`;
+            <Style id="currentPoint">
+              <IconStyle>
+                <Icon>
+                  <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
+                </Icon>
+              </IconStyle>
+            </Style>`;
           
-        let kmlFooter = `
+           let kmlFooter = `
       </Document>
     </kml>`;
     
@@ -2239,7 +2239,7 @@
             Packet Count: ${packetCounts[id] || 0}
           </description>
           <TimeStamp>
-            <when>${timestamp}</when>
+            <when>${latest.timestamp}</when>
           </TimeStamp>
           <styleUrl>#currentPoint</styleUrl>
           <Point>
@@ -2767,6 +2767,7 @@
   </script>
 </body>
 </html>
+
 
 
 
