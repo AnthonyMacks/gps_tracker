@@ -1990,11 +1990,28 @@
     
         // Calculate speed (km/h)
         if (lastPoint.timestamp && point.timestamp) {
-          const timeDiff = (new Date(point.timestamp) - new Date(lastPoint.timestamp)) / 1000; // seconds
+          const time1 = new Date(lastPoint.timestamp);
+          const time2 = new Date(point.timestamp);
+          const timeDiff = (time2 - time1) / 1000; // seconds
+
+          console.log(`Speed calc for ${point.device_id}:`, {
+            lastTime: lastPoint.timestamp,
+            currentTime: point.timestamp,
+            time1: time1.toISOString(),
+            time2: time2.toISOString(),
+            timeDiff: timeDiff,
+            distance: distanceFromPrev
+          });
+            
           if (timeDiff > 0) {
             speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600); // km/h
+            console.log(`Calculated speed: ${speedFromPrev.toFixed(2)} km/h`);
+          } else {
+            console.warn(`Time diff is ${timeDiff} - cannot calculate speed`);
           }
-        }
+        } else {
+          console.warn(`Missing timestamps - last: ${lastPoint.timestamp}, current: ${point.timestamp}`);
+        }  
       } else {
         // First point for this device
         deviceDistances[point.device_id] = 0;
@@ -2935,6 +2952,7 @@
   </script>
 </body>
 </html>
+
 
 
 
