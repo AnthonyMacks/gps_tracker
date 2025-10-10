@@ -1378,12 +1378,24 @@
           rejectedPointsCount = parseInt(rejectedCount) || 0;
         }
 
-        restoreMapFromStorage();
+        // Try to restor, if it fails, function handles cleanup
+        const restored = restoreMapFromStorage();
+
+        if (!restored) {
+          console.log('⚠️ Restoration failed but recovered gracefully');
+        }
+          
         updateStoredCount();
         
-        return true;
+        return restored;
       } catch (error) {
         console.error('Error loading from localStorage:', error);
+        // Clear everything and set default view
+        localStorage.clear();
+        setTimeout(() => {
+          map.setView([-33.4452, 150.1528], 15);
+          map.invalidateSize();
+        }, 300); 
         return false;
       }
     }
@@ -1429,6 +1441,12 @@
         let restoredCount = 0;
         let errorCount = 0;
     
+        // Validate that we have valid data structures
+        if (!gpsTrails || typeof gpsTrails !== 'object') {
+          console.warn('⚠️ Invalid gpsTrails structure');
+          throw new Error('Invalid gpsTrails');
+        }
+    
         Object.keys(gpsTrails).forEach(deviceId => {
           const trail = gpsTrails[deviceId];
           if (!trail || !Array.isArray(trail) || trail.length === 0) return;
@@ -1469,54 +1487,88 @@
     
         console.log(`✅ Restored ${restoredCount} points, ${errorCount} errors skipped`);
     
-        // If too many errors, clear storage and reload
-        if (errorCount > 10) {
-          console.error('❌ Too many errors in stored data. Clearing storage...');
-          localStorage.clear();
-          alert('⚠️ Stored GPS data was corrupted and has been cleared. The page will reload.');
-          location.reload();
-          return;
+        // If too many errors, clear corrupt data
+        if (errorCount > 10 || (errorCount > 0 && restoredCount === 0)) {
+          console.error('❌ Too many errors or no valid data restored. Clearing storage...');
+          throw new Error('Corrupt data detected');
         }
     
         updateTable();
         updateDebugInfo();
     
+        // Set map view
+        let viewSet = false;
+    
         if (Object.keys(gpsTrails).length > 0) {
+          const tempBounds = L.latLngBounds();
+          let validBoundsFound = false;
+      
           Object.keys(gpsTrails).forEach(deviceId => {
             gpsTrails[deviceId].forEach(point => {
               if (Array.isArray(point) && point.length >= 2) {
                 const lat = parseFloat(point[0]);
                 const lon = parseFloat(point[1]);
-                if (!isNaN(lat) && !isNaN(lon)) {
-                  allPointsBounds.extend([lat, lon]);
+                if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+                  tempBounds.extend([lat, lon]);
+                  validBoundsFound = true;
                 }
               }
             });
           });
-
-          if (allPointsBounds.isValid()) {
+      
+          if (validBoundsFound && tempBounds.isValid()) {
             setTimeout(() => {
-              map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+              map.fitBounds(tempBounds, { padding: [30, 30], maxZoom: 16 });
               map.invalidateSize();
               hasInitialData = true;
-              console.log('🗺️ Map view restored and resized');
-            }, 200);
-          } else {
-            // No bounds, set default view
-            setTimeout(() => {
-              map.setView([-33.4452, 150.1528], 15);
-              map.invalidateSize();
-              console.log('🗺️ Map set to default view');
-          }, 200);
-        }  
-          
+              console.log('🗺️ Map view set to data bounds');
+            }, 300);
+            viewSet = true;
+          }
         }
+    
+        // Fallback to default view if bounds weren't valid
+        if (!viewSet) {
+          console.log('⚠️ No valid bounds found, using default view');
+          setTimeout(() => {
+            map.setView([-33.4452, 150.1528], 15);
+            map.invalidateSize();
+            console.log('🗺️ Map set to default view');
+          }, 300);
+        }
+    
+        return true;
+    
       } catch (error) {
         console.error('❌ Critical error restoring from storage:', error);
-        console.warn('⚠️ Clearing corrupt storage and reloading...');
-        localStorage.clear();
-        alert('⚠️ Stored GPS data was corrupted and has been cleared. The page will reload.');
-        location.reload();
+        console.warn('⚠️ Clearing corrupt storage...');
+    
+        // Clear all stored data
+        try {
+          localStorage.removeItem(STORAGE_KEYS.GPS_TRAILS);
+          localStorage.removeItem(STORAGE_KEYS.PACKET_COUNTS);
+          localStorage.removeItem(STORAGE_KEYS.LATEST_PACKETS);
+          localStorage.removeItem(STORAGE_KEYS.DEVICE_START_POINTS);
+          localStorage.removeItem(STORAGE_KEYS.REJECTED_COUNT);
+      
+          // Clear memory
+          Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
+          Object.keys(packetCounts).forEach(key => delete packetCounts[key]);
+          Object.keys(latestPackets).forEach(key => delete latestPackets[key]);
+          Object.keys(deviceStartPoints).forEach(key => delete deviceStartPoints[key]);
+        } catch (clearError) {
+          console.error('Error clearing storage:', clearError);
+        }
+    
+        // Set default view
+        setTimeout(() => {
+          map.setView([-33.4452, 150.1528], 15);
+          map.invalidateSize();
+          console.log('🗺️ Recovery: Map set to default view');
+        }, 300);
+    
+        console.log('✅ Storage cleared and map reset to default');
+        return false;
       }
     }
 
@@ -2767,6 +2819,7 @@
   </script>
 </body>
 </html>
+
 
 
 
