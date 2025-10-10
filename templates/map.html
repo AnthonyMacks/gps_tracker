@@ -1846,64 +1846,160 @@
     const devicePoints = {};
     
     function exportKML(deviceId) {
-      let kmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
-      <kml xmlns="http://www.opengis.net/kml/2.2">
+      try {
+        console.log(`📥 Exporting KML for: ${deviceId}`);
+    
+        // Check if we have any data at all
+        if (Object.keys(deviceStartPoints).length === 0 && Object.keys(gpsTrails).length === 0) {
+          alert('⚠️ No GPS data available to export. Wait for devices to connect.');
+          return;
+        }
+    
+        let kmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://www.opengis.net/kml/2.2">
       <Document>
-        <name>GPS Device Export</name>`;
+        <name>GPS MacksTrack Export - ${deviceId === 'all' ? 'All Devices' : 'Device ' + deviceId}</name>
+        <description>Exported on ${new Date().toLocaleString('en-AU', {timeZone: 'Australia/Sydney'})}</description>`;
 
-      let kmlFooter = `</Document></kml>`;
-      let placemarks = '';
-
-      const devices = deviceId === 'all' ? Object.keys(deviceStartPoints) : [deviceId];
-
-      devices.forEach(id => {
-        const start = deviceStartPoints[id];
-        const trail = gpsTrails[id] || [];  // Changed from devicePoints
-
-        // Start point marker  
-        if (start) {
-          placemarks += `
-          <Placemark>
-            <name>Device ${id} Start Point</name>
-            <description>Start location for device ${id}</description>
-            <Point>
-              <coordinates>${start.lon},${start.lat},0</coordinates>
-            </Point>
-          </Placemark>`;
+        let kmlFooter = `
+      </Document>
+    </kml>`;
+    
+        let placemarks = '';
+        let deviceCount = 0;
+    
+        // Get list of devices to export
+        const allDeviceIds = [...new Set([
+          ...Object.keys(deviceStartPoints),
+          ...Object.keys(gpsTrails)
+        ])];
+    
+        const devices = deviceId === 'all' ? allDeviceIds : [deviceId];
+    
+        // Check if requested device exists
+        if (devices.length === 0 || (deviceId !== 'all' && !allDeviceIds.includes(deviceId))) {
+          alert(`⚠️ Device "${deviceId}" has no data to export.`);
+          return;
         }
-
-        // Trail line
-        if (trail.length > 1) {  // ✅ Now checks gpsTrails
-          // Convert [[lat,lon], [lat,lon]] to "lon,lat,0 lon,lat,0"
-          const coordList = points.map(p => `${p.lon},${p.lat},0`).join(' ');
-          placemarks += `
-          <Placemark>
-            <name>Device ${id} Trail</name>
-            <description>Trail for device ${id}</description>
-            <Style>
-              <LineStyle>
-                <color>ff0000ff</color> <!-- Red line -->
-                <width>2</width>
-              </LineStyle>
-            </Style>
-            <LineString>
-              <tessellate>1</tessellate>
-              <coordinates>${coordList}</coordinates>
-            </LineString>
-          </Placemark>`;
+    
+        devices.forEach(id => {
+          const start = deviceStartPoints[id];
+          const trail = gpsTrails[id] || [];
+          const color = deviceColors[id] || '#7F8C8D';
+      
+          // Convert hex color to KML format (aabbggrr)
+          const kmlColor = 'ff' + color.slice(5,7) + color.slice(3,5) + color.slice(1,3);
+      
+          let hasData = false;
+      
+          // Start point marker  
+          if (start) {
+            hasData = true;
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Start Point</name>
+          <description>Starting location for device ${id}</description>
+          <Style>
+            <IconStyle>
+              <Icon>
+                <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
+              </Icon>
+            </IconStyle>
+          </Style>
+          <Point>
+            <coordinates>${start.lon},${start.lat},0</coordinates>
+          </Point>
+        </Placemark>`;
+          }
+      
+          // Current position (if exists)
+          if (latestPackets[id]) {
+            hasData = true;
+            const latest = latestPackets[id];
+            const lat = parseFloat(latest.latitude);
+            const lon = parseFloat(latest.longitude);
+            const gridRef = latLonToGridReference(lat, lon);
+        
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Current Position</name>
+          <description>
+            Grid Reference: ${gridRef}
+            Latitude: ${lat.toFixed(6)}
+            Longitude: ${lon.toFixed(6)}
+            Timestamp: ${latest.timestamp}
+            Satellites: ${latest.sats || 'N/A'}
+            Packet Count: ${packetCounts[id] || 0}
+          </description>
+          <Style>
+            <IconStyle>
+              <Icon>
+                <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
+              </Icon>
+            </IconStyle>
+          </Style>
+          <Point>
+            <coordinates>${lon},${lat},0</coordinates>
+          </Point>
+        </Placemark>`;
+          }
+      
+          // Trail line (convert from [[lat,lon], [lat,lon]] format)
+          if (trail.length > 1) {
+            hasData = true;
+            const coordList = trail.map(point => `${point[1]},${point[0]},0`).join('\n            ');
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Trail</name>
+          <description>GPS trail for device ${id} (${trail.length} points)</description>
+          <Style>
+            <LineStyle>
+              <color>${kmlColor}</color>
+              <width>3</width>
+            </LineStyle>
+          </Style>
+          <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+                ${coordList}
+            </coordinates>
+          </LineString>
+        </Placemark>`;
+          }
+      
+          if (hasData) deviceCount++;
+        });
+    
+        if (deviceCount === 0) {
+          alert(`⚠️ No GPS data found for ${deviceId === 'all' ? 'any devices' : 'device ' + deviceId}.`);
+          return;
         }
-      });
-
-      const kmlContent = kmlHeader + placemarks + kmlFooter;
-      const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `gps_export_${deviceId}.kml`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    
+        const kmlContent = kmlHeader + placemarks + kmlFooter;
+    
+        // Create and download file
+        const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+        const url = URL.createObjectURL(blob);
+    
+        const link = document.createElement('a');
+        link.href = url;
+        const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+        link.download = `MacksTrack_${deviceId}_${timestamp}.kml`;
+    
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    
+        console.log(`✅ KML exported: ${deviceCount} device(s), ${placemarks.split('<Placemark>').length - 1} features`);
+        alert(`✅ Successfully exported ${deviceCount} device(s)!`);
+    
+      } catch (error) {
+        console.error('❌ KML Export Error:', error);
+        alert(`❌ Export failed: ${error.message}\n\nCheck browser console for details.`);
+      }
     }
     
     function downloadKML(content, filename) {
@@ -1981,6 +2077,7 @@
   </script>
 </body>
 </html>
+
 
 
 
