@@ -1358,6 +1358,17 @@
     const map = L.map("map", {
       maxZoom: 22
     }).setView([-33.4452, 150.1528], 15);
+
+    // Force map to resize after DOM is ready
+    setTimeout(function() {
+      map.invalidateSize();
+      console.log('🗺️ Map resized and ready');
+    }, 250);
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      map.invalidateSize();
+    })
     
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
@@ -2093,6 +2104,7 @@
   </script>
 </body>
 </html>
+
 
 
 
