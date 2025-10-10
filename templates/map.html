@@ -1998,7 +1998,23 @@
     
       } catch (error) {
         console.error('❌ KML Export Error:', error);
-        alert(`❌ Export failed: ${error.message}\n\nCheck browser console for details.`);
+        console.error('Error type:', typeof error);
+        console.error('Error details:', {
+          message: error?.message,
+          name: error?.name,
+          stack: error?.stack
+        });
+    
+        let errorMsg = 'Unknown error occurred';
+        if (error?.message) {
+          errorMsg = error.message;
+        } else if (typeof error === 'string') {
+          errorMsg = error;
+        } else if (error?.toString) {
+          errorMsg = error.toString();
+        }
+    
+        alert(`❌ Export failed: ${errorMsg}\n\nCheck browser console (F12) for details.`);
       }
     }
     
@@ -2077,6 +2093,7 @@
   </script>
 </body>
 </html>
+
 
 
 
