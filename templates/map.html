@@ -1493,11 +1493,23 @@
               }
             });
           });
-      
+
           if (allPointsBounds.isValid()) {
-            map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-            hasInitialData = true;
-          }
+            setTimeout(() => {
+              map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+              map.invalidateSize();
+              hasInitialData = true;
+              console.log('🗺️ Map view restored and resized');
+            }, 200);
+          } else {
+            // No bounds, set default view
+            setTimeout(() => {
+              map.setView([-33.4452, 150.1528], 15);
+              map.invalidateSize();
+              console.log('🗺️ Map set to default view');
+          }, 200);
+        }  
+          
         }
       } catch (error) {
         console.error('❌ Critical error restoring from storage:', error);
@@ -1627,6 +1639,14 @@
     const map = L.map("map", {
       maxZoom: 22
     }).setView([-33.4452, 150.1528], 15);
+
+    // Add this after map creation:
+    map.whenReady(function() {
+      console.log('🗺️ Map is ready');
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    });
     
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
@@ -2697,6 +2717,7 @@
   </script>
 </body>
 </html>
+
 
 
 
