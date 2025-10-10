@@ -1494,42 +1494,36 @@
   
       try {
         let restoredCount = 0;
-        let errorCount = 0;
-    
-        // Validate that we have valid data structures
-        if (!gpsTrails || typeof gpsTrails !== 'object') {
-          console.warn('⚠️ Invalid gpsTrails structure');
-          throw new Error('Invalid gpsTrails');
-        }
     
         Object.keys(gpsTrails).forEach(deviceId => {
           const trail = gpsTrails[deviceId];
           if (!trail || !Array.isArray(trail) || trail.length === 0) return;
       
+          // Generate timestamps for historical points (10 seconds apart, working backwards from latest)
+          const latestTimestamp = latestPackets[deviceId]?.timestamp 
+            ? new Date(latestPackets[deviceId].timestamp).getTime()
+            : Date.now();
+      
           trail.forEach((point, index) => {
-            // Validate point format
-            if (!Array.isArray(point) || point.length < 2) {
-              console.warn(`⚠️ Invalid point format for ${deviceId}:`, point);
-              errorCount++;
-              return;
-            }
+            if (!Array.isArray(point) || point.length < 2) return;
         
             const lat = parseFloat(point[0]);
             const lon = parseFloat(point[1]);
         
-            // Validate coordinates
             if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-              console.warn(`⚠️ Invalid coordinates for ${deviceId}:`, point);
-              errorCount++;
               return;
             }
+        
+            // Estimate timestamp: work backwards from latest (10 seconds per point)
+            const estimatedTime = latestTimestamp - ((trail.length - 1 - index) * 10000);
+            const estimatedTimestamp = new Date(estimatedTime).toISOString();
         
             const isLast = index === trail.length - 1;
             const packet = {
               device_id: deviceId,
               latitude: lat,
               longitude: lon,
-              timestamp: latestPackets[deviceId]?.timestamp || new Date().toISOString(),
+              timestamp: estimatedTimestamp,  // ✅ Unique timestamp for each point
               sats: latestPackets[deviceId]?.sats
             };
         
@@ -1540,89 +1534,33 @@
           drawTrail(deviceId);
         });
     
-        console.log(`✅ Restored ${restoredCount} points, ${errorCount} errors skipped`);
-    
-        // If too many errors, clear corrupt data
-        if (errorCount > 10 || (errorCount > 0 && restoredCount === 0)) {
-          console.error('❌ Too many errors or no valid data restored. Clearing storage...');
-          throw new Error('Corrupt data detected');
-        }
+        console.log(`✅ Restored ${restoredCount} points`);
     
         updateTable();
         updateDebugInfo();
     
-        // Set map view
-        let viewSet = false;
-    
-        if (Object.keys(gpsTrails).length > 0) {
+        // Fit map to data if we have any
+        if (restoredCount > 0 && Object.keys(gpsTrails).length > 0) {
           const tempBounds = L.latLngBounds();
-          let validBoundsFound = false;
       
           Object.keys(gpsTrails).forEach(deviceId => {
             gpsTrails[deviceId].forEach(point => {
               if (Array.isArray(point) && point.length >= 2) {
-                const lat = parseFloat(point[0]);
-                const lon = parseFloat(point[1]);
-                if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-                  tempBounds.extend([lat, lon]);
-                  validBoundsFound = true;
-                }
+                tempBounds.extend([point[0], point[1]]);
               }
             });
           });
       
-          if (validBoundsFound && tempBounds.isValid()) {
-            setTimeout(() => {
-              map.fitBounds(tempBounds, { padding: [30, 30], maxZoom: 16 });
-              map.invalidateSize();
-              hasInitialData = true;
-              console.log('🗺️ Map view set to data bounds');
-            }, 300);
-            viewSet = true;
+          if (tempBounds.isValid()) {
+            map.fitBounds(tempBounds, { padding: [30, 30], maxZoom: 16 });
+            hasInitialData = true;
           }
-        }
-    
-        // Fallback to default view if bounds weren't valid
-        if (!viewSet) {
-          console.log('⚠️ No valid bounds found, using default view');
-          setTimeout(() => {
-            map.setView([-33.4452, 150.1528], 15);
-            map.invalidateSize();
-            console.log('🗺️ Map set to default view');
-          }, 300);
         }
     
         return true;
     
       } catch (error) {
-        console.error('❌ Critical error restoring from storage:', error);
-        console.warn('⚠️ Clearing corrupt storage...');
-    
-        // Clear all stored data
-        try {
-          localStorage.removeItem(STORAGE_KEYS.GPS_TRAILS);
-          localStorage.removeItem(STORAGE_KEYS.PACKET_COUNTS);
-          localStorage.removeItem(STORAGE_KEYS.LATEST_PACKETS);
-          localStorage.removeItem(STORAGE_KEYS.DEVICE_START_POINTS);
-          localStorage.removeItem(STORAGE_KEYS.REJECTED_COUNT);
-      
-          // Clear memory
-          Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
-          Object.keys(packetCounts).forEach(key => delete packetCounts[key]);
-          Object.keys(latestPackets).forEach(key => delete latestPackets[key]);
-          Object.keys(deviceStartPoints).forEach(key => delete deviceStartPoints[key]);
-        } catch (clearError) {
-          console.error('Error clearing storage:', clearError);
-        }
-    
-        // Set default view
-        setTimeout(() => {
-          map.setView([-33.4452, 150.1528], 15);
-          map.invalidateSize();
-          console.log('🗺️ Recovery: Map set to default view');
-        }, 300);
-    
-        console.log('✅ Storage cleared and map reset to default');
+        console.error('❌ Error restoring:', error);
         return false;
       }
     }
@@ -2952,6 +2890,7 @@
   </script>
 </body>
 </html>
+
 
 
 
