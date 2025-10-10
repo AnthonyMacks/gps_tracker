@@ -2594,6 +2594,19 @@
       
       // Make playback control draggable
       makeDraggable(document.getElementById('playback-control'));
+
+      // Force rebuild speed dropdown
+      const speedSelect = document.getElementById('playback-speed');
+      speedSelect.innerHTML = `
+        <option value="0.25">0.25x</option>
+        <option value="0.5">0.5x</option>
+        <option value="1" selected>1x</option>
+        <option value="2">2x</option>
+        <option value="5">5x</option>
+        <option value="10">10x</option>
+      `;
+      console.log('🎬 Speed options rebuilt:', speedSelect.options.length);
+        
     }
 
     function clearMapForPlayback() {
@@ -2898,6 +2911,7 @@
   </script>
 </body>
 </html>
+
 
 
 
