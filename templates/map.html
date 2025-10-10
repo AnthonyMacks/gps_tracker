@@ -639,6 +639,13 @@
       min-width: 500px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       display: none;
+      cursor: move;
+      user-select: none;
+    }
+
+    #playback-control.dragging {
+        opacity: 0.8;
+        cursor: grabbing;
     }
 
     #playback-control.active {
@@ -866,7 +873,7 @@
 
 <div id="playback-control">
   <div class="playback-header">
-    <span class="playback-title">📹 Trail Playback</span>
+    <span class="playback-title">📹 Trail Playback <span style="margin-left: 10px; cursor: move; font-size: 16px; opacity: 0.6;">☰</span></span>
     <button class="playback-close" onclick="closePlayback()">✕ Close</button>
   </div>
   
@@ -2383,6 +2390,9 @@
   
       console.log(`✅ Loaded ${playbackState.allPoints.length} points for playback`);
       console.log(`Duration: ${formatDuration(playbackState.endTime - playbackState.startTime)}`);
+      
+      // Make playback control draggable
+      makeDraggable(document.getElementById('playback-control'));
     }
 
     function clearMapForPlayback() {
@@ -2687,6 +2697,7 @@
   </script>
 </body>
 </html>
+
 
 
 
