@@ -566,6 +566,13 @@
       .lower-right-image {
         max-width: 80px;
       }
+
+      .playback-speed-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+        min-width: 45px;
+      }
+        
     }
 
     @media (max-width: 768px) and (orientation: landscape) {
@@ -721,10 +728,27 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 11px;
-      min-width: 80px;
-      height: auto;
+      font-weight: bold;
+      transition: all 0.2s;
+      min-width: 50px;
     }
 
+    
+    .playback-speed-btn:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .playback-speed-btn.active-speed {
+      background: #3498DB;
+      border-color: #3498DB;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+    }
+
+    .playback-speed-btn:active {
+      transform: scale(0.95);
+    }
+    
     .playback-speed option {
       background: #2C3E50;
       color: white;
@@ -889,14 +913,14 @@
     <button class="playback-btn" id="play-btn" onclick="togglePlayback()">▶️ Play</button>
     <button class="playback-btn" onclick="restartPlayback()">⏮️ Restart</button>
     
-    <select class="playback-speed" id="playback-speed" onchange="changePlaybackSpeed()">
-      <option value="0.25">0.25x</option>
-      <option value="0.5">0.5x</option>
-      <option value="1" selected>1x</option>
-      <option value="2">2x</option>
-      <option value="5">5x</option>
-      <option value="10">10x</option>
-    </select>
+    <div style="display: flex; gap: 5px;">
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(0.25)" id="speed-025">0.25x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(0.5)" id="speed-05">0.5x</button>
+      <button class="playback-speed-btn active-speed" onclick="setPlaybackSpeed(1)" id="speed-1">1x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(2)" id="speed-2">2x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(5)" id="speed-5">5x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(10)" id="speed-10">10x</button>  
+    </div>
     
     <span class="playback-time" id="playback-time">00:00:00 / 00:00:00</span>
   </div>
@@ -2594,18 +2618,6 @@
       
       // Make playback control draggable
       makeDraggable(document.getElementById('playback-control'));
-
-      // Force rebuild speed dropdown
-      const speedSelect = document.getElementById('playback-speed');
-      speedSelect.innerHTML = `
-        <option value="0.25">0.25x</option>
-        <option value="0.5">0.5x</option>
-        <option value="1" selected>1x</option>
-        <option value="2">2x</option>
-        <option value="5">5x</option>
-        <option value="10">10x</option>
-      `;
-      console.log('🎬 Speed options rebuilt:', speedSelect.options.length);
         
     }
 
@@ -2703,17 +2715,6 @@
       updatePlaybackUI();
     }
 
-    function changePlaybackSpeed() {
-      const select = document.getElementById('playback-speed');
-      playbackState.speed = parseFloat(select.value);
-  
-      // Restart interval if playing
-      if (playbackState.isPlaying) {
-        pausePlayback();
-        startPlayback();
-      }
-    }
-
     function seekPlayback(value) {
       const wasPlaying = playbackState.isPlaying;
       pausePlayback();
@@ -2780,6 +2781,29 @@
       const secs = seconds % 60;
   
       return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function setPlaybackSpeed(speed) {
+      playbackState.speed = speed;
+  
+      // Update button styles
+      document.querySelectorAll('.playback-speed-btn').forEach(btn => {
+        btn.classList.remove('active-speed');
+      });
+  
+      const speedId = speed === 0.25 ? '025' : speed === 0.5 ? '05' : speed.toString();
+      const activeBtn = document.getElementById(`speed-${speedId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active-speed');
+      }
+  
+      // Restart interval if playing
+      if (playbackState.isPlaying) {
+        pausePlayback();
+        startPlayback();
+      }
+  
+      console.log('⏩ Playback speed changed to:', speed + 'x');
     }
 
     function closePlayback() {
@@ -2911,6 +2935,7 @@
   </script>
 </body>
 </html>
+
 
 
 
