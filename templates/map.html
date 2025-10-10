@@ -757,7 +757,7 @@
 
     #playback-toggle {
       position: absolute;
-      bottom: 140px;
+      bottom: 180px;
       left: 10px;
       background: rgba(52, 152, 219, 0.9);
       color: white;
@@ -2303,7 +2303,11 @@
       intervalId: null,
       allPoints: [],
       startTime: null,
-      endTime: null
+      endTime: null,
+      savedTrails: {},
+      savedMarkers: {},
+      savedCenter: null,
+      savedZoom: null
     };
 
     function togglePlaybackMode() {
@@ -2364,7 +2368,13 @@
       playbackState.startTime = playbackState.allPoints[0].timestamp;
       playbackState.endTime = playbackState.allPoints[playbackState.allPoints.length - 1].timestamp;
       playbackState.currentIndex = 0;
-  
+
+      // Save current state before clearing
+      playbackState.savedCenter = map.getCenter();
+      playbackState.savedZoom = map.getZoom();
+      playbackState.savedTrails = JSON.parse(JSON.stringify(gpsTrails));
+      playbackState.savedMarkers = {...allMarkers};
+        
       // Clear current map
       clearMapForPlayback();
   
@@ -2558,10 +2568,52 @@
       toggleBtn.textContent = '▶️ Playback Mode';
       playbackState.isActive = false;
   
-      // Restore normal view
-      restoreMapFromStorage();
+      // Clear playback visualization
+      clearMapForPlayback();
   
-      console.log('🎬 Playback mode closed');
+      // Restore saved trails
+      if (playbackState.savedTrails && Object.keys(playbackState.savedTrails).length > 0) {
+        Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
+        Object.assign(gpsTrails, JSON.parse(JSON.stringify(playbackState.savedTrails)));
+    
+        // Redraw everything
+        Object.keys(gpsTrails).forEach(deviceId => {
+          const trail = gpsTrails[deviceId];
+          if (trail && trail.length > 0) {
+            // Draw all points
+            trail.forEach((point, index) => {
+              const isLast = index === trail.length - 1;
+              const packet = {
+                device_id: deviceId,
+                latitude: point[0],
+                longitude: point[1],
+                timestamp: latestPackets[deviceId]?.timestamp || new Date().toISOString(),
+                sats: latestPackets[deviceId]?.sats
+              };
+              addDataPoint(packet, isLast);
+            });
+        
+            drawTrail(deviceId);
+          }
+        });
+    
+        // Restore map view
+        if (playbackState.savedCenter && playbackState.savedZoom) {
+          setTimeout(() => {
+            map.setView(playbackState.savedCenter, playbackState.savedZoom);
+          }, 100);
+        }
+      } else {
+        // No saved data, just ensure map is visible
+        setTimeout(() => {
+          map.setView([-33.4452, 150.1528], 15);
+        }, 100);
+      }
+  
+      updateTable();
+      updateDebugInfo();
+  
+      console.log('🎬 Playback mode closed - restored to previous state');
     }
 
     // Connect toggle button
@@ -2635,6 +2687,7 @@
   </script>
 </body>
 </html>
+
 
 
 
