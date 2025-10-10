@@ -685,6 +685,11 @@
     Last Update: <span id="last-update">never</span><br/>
     Current Zoom: <span id="current-zoom">13</span><br/>
     Stored Points: <span id="stored-count">0</span>
+    <button onclick="localStorage.clear(); location.reload();" 
+            style="background: #E74C3C; color: white; padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; margin-top: 5px; width: 100%;">
+      🔄 Reset Storage
+    </button>
+
 </div>
 </div>
 <footer>
@@ -1102,6 +1107,9 @@
       return true;
     }
 
+    const STORAGE_VERSION = '1.0';
+    const VERSION_KEY = 'mackstrack_version';
+    
     const STORAGE_KEYS = {
       GPS_TRAILS: 'mackstrack_gps_trails',
       PACKET_COUNTS: 'mackstrack_packet_counts',
@@ -1112,6 +1120,7 @@
 
     function saveToLocalStorage() {
       try {
+        localStorage.setItem(VERSION_KEY, STORAGE_VERSION);  
         localStorage.setItem(STORAGE_KEYS.GPS_TRAILS, JSON.stringify(gpsTrails));
         localStorage.setItem(STORAGE_KEYS.PACKET_COUNTS, JSON.stringify(packetCounts));
         localStorage.setItem(STORAGE_KEYS.LATEST_PACKETS, JSON.stringify(latestPackets));
@@ -1126,6 +1135,16 @@
 
     function loadFromLocalStorage() {
       try {
+        const storedVersion = localStorage.getItem(VERSION_KEY);
+    
+        // If version mismatch, clear everything
+        if (storedVersion !== STORAGE_VERSION) {
+          console.warn(`⚠️ Storage version mismatch (stored: ${storedVersion}, current: ${STORAGE_VERSION}). Clearing old data.`);
+          localStorage.clear();
+          localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+          return false;
+        }
+    
         const trails = localStorage.getItem(STORAGE_KEYS.GPS_TRAILS);
         const counts = localStorage.getItem(STORAGE_KEYS.PACKET_COUNTS);
         const packets = localStorage.getItem(STORAGE_KEYS.LATEST_PACKETS);
@@ -1202,40 +1221,87 @@
 
     function restoreMapFromStorage() {
       console.log('🔄 Restoring map from stored data...');
+  
+      try {
+        let restoredCount = 0;
+        let errorCount = 0;
+    
+        Object.keys(gpsTrails).forEach(deviceId => {
+          const trail = gpsTrails[deviceId];
+          if (!trail || !Array.isArray(trail) || trail.length === 0) return;
       
-      Object.keys(gpsTrails).forEach(deviceId => {
-        const trail = gpsTrails[deviceId];
-        if (trail && trail.length > 0) {
           trail.forEach((point, index) => {
+            // Validate point format
+            if (!Array.isArray(point) || point.length < 2) {
+              console.warn(`⚠️ Invalid point format for ${deviceId}:`, point);
+              errorCount++;
+              return;
+            }
+        
+            const lat = parseFloat(point[0]);
+            const lon = parseFloat(point[1]);
+        
+            // Validate coordinates
+            if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+              console.warn(`⚠️ Invalid coordinates for ${deviceId}:`, point);
+              errorCount++;
+              return;
+            }
+        
             const isLast = index === trail.length - 1;
             const packet = {
               device_id: deviceId,
-              latitude: point[0],
-              longitude: point[1],
+              latitude: lat,
+              longitude: lon,
               timestamp: latestPackets[deviceId]?.timestamp || new Date().toISOString(),
               sats: latestPackets[deviceId]?.sats
             };
-            addDataPoint(packet, isLast);
-          });
-          
-          drawTrail(deviceId);
-        }
-      });
-      
-      updateTable();
-      updateDebugInfo();
-      
-      if (Object.keys(gpsTrails).length > 0) {
-        Object.keys(gpsTrails).forEach(deviceId => {
-          gpsTrails[deviceId].forEach(point => {
-            allPointsBounds.extend([point[0], point[1]]);
-          });
-        });
         
-        if (allPointsBounds.isValid()) {
-          map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
-          hasInitialData = true;
+            addDataPoint(packet, isLast);
+            restoredCount++;
+          });
+      
+          drawTrail(deviceId);
+        });
+    
+        console.log(`✅ Restored ${restoredCount} points, ${errorCount} errors skipped`);
+    
+        // If too many errors, clear storage and reload
+        if (errorCount > 10) {
+          console.error('❌ Too many errors in stored data. Clearing storage...');
+          localStorage.clear();
+          alert('⚠️ Stored GPS data was corrupted and has been cleared. The page will reload.');
+          location.reload();
+          return;
         }
+    
+        updateTable();
+        updateDebugInfo();
+    
+        if (Object.keys(gpsTrails).length > 0) {
+          Object.keys(gpsTrails).forEach(deviceId => {
+            gpsTrails[deviceId].forEach(point => {
+              if (Array.isArray(point) && point.length >= 2) {
+                const lat = parseFloat(point[0]);
+                const lon = parseFloat(point[1]);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                  allPointsBounds.extend([lat, lon]);
+                }
+              }
+            });
+          });
+      
+          if (allPointsBounds.isValid()) {
+            map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+            hasInitialData = true;
+          }
+        }
+      } catch (error) {
+        console.error('❌ Critical error restoring from storage:', error);
+        console.warn('⚠️ Clearing corrupt storage and reloading...');
+        localStorage.clear();
+        alert('⚠️ Stored GPS data was corrupted and has been cleared. The page will reload.');
+        location.reload();
       }
     }
 
@@ -2093,6 +2159,7 @@
   </script>
 </body>
 </html>
+
 
 
 
