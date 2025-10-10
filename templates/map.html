@@ -2150,6 +2150,22 @@
         <name>GPS MacksTrack Export - ${deviceId === 'all' ? 'All Devices' : 'Device ' + deviceId}</name>
         <description>Exported on ${new Date().toLocaleString('en-AU', {timeZone: 'Australia/Sydney'})}</description>`;
 
+        <Style id="startPoint">
+          <IconStyle>
+            <Icon>
+              <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
+            </Icon>
+          </IconStyle>
+        </Style>
+    
+        <Style id="currentPoint">
+          <IconStyle>
+            <Icon>
+              <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
+            </Icon>
+          </IconStyle>
+        </Style>`;
+          
         let kmlFooter = `
       </Document>
     </kml>`;
@@ -2184,17 +2200,19 @@
           // Start point marker  
           if (start) {
             hasData = true;
+            // Use earliest timestamp if available
+            const startTime = latestPackets[id]?.timestamp 
+              ? new Date(new Date(latestPackets[id].timestamp).getTime() - (trail.length * 10000)).toISOString()
+              : new Date(Date.now() - (trail.length * 10000)).toISOString();
+        
             placemarks += `
         <Placemark>
           <name>Device ${id} - Start Point</name>
           <description>Starting location for device ${id}</description>
-          <Style>
-            <IconStyle>
-              <Icon>
-                <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
-              </Icon>
-            </IconStyle>
-          </Style>
+          <TimeStamp>
+            <when>${startTime}</when>
+          </TimeStamp>
+          <styleUrl>#startPoint</styleUrl>
           <Point>
             <coordinates>${start.lon},${start.lat},0</coordinates>
           </Point>
@@ -2220,27 +2238,61 @@
             Satellites: ${latest.sats || 'N/A'}
             Packet Count: ${packetCounts[id] || 0}
           </description>
-          <Style>
-            <IconStyle>
-              <Icon>
-                <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
-              </Icon>
-            </IconStyle>
-          </Style>
+          <TimeStamp>
+            <when>${timestamp}</when>
+          </TimeStamp>
+          <styleUrl>#currentPoint</styleUrl>
           <Point>
             <coordinates>${lon},${lat},0</coordinates>
           </Point>
         </Placemark>`;
           }
       
-          // Trail line (convert from [[lat,lon], [lat,lon]] format)
+          // Animated trail using gx:Track
           if (trail.length > 1) {
             hasData = true;
+        
+            // Generate timestamps for each point (10 seconds apart)
+            const baseTime = latestPackets[id]?.timestamp 
+              ? new Date(latestPackets[id].timestamp).getTime()
+              : Date.now();
+        
+            let whenElements = '';
+            let coordElements = '';
+        
+            trail.forEach((point, index) => {
+              const pointTime = new Date(baseTime - ((trail.length - 1 - index) * 10000)).toISOString();
+              whenElements += `        <when>${pointTime}</when>\n`;
+              coordElements += `        <gx:coord>${point[1]} ${point[0]} 0</gx:coord>\n`;
+            });
+
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Animated Trail</name>
+          <description>GPS trail for device ${id} (${trail.length} points). Use Google Earth's time slider to animate.</description>
+          <Style>
+            <LineStyle>
+              <color>${kmlColor}</color>
+              <width>4</width>
+            </LineStyle>
+            <IconStyle>
+              <Icon>
+                <href>http://earth.google.com/images/kml-icons/track-directional/track-0.png</href>
+              </Icon>
+            </IconStyle>
+          </Style>
+          <gx:Track>
+            <altitudeMode>clampToGround</altitudeMode>
+    ${whenElements}${coordElements}      </gx:Track>
+        </Placemark>`;
+
+            // Also add static line for devices without time support
             const coordList = trail.map(point => `${point[1]},${point[0]},0`).join(' ');
             placemarks += `
         <Placemark>
-          <name>Device ${id} - Trail</name>
-          <description>GPS trail for device ${id} (${trail.length} points)</description>
+          <name>Device ${id} - Static Trail</name>
+          <description>Static GPS trail for device ${id}</description>
+          <visibility>0</visibility>
           <Style>
             <LineStyle>
               <color>${kmlColor}</color>
@@ -2249,42 +2301,40 @@
           </Style>
           <LineString>
             <tessellate>1</tessellate>
-            <coordinates>
-                ${coordList}
-            </coordinates>
+            <coordinates>${coordList}</coordinates>
           </LineString>
         </Placemark>`;
           }
-      
+
           if (hasData) deviceCount++;
         });
-    
+
         if (deviceCount === 0) {
           alert(`⚠️ No GPS data found for ${deviceId === 'all' ? 'any devices' : 'device ' + deviceId}.`);
           return;
         }
-    
+
         const kmlContent = kmlHeader + placemarks + kmlFooter;
-    
+
         // Create and download file
         const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
         const url = URL.createObjectURL(blob);
-    
+
         const link = document.createElement('a');
         link.href = url;
         const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
         link.download = `MacksTrack_${deviceId}_${timestamp}.kml`;
-    
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    
+
         // Clean up
         setTimeout(() => URL.revokeObjectURL(url), 100);
-    
+
         console.log(`✅ KML exported: ${deviceCount} device(s), ${placemarks.split('<Placemark>').length - 1} features`);
-        alert(`✅ Successfully exported ${deviceCount} device(s)!`);
-    
+        alert(`✅ Successfully exported ${deviceCount} device(s) with animated trails!\n\nOpen in Google Earth and use the time slider to see animation.`);
+
       } catch (error) {
         console.error('❌ KML Export Error:', error);
         console.error('Error type:', typeof error);
@@ -2293,7 +2343,7 @@
           name: error?.name,
           stack: error?.stack
         });
-    
+
         let errorMsg = 'Unknown error occurred';
         if (error?.message) {
           errorMsg = error.message;
@@ -2302,7 +2352,7 @@
         } else if (error?.toString) {
           errorMsg = error.toString();
         }
-    
+
         alert(`❌ Export failed: ${errorMsg}\n\nCheck browser console (F12) for details.`);
       }
     }
@@ -2717,6 +2767,7 @@
   </script>
 </body>
 </html>
+
 
 
 
