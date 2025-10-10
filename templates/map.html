@@ -882,6 +882,7 @@
     <button class="playback-btn" onclick="restartPlayback()">⏮️ Restart</button>
     
     <select class="playback-speed" id="playback-speed" onchange="changePlaybackSpeed()">
+      <option value="0.25">0.25x</option>
       <option value="0.5">0.5x</option>
       <option value="1" selected>1x</option>
       <option value="2">2x</option>
@@ -1291,6 +1292,20 @@
       return R * c;
     }
 
+    // Add this new function RIGHT AFTER calculateDistance
+    function calculatePointDistance(lat1, lon1, lat2, lon2) {
+      // Returns distance in meters
+      const R = 6371000; // Earth's radius in meters
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
     function isValidDistance(deviceId, lat, lon) {
       if (!deviceStartPoints[deviceId]) {
         deviceStartPoints[deviceId] = { lat: lat, lon: lon };
@@ -1310,7 +1325,7 @@
       return true;
     }
 
-    const STORAGE_VERSION = '1.0';
+    const STORAGE_VERSION = '1.1';
     const VERSION_KEY = 'mackstrack_version';
     
     const STORAGE_KEYS = {
@@ -1318,7 +1333,8 @@
       PACKET_COUNTS: 'mackstrack_packet_counts',
       LATEST_PACKETS: 'mackstrack_latest_packets',
       DEVICE_START_POINTS: 'mackstrack_device_start_points',
-      REJECTED_COUNT: 'mackstrack_rejected_count'
+      REJECTED_COUNT: 'mackstrack_rejected_count',
+      DEVICE_DISTANCES: 'mackstrack_device_distances'
     };
 
     function saveToLocalStorage() {
@@ -1329,6 +1345,7 @@
         localStorage.setItem(STORAGE_KEYS.LATEST_PACKETS, JSON.stringify(latestPackets));
         localStorage.setItem(STORAGE_KEYS.DEVICE_START_POINTS, JSON.stringify(deviceStartPoints));
         localStorage.setItem(STORAGE_KEYS.REJECTED_COUNT, rejectedPointsCount.toString());
+        localStorage.setItem(STORAGE_KEYS.DEVICE_DISTANCES, JSON.stringify(deviceDistances));
         console.log('💾 Data saved to localStorage');
         updateStoredCount();
       } catch (error) {
@@ -1378,7 +1395,13 @@
           rejectedPointsCount = parseInt(rejectedCount) || 0;
         }
 
-        // Try to restor, if it fails, function handles cleanup
+        const distances = localStorage.getItem(STORAGE_KEYS.DEVICE_DISTANCES);
+        if (distances) {
+          const loadedDistances = JSON.parse(distances);
+          Object.assign(deviceDistances, loadedDistances);
+        }
+          
+        // Try to restore, if it fails, function handles cleanup
         const restored = restoreMapFromStorage();
 
         if (!restored) {
@@ -1828,6 +1851,8 @@
     const gpsTrails = {};
     const packetCounts = {};
     const latestPackets = {};
+    const deviceDistances = {};  // Track total distance per device
+    const lastPointData = {};     // Track last point for distance calculation
     const allPointsBounds = L.latLngBounds();
     const allMarkers = {};
     const trailLayers = {};
@@ -1914,6 +1939,42 @@
       const color = deviceColors[point.device_id] || "#7F8C8D";
       const gridRef = latLonToGridReference(lat, lon);
 
+      // Calculate distance and speed from previous point
+      let distanceFromPrev = 0;
+      let speedFromPrev = 0;
+      let totalDistance = deviceDistances[point.device_id] || 0;
+  
+      if (lastPointData[point.device_id]) {
+        const lastPoint = lastPointData[point.device_id];
+        distanceFromPrev = calculatePointDistance(
+          lastPoint.lat, 
+          lastPoint.lon, 
+          lat, 
+          lon
+        );
+    
+        totalDistance += distanceFromPrev;
+        deviceDistances[point.device_id] = totalDistance;
+    
+        // Calculate speed (km/h)
+        if (lastPoint.timestamp && point.timestamp) {
+          const timeDiff = (new Date(point.timestamp) - new Date(lastPoint.timestamp)) / 1000; // seconds
+          if (timeDiff > 0) {
+            speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600); // km/h
+          }
+        }
+      } else {
+        // First point for this device
+        deviceDistances[point.device_id] = 0;
+      }
+  
+      // Store this point for next calculation
+      lastPointData[point.device_id] = {
+        lat: lat,
+        lon: lon,
+        timestamp: point.timestamp
+      };
+        
       if (isLatest) {
         const circle = L.circleMarker([lat, lon], {
           radius: 10,
@@ -1928,7 +1989,11 @@
           <strong>Grid Reference:</strong> ${gridRef}<br>
           <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
           <strong>Timestamp:</strong> ${point.timestamp}<br>
-          <strong>Satellites:</strong> ${point.sats || 'N/A'}
+          <strong>Satellites:</strong> ${point.sats || 'N/A'}<br>
+          <hr style="margin: 5px 0;">
+          <strong>Distance from prev:</strong> ${distanceFromPrev.toFixed(1)} m<br>
+          <strong>Speed from prev:</strong> ${speedFromPrev.toFixed(2)} km/h<br>
+          <strong>Total distance:</strong> ${(totalDistance / 1000).toFixed(2)} km
         `;
         circle.bindPopup(popupContent);
 
@@ -1976,7 +2041,8 @@
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
             <strong>Grid Reference:</strong> ${gridRef}<br>
             <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
-            <strong>Timestamp:</strong> ${point.timestamp}
+            <strong>Timestamp:</strong> ${point.timestamp}<br>
+            <strong>Total distance:</strong> 0.00km
           `;
           crestMarker.bindPopup(popupContent);
 
@@ -2012,7 +2078,11 @@
             <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Grid Reference:</strong> ${gridRef}<br>
             <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
-            <strong>Timestamp:</strong> ${point.timestamp}
+            <strong>Timestamp:</strong> ${point.timestamp}<br>
+            <hr style="margin: 5px 0;">
+            <strong>Distance from prev:</strong> ${distanceFromPrev.toFixed(1)} m<br>
+            <strong>Speed from prev:</strong> ${speedFromPrev.toFixed(2)} km/h<br>
+            <strong>Total distance:</strong> ${(totalDistance / 1000).toFixed(2)} km
           `;
           pin.bindPopup(popupContent);
 
@@ -2820,6 +2890,7 @@
   </script>
 </body>
 </html>
+
 
 
 
