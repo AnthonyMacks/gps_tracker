@@ -1947,7 +1947,7 @@
           // Trail line (convert from [[lat,lon], [lat,lon]] format)
           if (trail.length > 1) {
             hasData = true;
-            const coordList = trail.map(point => `${point[1]},${point[0]},0`).join('\n            ');
+            const coordList = trail.map(point => `${point[1]},${point[0]},0`).join(' ');
             placemarks += `
         <Placemark>
           <name>Device ${id} - Trail</name>
@@ -2093,6 +2093,7 @@
   </script>
 </body>
 </html>
+
 
 
 
