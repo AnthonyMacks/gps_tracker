@@ -685,7 +685,7 @@
     Last Update: <span id="last-update">never</span><br/>
     Current Zoom: <span id="current-zoom">13</span><br/>
     Stored Points: <span id="stored-count">0</span>
-    <button onclick="localStorage.clear(); location.reload();" 
+    <button onclick="if(confirm('🔄 Reset all storage and reload page?')) { localStorage.clear(); location.reload(); }" 
             style="background: #E74C3C; color: white; padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; margin-top: 5px; width: 100%;">
       🔄 Reset Storage
     </button>
@@ -2159,6 +2159,7 @@
   </script>
 </body>
 </html>
+
 
 
 
