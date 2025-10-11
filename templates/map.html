@@ -2204,27 +2204,42 @@
         updateDebugInfo();
         return;
       }
-
+      
+      // ✅ Convert timestamp to ISO format immediately
+      const isoTimestamp = timestamp.replace(" ", "T") + "Z";
+        
       // ✅ SAVE THE OLD PACKET BEFORE UPDATING
       const oldPacket = latestPackets[device_id] ? {...latestPackets[device_id]} : null;
 
-      // Now update with new data  
+      // Now update with new data (with converted timestamp)  
       latestPackets[device_id] = {
         ...data,
-        timestamp: timestamp.replace(" ", "T") + "Z"
+        timestamp: isoTimestamp
       };
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
+      // ✅ Add the previous point first (if exists)
       if (gpsTrails[device_id] && gpsTrails[device_id].length && oldPacket) {
         const lastPoint = {
           ...oldPacket,  // ✅ Use the saved old packet
           latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
           longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
+          timestamp: oldPacket.timestamp,  // ✅ Old timestamp
+          sats: oldPacket.sats
         };
         addDataPoint(lastPoint, false);
       }
-      
+
+      // ✅ Add the NEW point with converted timestamp
+      const newPoint = {
+        device_id: device_id,
+        latitude: lat,
+        longitude: lon,
+        timestamp: isoTimestamp,  // ✅ New timestamp in ISO format
+        sats: data.sats
+      };
+    
       addDataPoint(data, true);
 
       allPointsBounds.extend([lat, lon]);
@@ -2894,6 +2909,7 @@
   </script>
 </body>
 </html>
+
 
 
 
