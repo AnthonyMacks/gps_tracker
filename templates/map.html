@@ -2205,6 +2205,10 @@
         return;
       }
 
+      // ✅ SAVE THE OLD PACKET BEFORE UPDATING
+      const oldPacket = latestPackets[device_id] ? {...latestPackets[device_id]} : null;
+
+      // Now update with new data  
       latestPackets[device_id] = {
         ...data,
         timestamp: timestamp.replace(" ", "T") + "Z"
@@ -2212,9 +2216,9 @@
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
-      if (gpsTrails[device_id] && gpsTrails[device_id].length) {
+      if (gpsTrails[device_id] && gpsTrails[device_id].length && oldPacket) {
         const lastPoint = {
-          ...latestPackets[device_id],
+          ...oldPacket,  // ✅ Use the saved old packet
           latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
           longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1]
         };
@@ -2890,6 +2894,7 @@
   </script>
 </body>
 </html>
+
 
 
 
