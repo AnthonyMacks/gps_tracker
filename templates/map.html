@@ -2334,6 +2334,10 @@
     }
 
     function updateTable() {
+      console.log('📊 updateTable called');
+      console.log('Latest packets:', latestPackets);
+      console.log('Packet count:', Object.keys(latestPackets).length);
+  
       const tbody1 = document.querySelector("#device-table tbody");
       const tbody2 = document.querySelector("#device-table2 tbody");
       tbody1.innerHTML = "";
@@ -2342,6 +2346,8 @@
       const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
         a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
       );
+
+      console.log('Sorted IDs:', sortedIDs);
 
       const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
       const secondTableDevices = ['XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII', 'XXVIII', 'XXIX', 'XXX'];
@@ -2356,6 +2362,8 @@
 
         // Get platoon designation
         const displaylabel = getDeviceLabel(id);
+
+        console.log(`Processing ${id} -> ${displayLabel}`);
         
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
@@ -2379,10 +2387,15 @@
 
         if (firstTableDevices.includes(id)) {
           tbody1.appendChild(row);
+          console.log(`✅ Added ${displayLabel} to table 1`);
         } else if (secondTableDevices.includes(id)) {
           tbody2.appendChild(row);
+          console.log(`✅ Added ${displayLabel} to table 2`);
         }
       }
+
+      console.log('📊 updateTable complete');
+      
     }
 
     function updateDebugInfo() {
@@ -3187,6 +3200,7 @@
   </script>
 </body>
 </html>
+
 
 
 
