@@ -829,10 +829,190 @@
         padding: 8px 12px;
       }
     }
+
+    /* Company Selection Modal */
+    #company-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #company-modal.hidden {
+      display: none;
+    }
+
+    .company-modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .company-modal-content h2 {
+      margin: 0 0 10px 0;
+      color: #2C3E50;
+      font-size: 24px;
+      font-family: sans-serif;
+    }
+
+    .company-modal-content p {
+      margin: 0 0 30px 0;
+      color: #7F8C8D;
+      font-size: 14px;
+      font-family: sans-serif;
+    }
+
+    .company-select {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      border: 2px solid #3498DB;
+      border-radius: 6px;
+      background: white;
+      color: #2C3E50;
+      font-family: sans-serif;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    .company-select:focus {
+      outline: none;
+      border-color: #2980B9;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+    }
+
+    .company-confirm-btn {
+      background: #27AE60;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: sans-serif;
+      transition: background 0.3s;
+    }
+
+    .company-confirm-btn:hover {
+      background: #229954;
+    }
+
+    .company-confirm-btn:disabled {
+      background: #BDC3C7;
+      cursor: not-allowed;
+    }
+
+    /* Scrolling Banner */
+    #company-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #2C3E50 0%, #3498DB 100%);
+      z-index: 2000;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      display: none;
+    }
+
+    #company-banner.active {
+      display: block;
+    }
+
+    .banner-content {
+      position: absolute;
+      white-space: nowrap;
+      line-height: 50px;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      font-family: sans-serif;
+      animation: scroll-left 20s linear infinite;
+    }
+
+    @keyframes scroll-left {
+      0% {
+        left: 100%;
+      }
+      100% {
+        left: -100%;
+      }
+    }
+
+    /* Adjust map to account for banner */
+    body.has-banner #map {
+      height: calc(100% - 50px);
+      margin-top: 50px;
+    }
+
+    body.has-banner #info,
+    body.has-banner #info2 {
+      top: 60px;
+    }
+
+    @media (max-width: 768px) {
+      #company-banner {
+        height: 40px;
+      }
+  
+      .banner-content {
+        line-height: 40px;
+        font-size: 18px;
+        animation: scroll-left 15s linear infinite;
+      }
+  
+      body.has-banner #map {
+        height: calc(100% - 40px);
+        margin-top: 40px;
+      }
+  
+      body.has-banner #info,
+      body.has-banner #info2 {
+        top: 50px;
+      }
+    }
     
   </style>
 </head>
-<body><img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
+<body>
+<!-- Company Selection Modal -->
+<div id="company-modal">
+  <div class="company-modal-content">
+    <h2>🎖️ Select Your Company</h2>
+    <p>Choose the company for this tracking session</p>
+    
+    <select id="company-select" class="company-select">
+      <option value="" disabled selected>-- Select Company --</option>
+      <option value="A COY">A COY</option>
+      <option value="B COY">B COY</option>
+      <option value="C COY">C COY</option>
+      <option value="D COY">D COY</option>
+      <option value="IND REC PLT">IND REC PLT</option>
+      <option value="S COY">S COY</option>
+    </select>
+    
+    <button id="company-confirm" class="company-confirm-btn" disabled>Confirm Selection</button>
+  </div>
+</div>
+
+<!-- Scrolling Banner (hidden initially) -->
+<div id="company-banner">
+  <div class="banner-content" id="banner-text"></div>
+</div>
+
+<img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
 <div id="map"></div>
 <div id="info">
 <strong>📡 GPS MacksTrack Data (I-XII) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
@@ -2844,7 +3024,57 @@
         toggleBtn.addEventListener('click', togglePlaybackMode);
       }
     });
+
+    // ==================== COMPANY SELECTION ====================
+
+    function initCompanySelection() {
+      const modal = document.getElementById('company-modal');
+      const select = document.getElementById('company-select');
+      const confirmBtn = document.getElementById('company-confirm');
+      const banner = document.getElementById('company-banner');
+      const bannerText = document.getElementById('banner-text');
+  
+      // Enable confirm button when company is selected
+      select.addEventListener('change', function() {
+        if (this.value) {
+          confirmBtn.disabled = false;
+        }
+      });
+  
+      // Handle confirmation
+      confirmBtn.addEventListener('click', function() {
+        const selectedCompany = select.value;
     
+        if (selectedCompany) {
+          // Hide modal
+          modal.classList.add('hidden');
+      
+          // Show banner with selected company
+          bannerText.textContent = `📍 ${selectedCompany} - GPS TRACKING ACTIVE 📍`;
+          banner.classList.add('active');
+          document.body.classList.add('has-banner');
+      
+          // Save selection to localStorage
+          localStorage.setItem('selected_company', selectedCompany);
+      
+          console.log(`✅ Company selected: ${selectedCompany}`);
+        }
+      });
+  
+      // Check if company was previously selected
+      const savedCompany = localStorage.getItem('selected_company');
+      if (savedCompany) {
+        // Auto-select and show banner
+        modal.classList.add('hidden');
+        bannerText.textContent = `📍 ${savedCompany} - GPS TRACKING ACTIVE 📍`;
+        banner.classList.add('active');
+        document.body.classList.add('has-banner');
+        console.log(`✅ Restored company: ${savedCompany}`);
+      }
+    }
+
+    // Initialize on page load
+    initCompanySelection();
     
     console.log('Initializing GPS tracker...');
     
@@ -2908,6 +3138,7 @@
   </script>
 </body>
 </html>
+
 
 
 
