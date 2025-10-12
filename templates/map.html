@@ -2357,7 +2357,11 @@
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
 
+        // Get platoon designation
         const displaylabel = getDeviceLabel(id);
+        
+        const row = document.createElement("tr");
+        row.className = getRowClass(packet.timestamp, packet.sats);
           
         row.innerHTML = `
           <td>${displayLabel}</td>
@@ -3186,6 +3190,7 @@
   </script>
 </body>
 </html>
+
 
 
 
