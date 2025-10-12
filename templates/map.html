@@ -1122,36 +1122,36 @@
     <div class="export-dropdown-content">
       <div class="export-option all-devices" onclick="exportKML('all')">📦 Export All Devices</div>
       <div class="export-section-header">Individual Devices</div>
-      <div class="export-option" onclick="exportKML('PLT 1-1')">Device I</div>
-      <div class="export-option" onclick="exportKML('PLT 1-2')">Device II</div>
-      <div class="export-option" onclick="exportKML('PLT 1-3')">Device III</div>
-      <div class="export-option" onclick="exportKML('PLT 2-1')">Device IV</div>
-      <div class="export-option" onclick="exportKML('PLT 2-2')">Device V</div>
-      <div class="export-option" onclick="exportKML('PLT 2-3')">Device VI</div>
-      <div class="export-option" onclick="exportKML('PLT 3-1')">Device VII</div>
-      <div class="export-option" onclick="exportKML('PLT 3-2')">Device VIII</div>
-      <div class="export-option" onclick="exportKML('PLT 3-3')">Device IX</div>
-      <div class="export-option" onclick="exportKML('PLT 4-1')">Device X</div>
-      <div class="export-option" onclick="exportKML('PLT 4-2')">Device XI</div>
-      <div class="export-option" onclick="exportKML('PLT 4-3')">Device XII</div>
-      <div class="export-option" onclick="exportKML('E COY 1-1')">Device XIII</div>
-      <div class="export-option" onclick="exportKML('E COY 1-2')">Device XIV</div>
-      <div class="export-option" onclick="exportKML('E COY 1-3')">Device XV</div>
-      <div class="export-option" onclick="exportKML('E COY 2-1')">Device XVI</div>
-      <div class="export-option" onclick="exportKML('E COY 2-2')">Device XVII</div>
-      <div class="export-option" onclick="exportKML('E COY 2-3')">Device XVIII</div>
-      <div class="export-option" onclick="exportKML('E COY 3-1')">Device XIX</div>
-      <div class="export-option" onclick="exportKML('E COY 3-2')">Device XX</div>
-      <div class="export-option" onclick="exportKML('E COY 3-3')">Device XXI</div>
-      <div class="export-option" onclick="exportKML('E COY 4-1')">Device XXII</div>
-      <div class="export-option" onclick="exportKML('E COY 4-2')">Device XXIII</div>
-      <div class="export-option" onclick="exportKML('E COY 4-3')">Device XXIV</div>
-      <div class="export-option" onclick="exportKML('IND REC PLT-1')">Device XXV</div>
-      <div class="export-option" onclick="exportKML('IND REC PLT-2')">Device XXVI</div>
-      <div class="export-option" onclick="exportKML('IND REC PLT-3')">Device XXVII</div>
-      <div class="export-option" onclick="exportKML('SPARE1')">Device XXVIII</div>
-      <div class="export-option" onclick="exportKML('SPARE2')">Device XXIX</div>
-      <div class="export-option" onclick="exportKML('SPARE3')">Device XXX</div>
+      <div class="export-option" onclick="exportKML('I')">PLT 1-1</div>
+      <div class="export-option" onclick="exportKML('II')">PLT 1-2</div>
+      <div class="export-option" onclick="exportKML('III')">PLT 1-3</div>
+      <div class="export-option" onclick="exportKML('IV')">PLT 2-1</div>
+      <div class="export-option" onclick="exportKML('V')">PLT 2-2</div>
+      <div class="export-option" onclick="exportKML('VI')">PLT 2-3</div>
+      <div class="export-option" onclick="exportKML('VII')">PLT 3-1</div>
+      <div class="export-option" onclick="exportKML('VIII')">PLT 3-2</div>
+      <div class="export-option" onclick="exportKML('IX')">PLT 3-3</div>
+      <div class="export-option" onclick="exportKML('X')">PLT 4-1</div>
+      <div class="export-option" onclick="exportKML('XI')">PLT 4-2</div>
+      <div class="export-option" onclick="exportKML('XII')">PLT 4-3</div>
+      <div class="export-option" onclick="exportKML('XIII')">E COY 1-1</div>
+      <div class="export-option" onclick="exportKML('XIV')">E COY 1-2</div>
+      <div class="export-option" onclick="exportKML('XV')">E COY 1-3</div>
+      <div class="export-option" onclick="exportKML('XVI')">E COY 2-1</div>
+      <div class="export-option" onclick="exportKML('XVII')">E COY 2-2</div>
+      <div class="export-option" onclick="exportKML('XVIII')">E COY 2-3</div>
+      <div class="export-option" onclick="exportKML('XIX')">E COY 3-1</div>
+      <div class="export-option" onclick="exportKML('XX')">E COY 3-2</div>
+      <div class="export-option" onclick="exportKML('XXI')">E COY 3-3</div>
+      <div class="export-option" onclick="exportKML('XXII')">E COY 4-1</div>
+      <div class="export-option" onclick="exportKML('XXIII')">E COY 4-2</div>
+      <div class="export-option" onclick="exportKML('XXIV')">E COY 4-3</div>
+      <div class="export-option" onclick="exportKML('XXV')">IND REC PLT-1</div>
+      <div class="export-option" onclick="exportKML('XXVI')">IND REC PLT-2</div>
+      <div class="export-option" onclick="exportKML('XXVII')">IND REC PLT-3</div>
+      <div class="export-option" onclick="exportKML('XXVIII')">SPARE1</div>
+      <div class="export-option" onclick="exportKML('XXIX')">SPARE2</div>
+      <div class="export-option" onclick="exportKML('XXX')">SPARE3</div>
       <div class="export-section-header">Data Management</div>
       <div class="export-option clear-data" onclick="clearStoredData()">🗑️ Clear All Stored Data</div>
     </div>
@@ -2185,10 +2185,24 @@
         `;
         circle.bindPopup(popupContent);
 
+        const deviceLabelsForMap = {
+          'I': 'PLT 1-1', 'II': 'PLT 1-2', 'III': 'PLT 1-3',
+          'IV': 'PLT 2-1', 'V': 'PLT 2-2', 'VI': 'PLT 2-3',
+          'VII': 'PLT 3-1', 'VIII': 'PLT 3-2', 'IX': 'PLT 3-3',
+          'X': 'PLT 4-1', 'XI': 'PLT 4-2', 'XII': 'PLT 4-3',
+          'XIII': 'E COY 1-1', 'XIV': 'E COY 1-2', 'XV': 'E COY 1-3',
+          'XVI': 'E COY 2-1', 'XVII': 'E COY 2-2', 'XVIII': 'E COY 2-3',
+          'XIX': 'E COY 3-1', 'XX': 'E COY 3-2', 'XXI': 'E COY 3-3',
+          'XXII': 'E COY 4-1', 'XXIII': 'E COY 4-2', 'XXIV': 'E COY 4-3',
+          'XXV': 'IND REC PLT-1', 'XXVI': 'IND REC PLT-2', 'XXVII': 'IND REC PLT-3',
+          'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+        };
+        const mapLabel = deviceLabelsForMap[point.device_id] || point.device_id;
+
         const label = L.divIcon({
-          html: `<div style="color: ${color}; font-weight: bold; text-shadow: 1px 1px 2px white;">${point.device_id}</div>`,
+          html: `<div style="color: ${color}; font-weight: bold; text-shadow: 1px 1px 2px white; font-size: 10px;">${mapLabel}</div>`,
           className: 'device-label',
-          iconSize: [20, 20]
+          iconSize: [60, 20]
         });
 
         const labelMarker = L.marker([lat, lon], { icon: label, interactive: false });
@@ -3236,6 +3250,7 @@
   </script>
 </body>
 </html>
+
 
 
 
