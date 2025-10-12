@@ -1966,6 +1966,24 @@
       'XXVI': '#5E35B1',  'XXVII': '#FF5252', 'XXVIII': '#00BCD4','XXIX': '#FFEB3B',  'XXX': '#795548'
     };
 
+    const deviceLabels = {
+      'I': 'PLT 1-1',     'II': 'PLT 1-2',    'III': 'PLT 1-3',
+      'IV': 'PLT 2-1',    'V': 'PLT 2-2',     'VI': 'PLT 2-3',
+      'VII': 'PLT 3-1',   'VIII': 'PLT 3-2',  'IX': 'PLT 3-3',
+      'X': 'PLT 4-1',     'XI': 'PLT 4-2',    'XII': 'PLT 4-3',
+      'XIII': 'PLT 1-1',  'XIV': 'PLT 1-2',   'XV': 'PLT 1-3',
+      'XVI': 'PLT 2-1',   'XVII': 'PLT 2-2',  'XVIII': 'PLT 2-3',
+      'XIX': 'PLT 3-1',   'XX': 'PLT 3-2',    'XXI': 'PLT 3-3',
+      'XXII': 'PLT 4-1',  'XXIII': 'PLT 4-2', 'XXIV': 'PLT 4-3',
+      'XXV': 'IND REC 1',   'XXVI': 'IND REC 2',  'XXVII': 'IND REC3',
+      'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+    };
+
+    // Helper function to get display label
+    function getDeviceLabel(deviceId) {
+      return deviceLabels[deviceId] || deviceId;
+    }
+    
     const socket = io({ 
       transports: ['websocket'],
       timeout: 5000,
@@ -2151,7 +2169,10 @@
           weight: 3
         });
 
+        const displayLabel = getDeviceLabel(point.device_id);
         const popupContent = `
+          <strong>Callsign:</strong> ${displayLabel}<br>
+          <strong>Device ID:</strong> ${point.device_id}<br>
           <strong>Device ID:</strong> ${point.device_id}<br>
           <strong>Grid Reference:</strong> ${gridRef}<br>
           <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
@@ -2204,7 +2225,10 @@
             interactive: true
           });
 
+          const displayLabel = getDeviceLabel(point.device_id);
           const popupContent = `
+            <strong>Callsign:</strong> ${displayLabel} (START)<br>
+            <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Device ID:</strong> ${point.device_id} (START)<br>
             <strong>Grid Reference:</strong> ${gridRef}<br>
             <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
@@ -2241,7 +2265,10 @@
             interactive: true
           });
 
+          const displayLabel = getDeviceLabel(point.device_id);
           const popupContent = `
+            <strong>Callsign:</strong> ${displayLabel}<br>
+            <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Grid Reference:</strong> ${gridRef}<br>
             <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
@@ -2330,8 +2357,10 @@
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
 
+        const displaylabel = getDeviceLabel(id);
+          
         row.innerHTML = `
-          <td>${id}</td>
+          <td>${displayLabel}</td>
           <td>${gridRef}</td>
           <td>${count}</td>
           <td>${sats}</td>
@@ -3157,6 +3186,7 @@
   </script>
 </body>
 </html>
+
 
 
 
