@@ -2354,9 +2354,6 @@
         const lon    = parseFloat(packet.longitude);
         const gridRef = latLonToGridReference(lat, lon);
 
-        const row = document.createElement("tr");
-        row.className = getRowClass(packet.timestamp, packet.sats);
-
         // Get platoon designation
         const displaylabel = getDeviceLabel(id);
         
@@ -3190,6 +3187,7 @@
   </script>
 </body>
 </html>
+
 
 
 
