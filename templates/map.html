@@ -1965,11 +1965,6 @@
       'XXI': '#26C6DA',   'XXII': '#FF6F00',  'XXIII': '#546E7A', 'XXIV': '#EC407A',  'XXV': '#8BC34A',
       'XXVI': '#5E35B1',  'XXVII': '#FF5252', 'XXVIII': '#00BCD4','XXIX': '#FFEB3B',  'XXX': '#795548'
     };
-
-    // Helper function to get display label
-    function getDeviceLabel(deviceId) {
-      return deviceLabels[deviceId] || deviceId;
-    }
     
     const socket = io({ 
       transports: ['websocket'],
@@ -3227,6 +3222,7 @@
   </script>
 </body>
 </html>
+
 
 
 
