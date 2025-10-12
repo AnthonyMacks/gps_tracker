@@ -3033,6 +3033,16 @@
       const confirmBtn = document.getElementById('company-confirm');
       const banner = document.getElementById('company-banner');
       const bannerText = document.getElementById('banner-text');
+
+      // Company to animal icon mapping
+      const companyIcons = {
+        'A COY': '🐺',      // Wolf
+        'B COY': '🐂',      // Bull
+        'C COY': '🐯',      // Tiger
+        'D COY': '🐕',      // Dingo (using dog emoji)
+        'IND REC PLT': '🦅', // Eagle
+        'S COY': '🦂'       // Scorpion
+      };
   
       // Enable confirm button when company is selected
       select.addEventListener('change', function() {
@@ -3046,18 +3056,20 @@
         const selectedCompany = select.value;
     
         if (selectedCompany) {
+          const icon = companyIcons[selectedCompany] || '📍';
+            
           // Hide modal
           modal.classList.add('hidden');
       
           // Show banner with selected company
-          bannerText.textContent = `📍 ${selectedCompany} - GPS TRACKING ACTIVE 📍`;
+          bannerText.textContent = `${icon} ${selectedCompany} - GPS TRACKING ACTIVE ${icon}`;
           banner.classList.add('active');
           document.body.classList.add('has-banner');
       
           // Save selection to localStorage
           localStorage.setItem('selected_company', selectedCompany);
       
-          console.log(`✅ Company selected: ${selectedCompany}`);
+          console.log(`✅ Company selected: ${selectedCompany} ${icon}`);
         }
       });
   
@@ -3066,10 +3078,10 @@
       if (savedCompany) {
         // Auto-select and show banner
         modal.classList.add('hidden');
-        bannerText.textContent = `📍 ${savedCompany} - GPS TRACKING ACTIVE 📍`;
+        bannerText.textContent = `${icon} ${savedCompany} - GPS TRACKING ACTIVE ${icon}`;
         banner.classList.add('active');
         document.body.classList.add('has-banner');
-        console.log(`✅ Restored company: ${savedCompany}`);
+        console.log(`✅ Restored company: ${savedCompany} ${icon}`);
       }
     }
 
@@ -3138,6 +3150,7 @@
   </script>
 </body>
 </html>
+
 
 
 
