@@ -2169,7 +2169,6 @@
         const popupContent = `
           <strong>Callsign:</strong> ${displayLabel}<br>
           <strong>Device ID:</strong> ${point.device_id}<br>
-          <strong>Device ID:</strong> ${point.device_id}<br>
           <strong>Grid Reference:</strong> ${gridRef}<br>
           <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
           <strong>Timestamp:</strong> ${point.timestamp}<br>
@@ -2238,7 +2237,6 @@
           const popupContent = `
             <strong>Callsign:</strong> ${displayLabel} (START)<br>
             <strong>Device ID:</strong> ${point.device_id}<br>
-            <strong>Device ID:</strong> ${point.device_id} (START)<br>
             <strong>Grid Reference:</strong> ${gridRef}<br>
             <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
             <strong>Timestamp:</strong> ${point.timestamp}<br>
@@ -2290,7 +2288,6 @@
 
           const popupContent = `
             <strong>Callsign:</strong> ${displayLabel}<br>
-            <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Device ID:</strong> ${point.device_id}<br>
             <strong>Grid Reference:</strong> ${gridRef}<br>
             <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
@@ -2398,8 +2395,6 @@
         // Get platoon designation - use direct lookup
         const displayLabel = deviceLabels[id] || id;
         console.log(`Processing ${id} -> ${displayLabel}`);
-
-        const row = document.createElement("tr");
         
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
@@ -3236,6 +3231,7 @@
   </script>
 </body>
 </html>
+
 
 
 
