@@ -3043,6 +3043,11 @@
         'IND REC PLT': '🦅', // Eagle
         'S COY': '🦂'       // Scorpion
       };
+      
+      // Helper function to get icon for a company
+      function getCompanyIcon(companyName) {
+        return companyIcons[companyName] || '📍';
+      }
   
       // Enable confirm button when company is selected
       select.addEventListener('change', function() {
@@ -3056,7 +3061,7 @@
         const selectedCompany = select.value;
     
         if (selectedCompany) {
-          const icon = companyIcons[selectedCompany] || '📍';
+          const icon = getCompanyIcon(selectedCompany);
             
           // Hide modal
           modal.classList.add('hidden');
@@ -3076,6 +3081,8 @@
       // Check if company was previously selected
       const savedCompany = localStorage.getItem('selected_company');
       if (savedCompany) {
+          const icon = getCompanyIcon(savedCompany);
+          
         // Auto-select and show banner
         modal.classList.add('hidden');
         bannerText.textContent = `${icon} ${savedCompany} - GPS TRACKING ACTIVE ${icon}`;
@@ -3150,6 +3157,7 @@
   </script>
 </body>
 </html>
+
 
 
 
