@@ -2491,7 +2491,7 @@
     
     function processGPSUpdate(data) {
       console.log('📡 Processing GPS update:', data);
-      
+  
       const { latitude, longitude, device_id, timestamp } = data;
       if (!latitude || !longitude || !device_id || !timestamp) {
         console.warn('Missing required data:', data);
@@ -2500,7 +2500,7 @@
 
       const lat = parseFloat(latitude);
       const lon = parseFloat(longitude);
-      
+  
       if (isNaN(lat) || isNaN(lon)) {
         console.warn('Invalid coordinates:', data);
         return;
@@ -2510,14 +2510,45 @@
         updateDebugInfo();
         return;
       }
-      
-      // ✅ Convert timestamp to ISO format immediately
+  
+      // Convert timestamp to ISO format
       const isoTimestamp = timestamp.replace(" ", "T") + "Z";
-        
-      // ✅ SAVE THE OLD PACKET BEFORE UPDATING
+    
+      // Save the OLD packet before updating
       const oldPacket = latestPackets[device_id] ? {...latestPackets[device_id]} : null;
 
-      // Now update with new data (with converted timestamp)  
+      // Calculate distance and speed for THIS point
+      let distanceFromPrev = 0;
+      let speedFromPrev = 0;
+      let totalDistance = deviceDistances[device_id] || 0;
+
+      if (lastPointData[device_id]) {
+        const lastPoint = lastPointData[device_id];
+        distanceFromPrev = calculatePointDistance(
+          lastPoint.lat,
+          lastPoint.lon,
+          lat,
+          lon
+        );
+    
+        totalDistance += distanceFromPrev;
+        deviceDistances[device_id] = totalDistance;
+    
+        // Calculate speed
+        if (lastPoint.timestamp && isoTimestamp) {
+          const time1 = new Date(lastPoint.timestamp);
+          const time2 = new Date(isoTimestamp);
+          const timeDiff = (time2 - time1) / 1000;
+      
+          if (timeDiff > 0) {
+            speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600);
+          }
+        }
+      } else {
+        deviceDistances[device_id] = 0;
+      }
+
+      // Update stored data
       latestPackets[device_id] = {
         ...data,
         timestamp: isoTimestamp
@@ -2525,48 +2556,63 @@
 
       packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
 
-      // ✅ Add the previous point first (if exists)
+      // Add the previous point first (if exists)
       if (gpsTrails[device_id] && gpsTrails[device_id].length && oldPacket) {
         const lastPoint = {
-          ...oldPacket,  // ✅ Use the saved old packet
-          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][0],
-          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1][1],
-          timestamp: oldPacket.timestamp,  // ✅ Old timestamp
-          sats: oldPacket.sats
+          device_id: device_id,
+          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1].lat,
+          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1].lon,
+          timestamp: oldPacket.timestamp,
+          sats: oldPacket.sats,
+          distanceFromPrev: gpsTrails[device_id][gpsTrails[device_id].length - 1].distanceFromPrev || 0,
+          speedFromPrev: gpsTrails[device_id][gpsTrails[device_id].length - 1].speedFromPrev || 0,
+          totalDistance: gpsTrails[device_id][gpsTrails[device_id].length - 1].totalDistance || 0
         };
         addDataPoint(lastPoint, false);
       }
 
-      // ✅ Add the NEW point with converted timestamp
+      // Add the NEW point with calculated data
       const newPoint = {
         device_id: device_id,
         latitude: lat,
         longitude: lon,
-        timestamp: isoTimestamp,  // ✅ New timestamp in ISO format
-        sats: data.sats
+        timestamp: isoTimestamp,
+        sats: data.sats,
+        distanceFromPrev: distanceFromPrev,
+        speedFromPrev: speedFromPrev,
+        totalDistance: totalDistance
       };
-      addDataPoint(newPoint, true);  // ✅ Use newPoint instead of data
+      addDataPoint(newPoint, true);
 
       allPointsBounds.extend([lat, lon]);
-      
+  
       if (!hasInitialData) {
         map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
         hasInitialData = true;
       }
 
+      // Store point with ALL calculated data
+      const trailPoint = {
+        lat: lat,
+        lon: lon,
+        timestamp: isoTimestamp,
+        distanceFromPrev: distanceFromPrev,
+        speedFromPrev: speedFromPrev,
+        totalDistance: totalDistance
+      };
+    
       gpsTrails[device_id] = gpsTrails[device_id] || [];
-      gpsTrails[device_id].push([lat, lon]);
-      if (gpsTrails[device_id].length > 100) gpsTrails[device_id].shift();
+      gpsTrails[device_id].push(trailPoint);
+    
+      if (gpsTrails[device_id].length > 100) {
+        gpsTrails[device_id].shift();
+      }
 
       drawTrail(device_id);
-
       updateTable();
       updateDebugInfo();
-
       saveToLocalStorage();
     }
-
-    const devicePoints = {};
     
     function exportKML(deviceId) {
       try {
@@ -3283,6 +3329,7 @@
   </script>
 </body>
 </html>
+
 
 
 
