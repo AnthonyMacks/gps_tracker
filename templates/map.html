@@ -1684,10 +1684,12 @@
           const trail = gpsTrails[deviceId];
           if (!trail || !Array.isArray(trail) || trail.length === 0) return;
       
-          // Generate timestamps for historical points (10 seconds apart, working backwards from latest)
           const latestTimestamp = latestPackets[deviceId]?.timestamp 
             ? new Date(latestPackets[deviceId].timestamp).getTime()
             : Date.now();
+      
+          // Pre-calculate distance and speed for all points
+          const pointsWithData = [];
       
           trail.forEach((point, index) => {
             if (!Array.isArray(point) || point.length < 2) return;
@@ -1699,17 +1701,49 @@
               return;
             }
         
-            // Estimate timestamp: work backwards from latest (10 seconds per point)
             const estimatedTime = latestTimestamp - ((trail.length - 1 - index) * 10000);
             const estimatedTimestamp = new Date(estimatedTime).toISOString();
         
-            const isLast = index === trail.length - 1;
+            // Calculate distance and speed from previous point
+            let distanceFromPrev = 0;
+            let speedFromPrev = 0;
+            let totalDistance = 0;
+        
+            if (index > 0 && pointsWithData.length > 0) {
+              const prevPoint = pointsWithData[pointsWithData.length - 1];
+              distanceFromPrev = calculatePointDistance(prevPoint.lat, prevPoint.lon, lat, lon);
+              totalDistance = prevPoint.totalDistance + distanceFromPrev;
+          
+              const timeDiff = (estimatedTime - prevPoint.timestamp) / 1000;
+              if (timeDiff > 0) {
+                speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600);
+              }
+            }
+        
+            pointsWithData.push({
+              lat: lat,
+              lon: lon,
+              timestamp: estimatedTime,
+              timestampISO: estimatedTimestamp,
+              distanceFromPrev: distanceFromPrev,
+              speedFromPrev: speedFromPrev,
+              totalDistance: totalDistance
+            });
+          });
+      
+          // Now add all points with their calculated data
+          pointsWithData.forEach((pointData, index) => {
+            const isLast = index === pointsWithData.length - 1;
             const packet = {
               device_id: deviceId,
-              latitude: lat,
-              longitude: lon,
-              timestamp: estimatedTimestamp,  // ✅ Unique timestamp for each point
-              sats: latestPackets[deviceId]?.sats
+              latitude: pointData.lat,
+              longitude: pointData.lon,
+              timestamp: pointData.timestampISO,
+              sats: latestPackets[deviceId]?.sats,
+              // Add these for use in popup
+              distanceFromPrev: pointData.distanceFromPrev,
+              speedFromPrev: pointData.speedFromPrev,
+              totalDistance: pointData.totalDistance
             };
         
             addDataPoint(packet, isLast);
@@ -1724,7 +1758,6 @@
         updateTable();
         updateDebugInfo();
     
-        // Fit map to data if we have any
         if (restoredCount > 0 && Object.keys(gpsTrails).length > 0) {
           const tempBounds = L.latLngBounds();
       
@@ -1749,7 +1782,7 @@
         return false;
       }
     }
-
+   
     function updateStoredCount() {
       const storedCount = document.getElementById('stored-count');
       let totalStoredPoints = 0;
@@ -2094,12 +2127,13 @@
       const color = deviceColors[point.device_id] || "#7F8C8D";
       const gridRef = latLonToGridReference(lat, lon);
 
-      // Calculate distance and speed from previous point
-      let distanceFromPrev = 0;
-      let speedFromPrev = 0;
-      let totalDistance = deviceDistances[point.device_id] || 0;
-  
-      if (lastPointData[point.device_id]) {
+      // Use pre-calculated values if available, otherwise calculate
+      let distanceFromPrev = point.distanceFromPrev !== undefined ? point.distanceFromPrev : 0;
+      let speedFromPrev = point.speedFromPrev !== undefined ? point.speedFromPrev : 0;
+      let totalDistance = point.totalDistance !== undefined ? point.totalDistance : (deviceDistances[point.device_id] || 0);
+
+      // Only calculate if not already provided
+      if (distanceFromPrev === 0 && speedFromPrev === 0 && lastPointData[point.device_id]) {
         const lastPoint = lastPointData[point.device_id];
         distanceFromPrev = calculatePointDistance(
           lastPoint.lat, 
@@ -2139,6 +2173,7 @@
         // First point for this device
         deviceDistances[point.device_id] = 0;
       }
+    } // Close the "if (distanceFromPrev === 0..." block
   
       // Store this point for next calculation
       lastPointData[point.device_id] = {
@@ -3249,6 +3284,7 @@
   </script>
 </body>
 </html>
+
 
 
 
