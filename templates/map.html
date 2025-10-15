@@ -2133,7 +2133,7 @@
       let totalDistance = point.totalDistance !== undefined ? point.totalDistance : (deviceDistances[point.device_id] || 0);
 
       // Only calculate if not already provided
-      if (distanceFromPrev === 0 && speedFromPrev === 0 && lastPointData[point.device_id]) {
+      if (point.distanceFromPrev === undefined && point.speedFromPrev === undefined && lastPointData[point.device_id]) {
         const lastPoint = lastPointData[point.device_id];
         distanceFromPrev = calculatePointDistance(
           lastPoint.lat, 
@@ -2164,14 +2164,17 @@
             speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600); // km/h
             console.log(`Calculated speed: ${speedFromPrev.toFixed(2)} km/h`);
           } else {
-            console.warn(`Time diff is ${timeDiff} - cannot calculate speed`);
+              console.warn(`Time diff is ${timeDiff} - cannot calculate speed`);
+            }
           }
         } else {
           console.warn(`Missing timestamps - last: ${lastPoint.timestamp}, current: ${point.timestamp}`);
         }  
       } else {
-        // First point for this device
-        deviceDistances[point.device_id] = 0;
+        // Values were provided, use them
+        if (point.totalDistance !== undefined) {
+          deviceDistances[point.device_id] = point.totalDistance;
+        }
       }
   
       // Store this point for next calculation
@@ -3329,6 +3332,7 @@
   </script>
 </body>
 </html>
+
 
 
 
