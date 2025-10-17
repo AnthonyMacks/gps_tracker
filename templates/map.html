@@ -1051,7 +1051,7 @@
 </div>
 <div id="opacity-control">
 <label for="opacity-slider">Base Layer Opacity:</label>
-<input id="opacity-slider" max="1" min="0" step="0.1" type="range" value="1"/>
+<input id="opacity-slider" max="1" min="0" step="0.05" type="range" value="1"/>
 <span id="opacity-value">100%</span>
 </div>
 <div id="grid-control">
@@ -1063,6 +1063,11 @@
 <label style="margin-top: 5px;">
   <input type="checkbox" id="grid-100m-toggle"/>
   Show 100m Grid Lines
+</label>
+<br/>
+<label style="margin-top: 5px;">
+  <input type="checkbox" id="grid-10m-toggle"/>
+  Show 10m Grid Lines
 </label>
 </div>
 <div id="debug" class="collapsed">
@@ -1232,8 +1237,10 @@
 
     let gridLinesVisible = true;
     let grid100mVisible = false;
+    let grid10mVisible = false;
     let gridLineLayer = null;
     let grid100mLayer = null;
+    let grid10mLayer = null;
     let gridLabelMarkers = [];
 
     function clearGridLines() {
@@ -1252,6 +1259,13 @@
       }
     }
 
+    function clearGrid10m() {
+      if (grid10mLayer) {
+        map.removeLayer(grid10mLayer);
+        grid10mLayer = null;
+      }
+    }
+    
     function drawGridLines() {
       if (!gridLinesVisible) return;
 
@@ -1384,6 +1398,10 @@
           draw100mGrid();
         }
 
+        if (grid10mVisible) {
+            draw10mGrid();
+        }
+
       } catch (error) {
         console.error('Error drawing grid lines:', error);
       }
@@ -1468,6 +1486,85 @@
       }
     }
 
+    function draw10mGrid() {
+      clearGrid10m();
+
+      try {
+        const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+
+        if (zoom < 17) {
+          console.log('Zoom too low for 10m grid display');
+          return;
+        }
+
+        const lat = center.lat;
+        const lon = center.lng;
+        const zone = getUTMZone(lon);
+        const epsg = getEPSG(zone);
+
+        const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
+        const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
+
+        const minE = Math.floor(sw[0] / 10) * 10;
+        const maxE = Math.ceil(ne[0] / 10) * 10;
+        const minN = Math.floor(sw[1] / 10) * 10;
+        const maxN = Math.ceil(ne[1] / 10) * 10;
+
+        const allLines = [];
+
+        for (let e = minE; e <= maxE; e += 10) {
+          if (e % 100 === 0) continue;
+      
+          const line = [];
+          for (let n = minN; n <= maxN; n += 5) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('10m grid conversion error:', err);
+            }
+          }
+      
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        for (let n = minN; n <= maxN; n += 10) {
+          if (n % 100 === 0) continue;
+      
+          const line = [];
+          for (let e = minE; e <= maxE; e += 5) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('10m grid conversion error:', err);
+            }
+          }
+      
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        if (allLines.length > 0) {
+          grid10mLayer = L.polyline(allLines, {
+            color: '#ff9900',
+            weight: 1,
+            opacity: 0.6,
+            dashArray: '2, 3',
+            interactive: false
+          }).addTo(map);
+        }
+
+      } catch (error) {
+        console.error('Error drawing 10m grid lines:', error);
+      }
+    }
+
     function toggleGridLines() {
       gridLinesVisible = !gridLinesVisible;
       if (gridLinesVisible) {
@@ -1475,6 +1572,7 @@
       } else {
         clearGridLines();
         clearGrid100m();
+        clearGrid10m();
       }
     }
 
@@ -1490,6 +1588,21 @@
         }
       } else {
         clearGrid100m();
+      }
+    }
+
+    function toggle10mGrid() {
+      grid10mVisible = !grid10mVisible;
+      if (grid10mVisible) {
+        if (!gridLinesVisible) {
+          gridLinesVisible = true;
+          document.getElementById('grid-toggle').checked = true;
+          drawGridLines();
+        } else {
+          draw10mGrid();
+        }
+      } else {
+        clearGrid10m();
       }
     }
 
@@ -1972,6 +2085,11 @@
     const grid100mToggle = document.getElementById('grid-100m-toggle');
     grid100mToggle.addEventListener('change', function() {
       toggle100mGrid();
+    });
+
+    const grid10mToggle = document.getElementById('grid-10m-toggle');
+    grid10mToggle.addEventListener('change', function() {
+      toggle10mGrid();
     });
 
     const opacitySlider = document.getElementById('opacity-slider');
@@ -3331,6 +3449,7 @@
   </script>
 </body>
 </html>
+
 
 
 
