@@ -1367,6 +1367,10 @@
       }
     }
     
+    <!-- Due to size limits, I'll provide the key updated function -->
+<!-- Insert this function to replace the existing drawGridLines() in your map.html -->
+
+
     function drawGridLines() {
       if (!gridLinesVisible) return;
 
@@ -1376,6 +1380,12 @@
         const bounds = map.getBounds();
         const center = map.getCenter();
         const zoom = map.getZoom();
+
+        // Don't draw grids if zoom is too high
+        if (zoom > 19) {
+          console.log('Zoom too high for grid display');
+          return;
+        }
 
         if (zoom < 12) {
           console.log('Zoom too low for grid display');
@@ -1387,6 +1397,11 @@
         const zone = getUTMZone(lon);
         const epsg = getEPSG(zone);
 
+        // Get center point in UTM
+        const centerUTM = proj4('EPSG:4326', `EPSG:${epsg}`, [lon, lat]);
+        const centerE = centerUTM[0];
+        const centerN = centerUTM[1];
+
         const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
         const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
 
@@ -1397,11 +1412,18 @@
 
         const gridInterval = zoom >= 15 ? 1000 : zoom >= 13 ? 2000 : 5000;
 
+        // Find nearest grid lines to center (guarantee at least one in each direction)
+        const nearestE = Math.round(centerE / gridInterval) * gridInterval;
+        const nearestN = Math.round(centerN / gridInterval) * gridInterval;
+
         const allLines = [];
         const labels = [];
+        const eastingsDrawn = new Set();
+        const northingsDrawn = new Set();
 
         console.log(`Drawing grid for zone ${zone}, datum: GDA94, interval: ${gridInterval}m`);
 
+        // Draw vertical lines (eastings) - regular interval
         for (let e = minE; e <= maxE; e += gridInterval) {
           const line = [];
           for (let n = minN; n <= maxN; n += 250) {
@@ -1412,12 +1434,31 @@
               console.warn('Grid conversion error:', err);
             }
           }
-          
+      
           if (line.length > 1) {
             allLines.push(line);
+            eastingsDrawn.add(e);
           }
         }
 
+        // Ensure at least one easting line is drawn (nearest to center)
+        if (eastingsDrawn.size === 0 || !eastingsDrawn.has(nearestE)) {
+          const line = [];
+          for (let n = minN; n <= maxN; n += 250) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [nearestE, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('Grid conversion error:', err);
+            }
+          }
+          if (line.length > 1) {
+            allLines.push(line);
+            eastingsDrawn.add(nearestE);
+          }
+        }
+
+        // Draw horizontal lines (northings) - regular interval
         for (let n = minN; n <= maxN; n += gridInterval) {
           const line = [];
           for (let e = minE; e <= maxE; e += 250) {
@@ -1428,9 +1469,27 @@
               console.warn('Grid conversion error:', err);
             }
           }
-          
+      
           if (line.length > 1) {
             allLines.push(line);
+            northingsDrawn.add(n);
+          }
+        }
+
+        // Ensure at least one northing line is drawn (nearest to center)
+        if (northingsDrawn.size === 0 || !northingsDrawn.has(nearestN)) {
+          const line = [];
+          for (let e = minE; e <= maxE; e += 250) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, nearestN]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('Grid conversion error:', err);
+            }
+          }
+          if (line.length > 1) {
+            allLines.push(line);
+            northingsDrawn.add(nearestN);
           }
         }
 
@@ -1443,14 +1502,15 @@
           }).addTo(map);
         }
 
-        console.log(`Drawing labels: minE=${minE}, maxE=${maxE}, minN=${minN}, maxN=${maxN}`);
-
-        for (let e = minE; e <= maxE; e += gridInterval) {
+        console.log(`Drawing labels for ${eastingsDrawn.size} eastings and ${northingsDrawn.size} northings`);
+  
+        // Draw labels for all easting lines
+        eastingsDrawn.forEach(e => {
           try {
             const labelN = maxN - (maxN - minN) * 0.15;
             const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, labelN]);
             const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
-            
+        
             labels.push({
               position: [ll[1], ll[0]],
               text: eastingLabel,
@@ -1459,14 +1519,15 @@
           } catch (err) {
             console.warn('Easting label error:', err);
           }
-        }
+        });
 
-        for (let n = minN; n <= maxN; n += gridInterval) {
+        // Draw labels for all northing lines
+        northingsDrawn.forEach(n => {
           try {
             const labelE = minE + (maxE - minE) * 0.15;
             const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [labelE, n]);
             const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
-            
+        
             labels.push({
               position: [ll[1], ll[0]],
               text: northingLabel,
@@ -1475,7 +1536,7 @@
           } catch (err) {
             console.warn('Northing label error:', err);
           }
-        }
+        });
 
         console.log(`Total labels created: ${labels.length}`);
 
@@ -1489,7 +1550,7 @@
             }),
             interactive: false
           }).addTo(map);
-          
+      
           gridLabelMarkers.push(marker);
         });
 
@@ -1500,13 +1561,14 @@
         }
 
         if (grid10mVisible) {
-            draw10mGrid();
+          draw10mGrid();
         }
 
       } catch (error) {
         console.error('Error drawing grid lines:', error);
       }
     }
+
 
     function draw100mGrid() {
       clearGrid100m();
@@ -3603,6 +3665,7 @@
   </script>
 </body>
 </html>
+
 
 
 
