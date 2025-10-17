@@ -91,7 +91,7 @@
       z-index: 1001;
       cursor: move;
       user-select: none;
-      transition: all 0.3s ease;
+      transition: padding 0.3s ease, opacity 0.3s ease;
     }
 
     #opacity-control.collapsed {
@@ -127,7 +127,7 @@
       z-index: 1001;
       cursor: move;
       user-select: none;
-      transition: all 0.3s ease;
+      transition: padding 0.3s ease, opacity 0.3s ease;
     }
 
     #grid-control.collapsed {
@@ -896,6 +896,11 @@
 
     #playback-toggle:hover {
       background: rgba(41, 128, 185, 0.9);
+    }
+
+    #playback-toggle.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
     }
 
     @media (max-width: 768px) {
@@ -2038,6 +2043,18 @@
       element.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
+        // Allow dragging for the playback-toggle button itself
+        if (element.id === 'playback-toggle') {
+          e.preventDefault();
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          isDragging = true;
+          element.classList.add('dragging');
+          document.onmouseup = closeDragElement;
+          document.onmousemove = elementDrag;
+          return;
+        }
+          
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
             e.target.closest('table') || e.target.closest('button')) {
           return;
@@ -2102,18 +2119,28 @@
       }
 
       function closeDragElement() {
+        const wasDragging = isDragging;
         isDragging = false;
         element.classList.remove('dragging');
         document.onmouseup = null;
         document.onmousemove = null;
         document.ontouchend = null;
         document.ontouchmove = null;
-      }
+
+        // If we actually dragged (moved more than a few pixels), prevent the click
+        if (wasDragging && element.id === 'playback-toggle' && (Math.abs(pos1) > 5 || Math.abs(pos2) > 5)) {
+          setTimeout(() => {
+            element.addEventListener('click', function preventClick(e) {
+              e.stopImmediatePropagation();
+              element.removeEventListener('click', preventClick);
+            }, true);
+          }, 0);
+        }
     }
 
     const map = L.map("map", {
       maxZoom: 22
-    }).setView([-33.4452, 150.1528], 15);
+    }).setView([-35.8411, 151.2058], 15);
 
     // Add this after map creation:
     map.whenReady(function() {
@@ -3494,6 +3521,7 @@
     makeDraggable(document.getElementById('info2'));
     makeDraggable(document.getElementById('opacity-control'));
     makeDraggable(document.getElementById('grid-control'));
+    makeDraggable(document.getElementById('playback-toggle'));
     
     setTimeout(() => {
       drawGridLines();
@@ -3559,6 +3587,7 @@
   </script>
 </body>
 </html>
+
 
 
 
