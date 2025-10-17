@@ -1051,7 +1051,7 @@
 </div>
 <div id="opacity-control">
 <label for="opacity-slider">Base Layer Opacity:</label>
-<input id="opacity-slider" max="1" min="0.1" step="0.1" type="range" value="1"/>
+<input id="opacity-slider" max="1" min="0" step="0.1" type="range" value="1"/>
 <span id="opacity-value">100%</span>
 </div>
 <div id="grid-control">
@@ -1457,7 +1457,7 @@
           grid100mLayer = L.polyline(allLines, {
             color: '#3366cc',
             weight: 1,
-            opacity: 0.4,
+            opacity: 0.9,
             dashArray: '4, 4',
             interactive: false
           }).addTo(map);
@@ -3331,6 +3331,7 @@
   </script>
 </body>
 </html>
+
 
 
 
