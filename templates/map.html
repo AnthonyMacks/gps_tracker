@@ -3515,15 +3515,30 @@
     initCompanySelection();
     
     console.log('Initializing GPS tracker...');
-    
+
     const hasStoredData = loadFromLocalStorage();
+
+    // Make elements draggable after a small delay to ensure they exist
+    setTimeout(() => {
+      try {
+        const info = document.getElementById('info');
+        const info2 = document.getElementById('info2');
+        const opacityControl = document.getElementById('opacity-control');
+        const gridControl = document.getElementById('grid-control');
+        const playbackToggle = document.getElementById('playback-toggle');
     
-    makeDraggable(document.getElementById('info'));
-    makeDraggable(document.getElementById('info2'));
-    makeDraggable(document.getElementById('opacity-control'));
-    makeDraggable(document.getElementById('grid-control'));
-    makeDraggable(document.getElementById('playback-toggle'));
+        if (info) makeDraggable(info);
+        if (info2) makeDraggable(info2);
+        if (opacityControl) makeDraggable(opacityControl);
+        if (gridControl) makeDraggable(gridControl);
+        if (playbackToggle) makeDraggable(playbackToggle);
     
+        console.log('✅ Draggable elements initialized');
+      } catch (error) {
+        console.error('Error making elements draggable:', error);
+      }
+    }, 100);
+
     setTimeout(() => {
       drawGridLines();
     }, 500);
@@ -3588,6 +3603,7 @@
   </script>
 </body>
 </html>
+
 
 
 
