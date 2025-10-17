@@ -89,6 +89,18 @@
       font-size: 12px;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+      cursor: move;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    #opacity-control.collapsed {
+      padding: 5px 10px;
+    }
+
+    #opacity-control.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
     }
 
     #opacity-control label {
@@ -113,8 +125,72 @@
       font-size: 12px;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
       z-index: 1001;
+      cursor: move;
+      user-select: none;
+      transition: all 0.3s ease;
     }
 
+    #grid-control.collapsed {
+      padding: 5px 10px;
+    }
+
+    #grid-control.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
+    }
+
+    #grid-control .grid-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 200px;
+      overflow: hidden;
+    }
+
+    #grid-control.collapsed .grid-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+    }
+
+    #grid-control .grid-header {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #grid-control.collapsed .grid-header {
+      margin-bottom: 0;
+    }
+
+    #opacity-control .opacity-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 100px;
+      overflow: hidden;
+    }
+
+    #opacity-control.collapsed .opacity-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+    }
+
+    #opacity-control .opacity-header {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #opacity-control.collapsed .opacity-header {
+      margin-bottom: 0;
+    }
+    
     #grid-control label {
       display: flex;
       align-items: center;
@@ -416,11 +492,19 @@
         padding: 6px;
       }
 
+      #opacity-control.collapsed {
+        padding: 4px 6px;
+      }
+
       #grid-control {
         bottom: 110px;
         left: 10px;
         font-size: 10px;
         padding: 6px;
+      }
+
+      #grid-control.collapsed {
+        padding: 4px 6px;
       }
 
       #debug {
@@ -1050,25 +1134,37 @@
 </table>
 </div>
 <div id="opacity-control">
-<label for="opacity-slider">Base Layer Opacity:</label>
-<input id="opacity-slider" max="1" min="0" step="0.05" type="range" value="1"/>
-<span id="opacity-value">100%</span>
+  <div class="opacity-header" onclick="toggleOpacityPanel()">
+    <span>Base Layer Opacity</span>
+    <span style="font-size: 14px;">☰</span>
+  </div>
+  <div class="opacity-content">
+    <label for="opacity-slider" style="display: block; margin-bottom: 5px;">Opacity:</label>
+    <input id="opacity-slider" max="1" min="0" step="0.05" type="range" value="1"/>
+    <span id="opacity-value">100%</span>
+  </div>
 </div>
 <div id="grid-control">
-<label>
-  <input type="checkbox" id="grid-toggle" checked/>
-  Show 1km Grid Lines
-</label>
-<br/>
-<label style="margin-top: 5px;">
-  <input type="checkbox" id="grid-100m-toggle"/>
-  Show 100m Grid Lines
-</label>
-<br/>
-<label style="margin-top: 5px;">
-  <input type="checkbox" id="grid-10m-toggle"/>
-  Show 10m Grid Lines
-</label>
+  <div class="grid-header" onclick="toggleGridPanel()">
+    <span>Grid Options</span>
+    <span style="font-size: 14px;">☰</span>
+  </div>
+  <div class="grid-content">
+    <label>
+      <input type="checkbox" id="grid-toggle" checked/>
+      Show 1km Grid Lines
+    </label>
+    <br/>
+    <label style="margin-top: 5px;">
+      <input type="checkbox" id="grid-100m-toggle"/>
+      Show 100m Grid Lines
+    </label>
+    <br/>
+    <label style="margin-top: 5px;">
+      <input type="checkbox" id="grid-10m-toggle"/>
+      Show 10m Grid Lines
+    </label>
+  </div>
 </div>
 <div id="debug" class="collapsed">
 <div class="debug-title">Debug Info</div>
@@ -3396,6 +3492,8 @@
     
     makeDraggable(document.getElementById('info'));
     makeDraggable(document.getElementById('info2'));
+    makeDraggable(document.getElementById('opacity-control'));
+    makeDraggable(document.getElementById('grid-control'));
     
     setTimeout(() => {
       drawGridLines();
@@ -3449,9 +3547,19 @@
         minute: '2-digit',
         second: '2-digit'
       });
+    function toggleGridPanel() {
+      const panel = document.getElementById('grid-control');
+      panel.classList.toggle('collapsed');
+    }
+
+    function toggleOpacityPanel() {
+      const panel = document.getElementById('opacity-control');
+      panel.classList.toggle('collapsed');
+    }
   </script>
 </body>
 </html>
+
 
 
 
