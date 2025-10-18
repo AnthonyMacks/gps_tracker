@@ -1312,6 +1312,43 @@
       return gridSquare;
     }
 
+    // New function to convert grid reference to lat/lon
+    function gridReferenceToLatLon(gridRef, zone) {
+      // Parse grid reference "3388 5415" format
+      const parts = gridRef.trim().split(/\s+/);
+      if (parts.length !== 2) {
+        console.error('Invalid grid reference format');
+        return null;
+      }
+  
+      const eastingDigits = parts[0];
+      const northingDigits = parts[1];
+  
+      // Convert to meters within 100km square
+      const eastingWithin100k = parseInt(eastingDigits) * 10; // 3388 -> 33880 meters
+      const northingWithin100k = parseInt(northingDigits) * 10; // 5415 -> 54150 meters
+  
+      // Get current map center to determine which 100km grid square we're in
+      const center = map.getCenter();
+      const centerUTM = proj4('EPSG:4326', `EPSG:${getEPSG(zone)}`, [center.lng, center.lat]);
+  
+      // Determine the 100km grid square base coordinates
+      const base100kE = Math.floor(centerUTM[0] / 100000) * 100000;
+      const base100kN = Math.floor(centerUTM[1] / 100000) * 100000;
+  
+      // Calculate full UTM coordinates
+      const fullEasting = base100kE + eastingWithin100k;
+      const fullNorthing = base100kN + northingWithin100k;
+  
+      console.log(`Grid ref ${gridRef} -> UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
+  
+      // Convert to lat/lon
+      const epsg = getEPSG(zone);
+      const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
+  
+      return { lat: latLon[1], lon: latLon[0] };
+    }
+
     function latLonToGridReference(lat, lon) {
       try {
         const zone = getUTMZone(lon);
@@ -2292,6 +2329,69 @@
       setTimeout(() => {
         map.invalidateSize();
         console.log('🗺️ Map size invalidated');
+    
+        // Add CUO rank slide marker at -33°50'23.27" 151°12'16.76"
+        // Convert DMS to decimal degrees
+        const lat = -33 - (50/60) - (23.27/3600); // -33.839797
+        const lon = 151 + (12/60) + (16.76/3600); // 151.204656
+    
+        console.log(`CUO marker position: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    
+        // Function to calculate icon size based on zoom level
+        function getCUOIconSize(zoom) {
+          // Base size at zoom 15
+          const baseSize = 40;
+          const baseZoom = 15;
+          // Scale factor: 1.3x size increase per zoom level
+          const scaleFactor = 1.3;
+          const size = baseSize * Math.pow(scaleFactor, zoom - baseZoom);
+          return Math.max(20, Math.min(size, 200)); // Clamp between 20 and 200 pixels
+        }
+    
+        // Create initial icon
+        let currentZoom = map.getZoom();
+        let iconSize = getCUOIconSize(currentZoom);
+    
+        const cuoIcon = L.icon({
+          iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/cuo_rank.png",
+          iconSize: [iconSize, iconSize],
+          iconAnchor: [iconSize/2, iconSize],
+          popupAnchor: [0, -iconSize]
+        });
+    
+        const cuoMarker = L.marker([lat, lon], {
+          icon: cuoIcon,
+          title: "CUO Rank Position"
+        });
+    
+        const gridRefDisplay = latLonToGridReference(lat, lon);
+        cuoMarker.bindPopup(`
+          <strong>Australian Army Cadet</strong><br>
+          <strong>CUO Rank Position</strong><br>
+          <hr style="margin: 5px 0;">
+          <strong>Grid Reference:</strong> ${gridRefDisplay}<br>
+          <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+          <strong>DMS:</strong> 33°50'23.27"S 151°12'16.76"E
+        `);
+    
+        cuoMarker.addTo(map);
+        console.log(`✅ CUO rank marker placed at ${lat.toFixed(6)}, ${lon.toFixed(6)} (Grid: ${gridRefDisplay})`);
+    
+        // Update icon size when zoom changes
+        map.on('zoomend', function() {
+          currentZoom = map.getZoom();
+          iconSize = getCUOIconSize(currentZoom);
+      
+          const updatedIcon = L.icon({
+            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO Rank Slide.png",
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize/2, iconSize],
+            popupAnchor: [0, -iconSize]
+          });
+      
+          cuoMarker.setIcon(updatedIcon);
+          console.log(`🔍 Zoom ${currentZoom}: CUO icon resized to ${iconSize.toFixed(0)}px`);
+        });
       }, 100);
     });
     
@@ -3746,6 +3846,7 @@
   </script>
 </body>
 </html>
+
 
 
 
