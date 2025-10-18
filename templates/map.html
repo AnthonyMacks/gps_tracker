@@ -2353,10 +2353,10 @@
         let iconSize = getCUOIconSize(currentZoom);
     
         const cuoIcon = L.icon({
-          iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.png",
+          iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
           iconSize: [iconSize, iconSize],
-          iconAnchor: [iconSize/2, iconSize],
-          popupAnchor: [0, -iconSize]
+          iconAnchor: [iconSize/2, iconSize/2],
+          popupAnchor: [0, -iconSize/2]
         });
     
         const cuoMarker = L.marker([lat, lon], {
@@ -2383,10 +2383,10 @@
           iconSize = getCUOIconSize(currentZoom);
       
           const updatedIcon = L.icon({
-            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.png",
+            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
             iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize/2, iconSize],
-            popupAnchor: [0, -iconSize]
+            iconAnchor: [iconSize/2, iconSize/2],
+            popupAnchor: [0, -iconSize/2]
           });
       
           cuoMarker.setIcon(updatedIcon);
@@ -3846,6 +3846,7 @@
   </script>
 </body>
 </html>
+
 
 
 
