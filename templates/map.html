@@ -1412,16 +1412,14 @@
 
         const gridInterval = zoom >= 15 ? 1000 : zoom >= 13 ? 2000 : 5000;
 
-        // Find nearest grid lines to center (guarantee at least one in each direction)
-        const nearestE = Math.round(centerE / gridInterval) * gridInterval;
-        const nearestN = Math.round(centerN / gridInterval) * gridInterval;
-
         const allLines = [];
         const labels = [];
         const eastingsDrawn = new Set();
         const northingsDrawn = new Set();
 
         console.log(`Drawing grid for zone ${zone}, datum: GDA94, interval: ${gridInterval}m, zoom: ${zoom}`);
+        console.log(`Bounds: E[${minE}, ${maxE}], N[${minN}, ${maxN}]`);
+        console.log(`Center: E=${centerE.toFixed(0)}, N=${centerN.toFixed(0)}`);
 
         // Helper function to safely create a grid line
         function createGridLine(coordinates, isVertical) {
@@ -1454,24 +1452,76 @@
       
           return line;
         }
- 
+
         // GUARANTEED CENTER LINES FIRST (drawn before regular grid)
-        // This ensures we always have at least one line in each direction
+        // Find grid lines closest to center that are WITHIN visible bounds
     
-        // Draw center easting line (vertical)
-        const centerEastingLine = createGridLine(nearestE, true);
+        // Find nearest easting within bounds
+        let guaranteedE = Math.round(centerE / gridInterval) * gridInterval;
+    
+        // If nearest easting is outside bounds, find the closest one that's inside
+        if (guaranteedE < minE || guaranteedE > maxE) {
+          // Find all possible eastings within bounds
+          const possibleE = [];
+          for (let e = minE; e <= maxE; e += gridInterval) {
+            possibleE.push(e);
+          }
+      
+          // If no grid lines fit in bounds, use the center point directly
+          if (possibleE.length === 0) {
+            guaranteedE = Math.floor(centerE / gridInterval) * gridInterval;
+            if (guaranteedE < minE) guaranteedE += gridInterval;
+            if (guaranteedE > maxE) guaranteedE -= gridInterval;
+          } else {
+            // Find closest to center
+            guaranteedE = possibleE.reduce((prev, curr) => 
+              Math.abs(curr - centerE) < Math.abs(prev - centerE) ? curr : prev
+            );
+          }
+        }
+    
+        // Draw guaranteed easting line (vertical)
+        const centerEastingLine = createGridLine(guaranteedE, true);
         if (centerEastingLine.length > 1) {
           allLines.push(centerEastingLine);
-          eastingsDrawn.add(nearestE);
-          console.log(`✓ Drew guaranteed center easting at ${nearestE}m`);
+          eastingsDrawn.add(guaranteedE);
+          console.log(`✓ Drew guaranteed easting at ${guaranteedE}m (center was ${centerE.toFixed(0)})`);
+        } else {
+          console.warn(`⚠️ Failed to create easting line at ${guaranteedE}m`);
         }
 
-        // Draw center northing line (horizontal)
-        const centerNorthingLine = createGridLine(nearestN, false);
+        // Find nearest northing within bounds
+        let guaranteedN = Math.round(centerN / gridInterval) * gridInterval;
+    
+        // If nearest northing is outside bounds, find the closest one that's inside
+        if (guaranteedN < minN || guaranteedN > maxN) {
+          // Find all possible northings within bounds
+          const possibleN = [];
+          for (let n = minN; n <= maxN; n += gridInterval) {
+            possibleN.push(n);
+          }
+      
+          // If no grid lines fit in bounds, use the center point directly
+          if (possibleN.length === 0) {
+            guaranteedN = Math.floor(centerN / gridInterval) * gridInterval;
+            if (guaranteedN < minN) guaranteedN += gridInterval;
+            if (guaranteedN > maxN) guaranteedN -= gridInterval;
+          } else {
+            // Find closest to center
+            guaranteedN = possibleN.reduce((prev, curr) => 
+              Math.abs(curr - centerN) < Math.abs(prev - centerN) ? curr : prev
+            );
+          }
+        }
+    
+        // Draw guaranteed northing line (horizontal)
+        const centerNorthingLine = createGridLine(guaranteedN, false);
         if (centerNorthingLine.length > 1) {
           allLines.push(centerNorthingLine);
-          northingsDrawn.add(nearestN);
-          console.log(`✓ Drew guaranteed center northing at ${nearestN}m`);
+          northingsDrawn.add(guaranteedN);
+          console.log(`✓ Drew guaranteed northing at ${guaranteedN}m (center was ${centerN.toFixed(0)})`);
+        } else {
+          console.warn(`⚠️ Failed to create northing line at ${guaranteedN}m`);
         }
 
         // Now draw additional grid lines at regular intervals (skipping center if already drawn)
@@ -1516,24 +1566,33 @@
     
         if (zoom >= 18) {
           // Very high zoom - place labels well into the visible area
-          eastingLabelOffset = 0.40;  // 40% from top
-          northingLabelOffset = 0.35; // 35% from left
+          eastingLabelOffset = 0.50;  // 50% from top (center of screen)
+          northingLabelOffset = 0.45; // 45% from left
+        } else if (zoom >= 17) {
+          // Zoom 17 - need significant offset to clear banner and be visible
+          eastingLabelOffset = 0.45;  // 45% from top
+          northingLabelOffset = 0.40; // 40% from left
         } else if (zoom >= 16) {
           // High zoom - moderate offset to avoid banner and stay visible
-          eastingLabelOffset = 0.30;  // 30% from top
-          northingLabelOffset = 0.25; // 25% from left
+          eastingLabelOffset = 0.35;  // 35% from top
+          northingLabelOffset = 0.30; // 30% from left
         } else {
           // Normal zoom - smaller offset is fine
           eastingLabelOffset = 0.22;  // 22% from top
           northingLabelOffset = 0.18; // 18% from left
         }
-          
+    
+        console.log(`Label offsets at zoom ${zoom}: easting=${eastingLabelOffset}, northing=${northingLabelOffset}`);
+
         // Draw labels for all drawn grid lines
         eastingsDrawn.forEach(e => {
           try {
-            const labelN = maxN - (maxN - minN) * 0.15;
+            // Position label BELOW the top edge to avoid banner and UI
+            const labelN = maxN - (maxN - minN) * eastingLabelOffset;
             const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, labelN]);
             const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
+    
+            console.log(`Easting label "${eastingLabel}" at E=${e}, N=${labelN.toFixed(0)} -> lat=${ll[1].toFixed(6)}, lon=${ll[0].toFixed(6)}`);
     
             labels.push({
               position: [ll[1], ll[0]],
@@ -1547,9 +1606,12 @@
 
         northingsDrawn.forEach(n => {
           try {
-            const labelE = minE + (maxE - minE) * 0.15;
+            // Position label further from left edge for better visibility
+            const labelE = minE + (maxE - minE) * northingLabelOffset;
             const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [labelE, n]);
             const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
+    
+            console.log(`Northing label "${northingLabel}" at E=${labelE.toFixed(0)}, N=${n} -> lat=${ll[1].toFixed(6)}, lon=${ll[0].toFixed(6)}`);
     
             labels.push({
               position: [ll[1], ll[0]],
@@ -1588,7 +1650,6 @@
         console.error('Error drawing grid lines:', error);
       }
     }
-
 
     function draw100mGrid() {
       clearGrid100m();
@@ -3685,6 +3746,7 @@
   </script>
 </body>
 </html>
+
 
 
 
