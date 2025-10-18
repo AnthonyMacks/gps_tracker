@@ -1510,6 +1510,24 @@
 
         console.log(`Drew ${eastingsDrawn.size} eastings and ${northingsDrawn.size} northings (${allLines.length} total lines)`);
 
+        // Adaptive label positioning based on zoom level
+        // Higher zoom = labels need to be further from edges to avoid UI elements and stay visible
+        let eastingLabelOffset, northingLabelOffset;
+    
+        if (zoom >= 18) {
+          // Very high zoom - place labels well into the visible area
+          eastingLabelOffset = 0.40;  // 40% from top
+          northingLabelOffset = 0.35; // 35% from left
+        } else if (zoom >= 16) {
+          // High zoom - moderate offset to avoid banner and stay visible
+          eastingLabelOffset = 0.30;  // 30% from top
+          northingLabelOffset = 0.25; // 25% from left
+        } else {
+          // Normal zoom - smaller offset is fine
+          eastingLabelOffset = 0.22;  // 22% from top
+          northingLabelOffset = 0.18; // 18% from left
+        }
+          
         // Draw labels for all drawn grid lines
         eastingsDrawn.forEach(e => {
           try {
@@ -3667,6 +3685,7 @@
   </script>
 </body>
 </html>
+
 
 
 
