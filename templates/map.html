@@ -2340,10 +2340,10 @@
         // Function to calculate icon size based on zoom level
         function getCUOIconSize(zoom) {
           // Base size at zoom 15
-          const baseSize = 40;
+          const baseSize = 20;
           const baseZoom = 15;
           // Scale factor: 1.3x size increase per zoom level
-          const scaleFactor = 1.3;
+          const scaleFactor = 1.01;
           const size = baseSize * Math.pow(scaleFactor, zoom - baseZoom);
           return Math.max(20, Math.min(size, 200)); // Clamp between 20 and 200 pixels
         }
@@ -2356,7 +2356,8 @@
           iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
           iconSize: [iconSize, iconSize],
           iconAnchor: [iconSize/2, iconSize/2],
-          popupAnchor: [0, -iconSize/2]
+          popupAnchor: [0, -iconSize/2],
+          opacity: 0.5
         });
     
         const cuoMarker = L.marker([lat, lon], {
@@ -3846,6 +3847,7 @@
   </script>
 </body>
 </html>
+
 
 
 
