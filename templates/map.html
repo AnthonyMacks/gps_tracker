@@ -1,18 +1,888 @@
 <!DOCTYPE html>
-<html>
-<head>
-<!-- [Previous head content remains exactly the same until the closing </style> tag] -->
-<!-- I'll add the new CSS right before the existing Company Selection Modal styles -->
 
+<html>
+<head><style>
+.lower-right-image {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    max-width: 120px;
+    z-index: 1000;
+}
+
+</style>
+<title>Live GPS Tracker v1.9 - NSW Topo + World Imagery</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
 <style>
-    /* [All your existing styles remain the same] */
-    
-    /* Coordinate Plotter Control */
-    #coord-plotter-btn {
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100%; width: 100%; z-index: 0; }
+
+    #info {
       position: absolute;
-      bottom: 180px;
+      top: 10px;
+      right: 10px;
+      max-width: 340px;
+      max-height: 70%;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #2C3E50;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+      cursor: move;
+      user-select: none;
+    }
+
+    #info2 {
+      position: absolute;
+      top: 10px;
+      right: 370px;
+      max-width: 340px;
+      max-height: 70%;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.85);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #2C3E50;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+      cursor: move;
+      user-select: none;
+    }
+
+    #info.dragging, #info2.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
+    }
+
+    #toggle-button, #toggle-button2 {
+      background-color: #0078D7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    
+    #toggle-button:hover, #toggle-button2:hover {
+      background-color: #005A9E;
+    }
+
+    #opacity-control {
+      position: absolute;
+      bottom: 60px;
       left: 10px;
-      background: rgba(46, 204, 113, 0.9);
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 12px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+      cursor: move;
+      user-select: none;
+      transition: padding 0.3s ease, opacity 0.3s ease;
+    }
+
+    #opacity-control.collapsed {
+      padding: 5px 10px;
+    }
+
+    #opacity-control.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
+    }
+
+    #opacity-control label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    #opacity-control input[type="range"] {
+      width: 150px;
+      margin-right: 10px;
+    }
+
+    #grid-control {
+      position: absolute;
+      bottom: 120px;
+      left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 12px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      z-index: 1001;
+      cursor: move;
+      user-select: none;
+      transition: padding 0.3s ease, opacity 0.3s ease;
+    }
+
+    #grid-control.collapsed {
+      padding: 5px 10px;
+    }
+
+    #grid-control.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
+    }
+
+    #grid-control .grid-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 200px;
+      overflow: hidden;
+    }
+
+    #grid-control.collapsed .grid-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+    }
+
+    #grid-control .grid-header {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #grid-control.collapsed .grid-header {
+      margin-bottom: 0;
+    }
+
+    #opacity-control .opacity-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 100px;
+      overflow: hidden;
+    }
+
+    #opacity-control.collapsed .opacity-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+    }
+
+    #opacity-control .opacity-header {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #opacity-control.collapsed .opacity-header {
+      margin-bottom: 0;
+    }
+    
+    #grid-control label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #grid-control input[type="checkbox"] {
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    .grid-label-marker {
+      background: transparent !important;
+      border: none !important;
+    }
+
+    .row-active { background-color: #D5F5E3; }
+    .row-warm   { background-color: #FCF3CF; }
+    .row-stale  { background-color: #FADBD8; }
+
+    .row-low-sats {
+      background-color: #F5B7B1 !important;
+      animation: blink 1s step-start infinite;
+    }
+
+    @keyframes blink {
+      50% { background-color: #FADBD8; }
+    }
+
+    .device-label {
+      background: transparent;
+      color: black;
+      font-weight: bold;
+      text-align: center;
+      line-height: 24px;
+      font-size: 11px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 12px;
+      color: #666;
+      font-family: sans-serif;
+      background-color: rgba(255,255,255,0.6);
+      padding: 4px 8px;
+      border-radius: 6px;
+      z-index: 1001;
+    }
+
+    #export-control {
+      position: absolute;
+      bottom: 20px;
+      right: 150px;
+      z-index: 1001;
+    }
+
+    .export-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .export-btn {
+      background-color: #27AE60;
+      color: white;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-family: sans-serif;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+    }
+
+    .export-btn:hover {
+      background-color: #229954;
+    }
+
+    .export-dropdown-content {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 5px;
+      background-color: rgba(255,255,255,0.98);
+      min-width: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      border-radius: 6px;
+      z-index: 1002;
+    }
+
+    .export-dropdown:hover .export-dropdown-content {
+      display: block;
+    }
+
+    .export-option {
+      color: #333;
+      padding: 10px 16px;
+      text-decoration: none;
+      display: block;
+      font-family: sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s ease;
+    }
+
+    .export-option:last-child {
+      border-bottom: none;
+    }
+
+    .export-option:hover {
+      background-color: #E8F5E9;
+    }
+
+    .export-option.all-devices {
+      background-color: #F0F8FF;
+      font-weight: bold;
+      border-bottom: 2px solid #3498DB;
+    }
+
+    .export-option.all-devices:hover {
+      background-color: #D6EAF8;
+    }
+
+    .export-option.clear-data {
+      background-color: #FFEBEE;
+      font-weight: bold;
+      border-top: 2px solid #E74C3C;
+      color: #C0392B;
+    }
+
+    .export-option.clear-data:hover {
+      background-color: #FFCDD2;
+    }
+
+    .export-section-header {
+      padding: 8px 16px;
+      background-color: #ECF0F1;
+      font-weight: bold;
+      font-size: 11px;
+      color: #7F8C8D;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes pulse {
+      0%   { background-color: #D5F5E3; }
+      50%  { background-color: #ABEBC6; }
+      100% { background-color: #D5F5E3; }
+    }
+
+    .row-active {
+      animation: pulse 2s infinite;
+    }
+
+    #debug {
+      position: absolute;
+      bottom: 160px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      max-width: 300px;
+      z-index: 1001;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      height: auto;
+      min-height: 20px;
+    }
+
+    #debug.collapsed {
+      height: 25px;
+      padding: 5px 10px;
+      overflow: hidden;
+    }
+
+    #debug .debug-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 200px;
+    }
+
+    #debug.collapsed .debug-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: -5px;
+    }
+
+    #debug .debug-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+
+    #debug.collapsed .debug-title {
+      margin-bottom: 0;
+      font-size: 10px;
+    }
+
+    .animated-polyline {
+      stroke-dasharray: 1, 14;
+      stroke-linecap: round;
+      animation: moveDots 4s linear infinite;
+    }
+
+    @keyframes moveDots {
+      0% {
+        stroke-dashoffset: 15;
+      }
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      color: #333;
+      position: sticky;
+      top: 0;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    tr:hover {
+      background-color: #e6f3ff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .row-number {
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      #info {
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info2 {
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info strong, #info2 strong {
+        font-size: 12px;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px 2px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      #opacity-control {
+        bottom: 60px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
+      #opacity-control.collapsed {
+        padding: 4px 6px;
+      }
+
+      #grid-control {
+        bottom: 110px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px;
+      }
+
+      #grid-control.collapsed {
+        padding: 4px 6px;
+      }
+
+      #debug {
+        bottom: 140px;
+        left: 10px;
+        font-size: 9px;
+        padding: 6px;
+        max-width: 200px;
+      }
+
+      #debug.collapsed {
+        height: 22px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
+
+      footer {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+        padding: 2px 4px;
+      }
+
+      #export-control {
+        bottom: 45px;
+        right: 10px;
+      }
+
+      .export-btn {
+        padding: 8px 12px;
+        font-size: 11px;
+      }
+
+      .export-dropdown-content {
+        min-width: 180px;
+        max-height: 300px;
+      }
+
+      .export-option {
+        padding: 8px 12px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 480px) and (orientation: portrait) {
+      #info {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+
+      #info2 {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+
+      table {
+        font-size: 9px;
+      }
+
+      th, td {
+        padding: 3px 1px;
+      }
+
+      #toggle-button, #toggle-button2 {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+
+      #opacity-control {
+        bottom: 60px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
+      }
+
+      #grid-control {
+        bottom: 100px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px;
+      }
+
+      #grid-control button {
+        font-size: 7px;
+        padding: 1px 3px;
+      }
+
+      #debug {
+        bottom: 130px;
+        right: 10px;
+        left: auto;
+        font-size: 8px;
+        padding: 4px;
+        max-width: 150px;
+      }
+
+      #debug.collapsed {
+        height: 18px;
+        padding: 3px 4px;
+      }
+
+      #debug .debug-title {
+        font-size: 8px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 7px;
+      }
+
+      footer {
+        font-size: 9px;
+      }
+
+      #export-control {
+        bottom: 40px;
+        right: 10px;
+      }
+
+      .export-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+
+      .export-dropdown-content {
+        min-width: 160px;
+        max-height: 250px;
+      }
+
+      .export-option {
+        padding: 7px 10px;
+        font-size: 10px;
+      }
+
+      .lower-right-image {
+        max-width: 80px;
+      }
+
+      .playback-speed-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+        min-width: 45px;
+      }
+        
+    }
+
+    @media (max-width: 768px) and (orientation: landscape) {
+      #info {
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+
+      #info2 {
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+
+      #opacity-control {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+      }
+
+      #grid-control {
+        bottom: 50px;
+        left: 10px;
+        font-size: 10px;
+      }
+
+      #debug {
+        bottom: 140px;
+        right: 10px;
+        left: auto;
+        font-size: 9px;
+        max-width: 180px;
+      }
+
+      #debug.collapsed {
+        height: 20px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
+
+      #export-control {
+        bottom: 10px;
+        right: 150px;
+      }
+
+      .export-btn {
+        padding: 7px 11px;
+        font-size: 11px;
+      }
+    }
+
+    #playback-control {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85);
+      padding: 15px 20px;
+      border-radius: 10px;
+      font-family: sans-serif;
+      color: white;
+      z-index: 1001;
+      min-width: 500px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      display: none;
+      cursor: move;
+      user-select: none;
+    }
+
+    #playback-control.dragging {
+        opacity: 0.8;
+        cursor: grabbing;
+    }
+
+    #playback-control.active {
+      display: block;
+    }
+
+    .playback-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding-bottom: 8px;
+    }
+
+    .playback-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #3498DB;
+    }
+
+    .playback-close {
+      background: #E74C3C;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .playback-close:hover {
+      background: #C0392B;
+    }
+
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .playback-btn {
+      background: #3498DB;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .playback-btn:hover {
+      background: #2980B9;
+    }
+
+    .playback-btn:disabled {
+      background: #7F8C8D;
+      cursor: not-allowed;
+    }
+
+    .playback-btn.playing {
+      background: #E67E22;
+    }
+
+    .playback-speed {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: bold;
+      transition: all 0.2s;
+      min-width: 50px;
+    }
+
+    
+    .playback-speed-btn:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .playback-speed-btn.active-speed {
+      background: #3498DB;
+      border-color: #3498DB;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+    }
+
+    .playback-speed-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .playback-speed option {
+      background: #2C3E50;
+      color: white;
+      padding: 5px;
+    }
+    
+    .playback-time {
+      font-size: 11px;
+      color: #ECF0F1;
+      font-family: monospace;
+      min-width: 200px;
+    }
+
+    .playback-slider-container {
+      margin-top: 5px;
+    }
+
+    .playback-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.2);
+      outline: none;
+      -webkit-appearance: none;
+    } 
+
+    .playback-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3498DB;
+      cursor: pointer;
+    }
+
+    .playback-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3498DB;
+      cursor: pointer;
+      border: none;
+    }
+
+    #playback-toggle {
+      position: absolute;
+      bottom: 230px;
+      left: 10px;
+      background: rgba(52, 152, 219, 0.9);
       color: white;
       padding: 10px 15px;
       border: none;
@@ -24,12 +894,33 @@
       z-index: 1001;
     }
 
-    #coord-plotter-btn:hover {
-      background: rgba(39, 174, 96, 0.9);
+    #playback-toggle:hover {
+      background: rgba(41, 128, 185, 0.9);
     }
 
-    /* Coordinate Plotter Modal */
-    #coord-plotter-modal {
+    #playback-toggle.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
+    }
+
+    @media (max-width: 768px) {
+       #playback-control {
+        min-width: 90%;
+        left: 5%;
+        transform: none;
+        bottom: 60px;
+      }
+
+      #playback-toggle {
+        bottom: 150px;
+        left: 10px;
+        font-size: 10px;
+        padding: 8px 12px;
+      }
+    }
+
+    /* Company Selection Modal */
+    #company-modal {
       position: fixed;
       top: 0;
       left: 0;
@@ -42,547 +933,2990 @@
       z-index: 9999;
     }
 
-    #coord-plotter-modal.hidden {
+    #company-modal.hidden {
       display: none;
     }
 
-    .coord-plotter-content {
+    .company-modal-content {
       background: white;
-      padding: 30px;
+      padding: 40px;
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       max-width: 500px;
       width: 90%;
-      font-family: sans-serif;
+      text-align: center;
     }
 
-    .coord-plotter-content h2 {
+    .company-modal-content h2 {
       margin: 0 0 10px 0;
       color: #2C3E50;
-      font-size: 22px;
-    }
-
-    .coord-plotter-content p {
-      margin: 0 0 20px 0;
-      color: #7F8C8D;
-      font-size: 13px;
-    }
-
-    .coord-input-group {
-      margin-bottom: 15px;
-    }
-
-    .coord-input-group label {
-      display: block;
-      margin-bottom: 5px;
-      color: #2C3E50;
-      font-weight: bold;
-      font-size: 13px;
-    }
-
-    .coord-input-group input,
-    .coord-input-group select {
-      width: 100%;
-      padding: 10px;
-      font-size: 14px;
-      border: 2px solid #BDC3C7;
-      border-radius: 6px;
+      font-size: 24px;
       font-family: sans-serif;
-      box-sizing: border-box;
     }
 
-    .coord-input-group input:focus,
-    .coord-input-group select:focus {
-      outline: none;
-      border-color: #27AE60;
+    .company-modal-content p {
+      margin: 0 0 30px 0;
+      color: #7F8C8D;
+      font-size: 14px;
+      font-family: sans-serif;
     }
 
-    .coord-format-toggle {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .coord-format-toggle button {
-      flex: 1;
-      padding: 8px;
-      border: 2px solid #BDC3C7;
-      background: white;
+    .company-select {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      border: 2px solid #3498DB;
       border-radius: 6px;
+      background: white;
+      color: #2C3E50;
+      font-family: sans-serif;
+      margin-bottom: 20px;
       cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
-      transition: all 0.2s;
     }
 
-    .coord-format-toggle button.active {
+    .company-select:focus {
+      outline: none;
+      border-color: #2980B9;
+      box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+    }
+
+    .company-confirm-btn {
       background: #27AE60;
       color: white;
-      border-color: #27AE60;
-    }
-
-    .coord-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .coord-buttons button {
-      flex: 1;
-      padding: 12px;
       border: none;
+      padding: 15px 40px;
+      font-size: 16px;
+      font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
+      font-family: sans-serif;
       transition: background 0.3s;
     }
 
-    .coord-plot-btn {
-      background: #27AE60;
-      color: white;
-    }
-
-    .coord-plot-btn:hover {
+    .company-confirm-btn:hover {
       background: #229954;
     }
 
-    .coord-cancel-btn {
-      background: #E74C3C;
-      color: white;
+    .company-confirm-btn:disabled {
+      background: #BDC3C7;
+      cursor: not-allowed;
     }
 
-    .coord-cancel-btn:hover {
-      background: #C0392B;
-    }
-
-    .coord-example {
-      background: #ECF0F1;
-      padding: 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: #7F8C8D;
-      margin-top: 5px;
-    }
-
-    .coord-markers-list {
-      position: absolute;
-      bottom: 220px;
-      left: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 10px;
-      border-radius: 6px;
-      font-family: sans-serif;
-      font-size: 12px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 1001;
-      max-width: 250px;
-      max-height: 200px;
-      overflow-y: auto;
+    /* Scrolling Banner */
+    #company-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(135deg, #2C3E50 0%, #3498DB 100%);
+      z-index: 2000;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       display: none;
     }
 
-    .coord-markers-list.active {
+    #company-banner.active {
       display: block;
     }
 
-    .coord-markers-list h4 {
-      margin: 0 0 8px 0;
-      color: #2C3E50;
-      font-size: 13px;
-      border-bottom: 1px solid #BDC3C7;
-      padding-bottom: 5px;
-    }
-
-    .coord-marker-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 5px;
-      margin-bottom: 5px;
-      background: #ECF0F1;
-      border-radius: 4px;
-    }
-
-    .coord-marker-name {
+    .banner-content {
+      position: absolute;
+      white-space: nowrap;
+      line-height: 50px;
+      font-size: 24px;
       font-weight: bold;
-      color: #2C3E50;
-      flex: 1;
-      cursor: pointer;
-    }
-
-    .coord-marker-remove {
-      background: #E74C3C;
       color: white;
-      border: none;
-      padding: 2px 6px;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 10px;
+      font-family: sans-serif;
+      animation: scroll-left 15s linear infinite;
     }
 
-    .coord-marker-remove:hover {
-      background: #C0392B;
+    @keyframes scroll-left {
+      0% {
+        left: 100%;
+      }
+      100% {
+        left: -100%;
+      }
+    }
+
+    /* Adjust map to account for banner */
+    body.has-banner #map {
+      height: calc(100% - 50px);
+      margin-top: 50px;
+    }
+
+    body.has-banner #info,
+    body.has-banner #info2 {
+      top: 60px;
     }
 
     @media (max-width: 768px) {
-      #coord-plotter-btn {
-        bottom: 140px;
-        left: 10px;
-        font-size: 10px;
-        padding: 8px 12px;
+      #company-banner {
+        height: 40px;
       }
-
-      .coord-markers-list {
-        bottom: 180px;
-        max-width: 200px;
-      }
-
-      .coord-plotter-content {
-        padding: 20px;
-      }
-
-      .coord-plotter-content h2 {
+  
+      .banner-content {
+        line-height: 40px;
         font-size: 18px;
+        animation: scroll-left 15s linear infinite;
+      }
+  
+      body.has-banner #map {
+        height: calc(100% - 40px);
+        margin-top: 40px;
+      }
+  
+      body.has-banner #info,
+      body.has-banner #info2 {
+        top: 50px;
       }
     }
-</style>
+    
+  </style>
 </head>
 <body>
-<!-- [All your existing body content remains the same] -->
-<!-- Add these new elements right before the closing </body> tag, after the company modal -->
-
-<!-- Coordinate Plotter Button -->
-<button id="coord-plotter-btn">📍 Plot Coordinates</button>
-
-<!-- Coordinate Markers List -->
-<div id="coord-markers-list" class="coord-markers-list">
-  <h4>Plotted Coordinates</h4>
-  <div id="coord-markers-container"></div>
-</div>
-
-<!-- Coordinate Plotter Modal -->
-<div id="coord-plotter-modal" class="hidden">
-  <div class="coord-plotter-content">
-    <h2>📍 Plot Coordinates</h2>
-    <p>Enter coordinates to plot on the map</p>
-
-    <div class="coord-format-toggle">
-      <button id="format-latlon" class="active" onclick="switchCoordFormat('latlon')">Lat/Lon</button>
-      <button id="format-gridref" onclick="switchCoordFormat('gridref')">Grid Reference</button>
-    </div>
-
-    <div class="coord-input-group">
-      <label for="coord-name">Label (optional)</label>
-      <input type="text" id="coord-name" placeholder="e.g., Rally Point Alpha">
-    </div>
-
-    <div id="latlon-inputs">
-      <div class="coord-input-group">
-        <label for="coord-lat">Latitude</label>
-        <input type="text" id="coord-lat" placeholder="-33.8411">
-        <div class="coord-example">Example: -33.8411 or 33°50'28"S</div>
-      </div>
-
-      <div class="coord-input-group">
-        <label for="coord-lon">Longitude</label>
-        <input type="text" id="coord-lon" placeholder="151.2058">
-        <div class="coord-example">Example: 151.2058 or 151°12'21"E</div>
-      </div>
-    </div>
-
-    <div id="gridref-inputs" style="display: none;">
-      <div class="coord-input-group">
-        <label for="coord-zone">UTM Zone</label>
-        <select id="coord-zone">
-          <option value="55">Zone 55 (NSW Central)</option>
-          <option value="56" selected>Zone 56 (Sydney)</option>
-          <option value="57">Zone 57 (NSW East)</option>
-        </select>
-      </div>
-
-      <div class="coord-input-group">
-        <label for="coord-gridref">Grid Reference</label>
-        <input type="text" id="coord-gridref" placeholder="3388 5415">
-        <div class="coord-example">Example: 3388 5415 (8-digit) or 338 541 (6-digit)</div>
-      </div>
-    </div>
-
-    <div class="coord-buttons">
-      <button class="coord-cancel-btn" onclick="closeCoordPlotter()">Cancel</button>
-      <button class="coord-plot-btn" onclick="plotCoordinate()">Plot on Map</button>
-    </div>
+<!-- Company Selection Modal -->
+<div id="company-modal">
+  <div class="company-modal-content">
+    <h2>
+        <img src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png" 
+           alt="SCU Crest" 
+           style="height: 40px; vertical-align: middle; margin-right: 10px;">
+        Which COY is on the NAVEX?
+    </h2>
+    <p>Choose the company for this tracking session</p>
+    
+    <select id="company-select" class="company-select">
+      <option value="" disabled selected>-- Select Company --</option>
+      <option value="A COY">A COY</option>
+      <option value="B COY">B COY</option>
+      <option value="C COY">C COY</option>
+      <option value="D COY">D COY</option>
+      <option value="E COY">E COY</option>
+      <option value="S COY">S COY</option>
+    </select>
+    
+    <button id="company-confirm" class="company-confirm-btn" disabled>Confirm Selection</button>
   </div>
 </div>
 
+<!-- Scrolling Banner (hidden initially) -->
+<div id="company-banner">
+  <div class="banner-content" id="banner-text"></div>
+</div>
+
+<img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
+<div id="map"></div>
+<div id="info">
+<strong>📡 GPS MacksTrack Data (I-XII) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
+<button id="toggle-button" onclick="toggleTable()">Hide Table</button>
+<table id="device-table">
+<thead>
+<tr>
+<th>ID</th>
+<th>Grid Ref</th>
+<th>Count</th>
+<th>Sats</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div id="info2">
+<strong>📡 GPS MacksTrack Data (XIII-XXX) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
+<button id="toggle-button2" onclick="toggleTable2()">Hide Table</button>
+<table id="device-table2">
+<thead>
+<tr>
+<th>ID</th>
+<th>Grid Ref</th>
+<th>Count</th>
+<th>Sats</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+<div id="opacity-control">
+  <div class="opacity-header" onclick="toggleOpacityPanel()">
+    <span>Base Layer Opacity</span>
+    <span style="font-size: 14px;">☰</span>
+  </div>
+  <div class="opacity-content">
+    <label for="opacity-slider" style="display: block; margin-bottom: 5px;">Opacity:</label>
+    <input id="opacity-slider" max="1" min="0" step="0.05" type="range" value="1"/>
+    <span id="opacity-value">100%</span>
+  </div>
+</div>
+<div id="grid-control">
+  <div class="grid-header" onclick="toggleGridPanel()">
+    <span>Grid Options</span>
+    <span style="font-size: 14px;">☰</span>
+  </div>
+  <div class="grid-content">
+    <label>
+      <input type="checkbox" id="grid-toggle" checked/>
+      Show 1km Grid Lines
+    </label>
+    <br/>
+    <label style="margin-top: 5px;">
+      <input type="checkbox" id="grid-100m-toggle"/>
+      Show 100m Grid Lines
+    </label>
+    <br/>
+    <label style="margin-top: 5px;">
+      <input type="checkbox" id="grid-10m-toggle"/>
+      Show 10m Grid Lines
+    </label>
+  </div>
+</div>
+<div id="debug" class="collapsed">
+<div class="debug-title">Debug Info</div>
+<div class="debug-content">
+    Connected: <span id="socket-status">❌</span><br/>
+    Total Devices: <span id="device-count">0</span><br/>
+    Total Points: <span id="point-count">0</span><br/>
+    Rejected Points: <span id="rejected-count">0</span><br/>
+    Last Update: <span id="last-update">never</span><br/>
+    Current Zoom: <span id="current-zoom">13</span><br/>
+    Stored Points: <span id="stored-count">0</span>
+    <button onclick="if(confirm('🔄 Reset all storage and reload page?')) { localStorage.clear(); location.reload(); }" 
+            style="background: #E74C3C; color: white; padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; margin-top: 5px; width: 100%;">
+      🔄 Reset Storage
+    </button>
+
+</div>
+</div>
+<footer>
+    🚀 Last Render Build: <span id="build-time">loading...</span>
+</footer>
+
+<button id="playback-toggle">▶️ Playback Mode</button>
+
+<div id="playback-control">
+  <div class="playback-header">
+    <span class="playback-title">📹 Trail Playback <span style="margin-left: 10px; cursor: move; font-size: 16px; opacity: 0.6;">☰</span></span>
+    <button class="playback-close" onclick="closePlayback()">✕ Close</button>
+  </div>
+  
+  <div class="playback-controls">
+    <button class="playback-btn" id="play-btn" onclick="togglePlayback()">▶️ Play</button>
+    <button class="playback-btn" onclick="restartPlayback()">⏮️ Restart</button>
+    
+    <div style="display: flex; gap: 5px;">
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(0.25)" id="speed-025">0.25x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(0.5)" id="speed-05">0.5x</button>
+      <button class="playback-speed-btn active-speed" onclick="setPlaybackSpeed(1)" id="speed-1">1x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(2)" id="speed-2">2x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(5)" id="speed-5">5x</button>
+      <button class="playback-speed-btn" onclick="setPlaybackSpeed(10)" id="speed-10">10x</button>  
+    </div>
+    
+    <span class="playback-time" id="playback-time">00:00:00 / 00:00:00</span>
+  </div>
+  
+  <div class="playback-slider-container">
+    <input type="range" class="playback-slider" id="playback-slider" 
+           min="0" max="100" value="0" oninput="seekPlayback(this.value)">
+  </div>
+</div>
+    
+<div id="export-control">
+  <div class="export-dropdown">
+    <button class="export-btn">📥 Export KML</button>
+    <div class="export-dropdown-content">
+      <div class="export-option all-devices" onclick="exportKML('all')">📦 Export All Devices</div>
+      <div class="export-section-header">Individual Devices</div>
+      <div class="export-option" onclick="exportKML('I')">PLT 1-1</div>
+      <div class="export-option" onclick="exportKML('II')">PLT 1-2</div>
+      <div class="export-option" onclick="exportKML('III')">PLT 1-3</div>
+      <div class="export-option" onclick="exportKML('IV')">PLT 2-1</div>
+      <div class="export-option" onclick="exportKML('V')">PLT 2-2</div>
+      <div class="export-option" onclick="exportKML('VI')">PLT 2-3</div>
+      <div class="export-option" onclick="exportKML('VII')">PLT 3-1</div>
+      <div class="export-option" onclick="exportKML('VIII')">PLT 3-2</div>
+      <div class="export-option" onclick="exportKML('IX')">PLT 3-3</div>
+      <div class="export-option" onclick="exportKML('X')">PLT 4-1</div>
+      <div class="export-option" onclick="exportKML('XI')">PLT 4-2</div>
+      <div class="export-option" onclick="exportKML('XII')">PLT 4-3</div>
+      <div class="export-option" onclick="exportKML('XIII')">E COY 1-1</div>
+      <div class="export-option" onclick="exportKML('XIV')">E COY 1-2</div>
+      <div class="export-option" onclick="exportKML('XV')">E COY 1-3</div>
+      <div class="export-option" onclick="exportKML('XVI')">E COY 2-1</div>
+      <div class="export-option" onclick="exportKML('XVII')">E COY 2-2</div>
+      <div class="export-option" onclick="exportKML('XVIII')">E COY 2-3</div>
+      <div class="export-option" onclick="exportKML('XIX')">E COY 3-1</div>
+      <div class="export-option" onclick="exportKML('XX')">E COY 3-2</div>
+      <div class="export-option" onclick="exportKML('XXI')">E COY 3-3</div>
+      <div class="export-option" onclick="exportKML('XXII')">E COY 4-1</div>
+      <div class="export-option" onclick="exportKML('XXIII')">E COY 4-2</div>
+      <div class="export-option" onclick="exportKML('XXIV')">E COY 4-3</div>
+      <div class="export-option" onclick="exportKML('XXV')">IND REC PLT-1</div>
+      <div class="export-option" onclick="exportKML('XXVI')">IND REC PLT-2</div>
+      <div class="export-option" onclick="exportKML('XXVII')">IND REC PLT-3</div>
+      <div class="export-option" onclick="exportKML('XXVIII')">SPARE1</div>
+      <div class="export-option" onclick="exportKML('XXIX')">SPARE2</div>
+      <div class="export-option" onclick="exportKML('XXX')">SPARE3</div>
+      <div class="export-section-header">Data Management</div>
+      <div class="export-option clear-data" onclick="clearStoredData()">🗑️ Clear All Stored Data</div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
 <script>
-// [All your existing JavaScript remains the same]
-// Add the following new functions at the end, before the closing </script> tag
+    proj4.defs("EPSG:7854", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:7855", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:7856", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:28354", "+proj=utm +zone=54 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:28355", "+proj=utm +zone=55 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+    proj4.defs("EPSG:28356", "+proj=utm +zone=56 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 
-// ==================== COORDINATE PLOTTER ====================
+    const e100kLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const n100kLetters = "ABCDEFGHJKLMNPQRSTUV";
+    let useGDA94 = true;
 
-let plottedCoordinates = [];
-let coordMarkerCounter = 1;
-
-function openCoordPlotter() {
-  document.getElementById('coord-plotter-modal').classList.remove('hidden');
-}
-
-function closeCoordPlotter() {
-  document.getElementById('coord-plotter-modal').classList.add('hidden');
-  // Clear inputs
-  document.getElementById('coord-name').value = '';
-  document.getElementById('coord-lat').value = '';
-  document.getElementById('coord-lon').value = '';
-  document.getElementById('coord-gridref').value = '';
-}
-
-function switchCoordFormat(format) {
-  const latlonBtn = document.getElementById('format-latlon');
-  const gridrefBtn = document.getElementById('format-gridref');
-  const latlonInputs = document.getElementById('latlon-inputs');
-  const gridrefInputs = document.getElementById('gridref-inputs');
-
-  if (format === 'latlon') {
-    latlonBtn.classList.add('active');
-    gridrefBtn.classList.remove('active');
-    latlonInputs.style.display = 'block';
-    gridrefInputs.style.display = 'none';
-  } else {
-    gridrefBtn.classList.add('active');
-    latlonBtn.classList.remove('active');
-    gridrefInputs.style.display = 'block';
-    latlonInputs.style.display = 'none';
-  }
-}
-
-function parseDMS(dmsString) {
-  // Parse DMS format like "33°50'28\"S" or "151°12'21\"E"
-  const regex = /(\d+)[°\s]+(\d+)['\s]+(\d+(?:\.\d+)?)["\s]*([NSEW]?)/i;
-  const match = dmsString.match(regex);
-  
-  if (!match) return null;
-  
-  const degrees = parseInt(match[1]);
-  const minutes = parseInt(match[2]);
-  const seconds = parseFloat(match[3]);
-  const direction = match[4].toUpperCase();
-  
-  let decimal = degrees + minutes/60 + seconds/3600;
-  
-  if (direction === 'S' || direction === 'W') {
-    decimal = -decimal;
-  }
-  
-  return decimal;
-}
-
-function parseCoordinate(value) {
-  // Try decimal first
-  const decimal = parseFloat(value);
-  if (!isNaN(decimal)) {
-    return decimal;
-  }
-  
-  // Try DMS format
-  return parseDMS(value);
-}
-
-function plotCoordinate() {
-  const formatLatlon = document.getElementById('format-latlon').classList.contains('active');
-  let lat, lon, label;
-  
-  label = document.getElementById('coord-name').value.trim() || `Point ${coordMarkerCounter}`;
-  
-  if (formatLatlon) {
-    // Parse lat/lon
-    const latInput = document.getElementById('coord-lat').value.trim();
-    const lonInput = document.getElementById('coord-lon').value.trim();
-    
-    if (!latInput || !lonInput) {
-      alert('❌ Please enter both latitude and longitude');
-      return;
+    function getUTMZone(lon) {
+      if (lon >= 144 && lon < 150) return 55;
+      if (lon >= 150 && lon < 156) return 56;
+      if (lon >= 156 && lon < 162) return 57;
+      return 56;
     }
     
-    lat = parseCoordinate(latInput);
-    lon = parseCoordinate(lonInput);
-    
-    if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
-      alert('❌ Invalid coordinates. Use decimal (-33.8411) or DMS (33°50\'28"S) format');
-      return;
+    function getEPSG(zone) {
+      if (useGDA94) {
+        return 28354 + (zone - 54);
+      } else {
+        return 7854 + (zone - 54);
+      }
     }
-    
-    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-      alert('❌ Coordinates out of range. Lat: -90 to 90, Lon: -180 to 180');
-      return;
-    }
-    
-  } else {
-    // Parse grid reference
-    const zone = parseInt(document.getElementById('coord-zone').value);
-    const gridRef = document.getElementById('coord-gridref').value.trim();
-    
-    if (!gridRef) {
-      alert('❌ Please enter a grid reference');
-      return;
-    }
-    
-    const result = gridReferenceToLatLon(gridRef, zone);
-    
-    if (!result) {
-      alert('❌ Invalid grid reference format. Use 8-digit (3388 5415) or 6-digit (338 541) format');
-      return;
-    }
-    
-    lat = result.lat;
-    lon = result.lon;
-  }
-  
-  // Create marker
-  const markerId = `coord-${coordMarkerCounter}`;
-  coordMarkerCounter++;
-  
-  const marker = L.marker([lat, lon], {
-    icon: L.icon({
-      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    }),
-    draggable: true
-  });
-  
-  const gridRef = latLonToGridReference(lat, lon);
-  
-  const popupContent = `
-    <strong>${label}</strong><br>
-    <hr style="margin: 5px 0;">
-    <strong>Grid Reference:</strong> ${gridRef}<br>
-    <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
-    <button onclick="removeCoordMarker('${markerId}')" style="margin-top: 8px; background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
-  `;
-  
-  marker.bindPopup(popupContent);
-  marker.addTo(map);
-  
-  // Update marker position on drag
-  marker.on('dragend', function(e) {
-    const newPos = e.target.getLatLng();
-    const newGridRef = latLonToGridReference(newPos.lat, newPos.lng);
-    
-    // Update the stored coordinates
-    const coord = plottedCoordinates.find(c => c.id === markerId);
-    if (coord) {
-      coord.lat = newPos.lat;
-      coord.lon = newPos.lng;
-    }
-    
-    // Update popup
-    const newPopupContent = `
-      <strong>${label}</strong><br>
-      <hr style="margin: 5px 0;">
-      <strong>Grid Reference:</strong> ${newGridRef}<br>
-      <strong>Lat/Lon:</strong> ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}<br>
-      <button onclick="removeCoordMarker('${markerId}')" style="margin-top: 8px; background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
-    `;
-    marker.setPopupContent(newPopupContent);
-  });
-  
-  // Store marker info
-  plottedCoordinates.push({
-    id: markerId,
-    label: label,
-    lat: lat,
-    lon: lon,
-    marker: marker
-  });
-  
-  // Update list
-  updateCoordMarkersList();
-  
-  // Pan to marker
-  map.setView([lat, lon], Math.max(map.getZoom(), 15));
-  
-  // Close modal
-  closeCoordPlotter();
-  
-  // Show marker and popup
-  marker.openPopup();
-  
-  console.log(`✅ Plotted coordinate: ${label} at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-}
 
-function removeCoordMarker(markerId) {
-  const coordIndex = plottedCoordinates.findIndex(c => c.id === markerId);
-  
-  if (coordIndex !== -1) {
-    const coord = plottedCoordinates[coordIndex];
-    
-    // Remove marker from map
-    map.removeLayer(coord.marker);
-    
-    // Remove from array
-    plottedCoordinates.splice(coordIndex, 1);
-    
-    // Update list
-    updateCoordMarkersList();
-    
-    console.log(`🗑️ Removed coordinate: ${coord.label}`);
-  }
-}
+    function get100kmGridSquare(easting, northing, zone) {
+      const e100k = Math.floor(easting / 100000);
+      const n100k = Math.floor(northing / 100000);
+      
+      let colStart;
+      if (zone === 54) colStart = 16;
+      else if (zone === 55) colStart = 0;
+      else if (zone === 56) colStart = 9;
+      else if (zone === 57) colStart = 18;
+      else colStart = 0;
+      
+      const eIndex = (colStart + (e100k - 1)) % 24;
+      const nIndex = (n100k) % 20;
+      const gridSquare = e100kLetters[eIndex] + n100kLetters[nIndex];
+      
+      return gridSquare;
+    }
 
-function updateCoordMarkersList() {
-  const container = document.getElementById('coord-markers-container');
-  const listDiv = document.getElementById('coord-markers-list');
+    // New function to convert grid reference to lat/lon
+    function gridReferenceToLatLon(gridRef, zone) {
+      // Parse grid reference "3388 5415" format
+      const parts = gridRef.trim().split(/\s+/);
+      if (parts.length !== 2) {
+        console.error('Invalid grid reference format');
+        return null;
+      }
   
-  if (plottedCoordinates.length === 0) {
-    listDiv.classList.remove('active');
-    container.innerHTML = '<p style="color: #7F8C8D; font-size: 11px; margin: 0;">No coordinates plotted</p>';
-    return;
-  }
+      const eastingDigits = parts[0];
+      const northingDigits = parts[1];
   
-  listDiv.classList.add('active');
+      // Convert to meters within 100km square
+      const eastingWithin100k = parseInt(eastingDigits) * 10; // 3388 -> 33880 meters
+      const northingWithin100k = parseInt(northingDigits) * 10; // 5415 -> 54150 meters
   
-  container.innerHTML = '';
+      // Get current map center to determine which 100km grid square we're in
+      const center = map.getCenter();
+      const centerUTM = proj4('EPSG:4326', `EPSG:${getEPSG(zone)}`, [center.lng, center.lat]);
   
-  plottedCoordinates.forEach(coord => {
-    const item = document.createElement('div');
-    item.className = 'coord-marker-item';
+      // Determine the 100km grid square base coordinates
+      const base100kE = Math.floor(centerUTM[0] / 100000) * 100000;
+      const base100kN = Math.floor(centerUTM[1] / 100000) * 100000;
+  
+      // Calculate full UTM coordinates
+      const fullEasting = base100kE + eastingWithin100k;
+      const fullNorthing = base100kN + northingWithin100k;
+  
+      console.log(`Grid ref ${gridRef} -> UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
+  
+      // Convert to lat/lon
+      const epsg = getEPSG(zone);
+      const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
+  
+      return { lat: latLon[1], lon: latLon[0] };
+    }
+
+    function latLonToGridReference(lat, lon) {
+      try {
+        const zone = getUTMZone(lon);
+        const epsg = getEPSG(zone);
+        
+        const utm = proj4('EPSG:4326', `EPSG:${epsg}`, [lon, lat]);
+        const easting = utm[0];
+        const northing = utm[1];
+
+        const gridSquare = get100kmGridSquare(easting, northing, zone);
+        
+        const eastingRemainder = Math.floor(easting % 100000);
+        const northingRemainder = Math.floor(northing % 100000);
+        
+        const eastingStr = eastingRemainder.toString().padStart(5, '0').substring(0, 4);
+        const northingStr = northingRemainder.toString().padStart(5, '0').substring(0, 4);
+        
+        return `${eastingStr} ${northingStr}`;
+      } catch (error) {
+        console.error('Grid conversion error:', error);
+        return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      }
+    }
+
+    let gridLinesVisible = true;
+    let grid100mVisible = false;
+    let grid10mVisible = false;
+    let gridLineLayer = null;
+    let grid100mLayer = null;
+    let grid10mLayer = null;
+    let gridLabelMarkers = [];
+
+    function clearGridLines() {
+      if (gridLineLayer) {
+        map.removeLayer(gridLineLayer);
+        gridLineLayer = null;
+      }
+      gridLabelMarkers.forEach(marker => map.removeLayer(marker));
+      gridLabelMarkers = [];
+    }
+
+    function clearGrid100m() {
+      if (grid100mLayer) {
+        map.removeLayer(grid100mLayer);
+        grid100mLayer = null;
+      }
+    }
+
+    function clearGrid10m() {
+      if (grid10mLayer) {
+        map.removeLayer(grid10mLayer);
+        grid10mLayer = null;
+      }
+    }
     
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'coord-marker-name';
-    nameSpan.textContent = coord.label;
-    nameSpan.title = `${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)}`;
-    nameSpan.onclick = () => {
-      map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 15));
-      coord.marker.openPopup();
+    <!-- Due to size limits, I'll provide the key updated function -->
+<!-- Insert this function to replace the existing drawGridLines() in your map.html -->
+
+
+    function drawGridLines() {
+      if (!gridLinesVisible) return;
+
+      clearGridLines();
+
+      try {
+        const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+
+        // Don't draw grids if zoom is outside range
+        if (zoom > 19) {
+          console.log('Zoom too high for grid display');
+          return;
+        }
+
+        if (zoom < 12) {
+          console.log('Zoom too low for grid display');
+          return;
+        }
+
+        const lat = center.lat;
+        const lon = center.lng;
+        const zone = getUTMZone(lon);
+        const epsg = getEPSG(zone);
+
+        // Get center point in UTM
+        const centerUTM = proj4('EPSG:4326', `EPSG:${epsg}`, [lon, lat]);
+        const centerE = centerUTM[0];
+        const centerN = centerUTM[1];
+
+        const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
+        const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
+
+        const minE = Math.floor(sw[0] / 1000) * 1000;
+        const maxE = Math.ceil(ne[0] / 1000) * 1000;
+        const minN = Math.floor(sw[1] / 1000) * 1000;
+        const maxN = Math.ceil(ne[1] / 1000) * 1000;
+
+        const gridInterval = zoom >= 15 ? 1000 : zoom >= 13 ? 2000 : 5000;
+
+        const allLines = [];
+        const labels = [];
+        const eastingsDrawn = new Set();
+        const northingsDrawn = new Set();
+
+        console.log(`Drawing grid for zone ${zone}, datum: GDA94, interval: ${gridInterval}m, zoom: ${zoom}`);
+        console.log(`Bounds: E[${minE}, ${maxE}], N[${minN}, ${maxN}]`);
+        console.log(`Center: E=${centerE.toFixed(0)}, N=${centerN.toFixed(0)}`);
+
+        // Helper function to safely create a grid line
+        function createGridLine(coordinates, isVertical) {
+          const line = [];
+          const step = 250; // meters between points on the line
+      
+          if (isVertical) {
+            // Vertical line (constant easting)
+            const e = coordinates;
+            for (let n = minN; n <= maxN; n += step) {
+              try {
+                const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+                line.push([ll[1], ll[0]]);
+              } catch (err) {
+                console.warn('Grid conversion error:', err);
+              }
+            }
+          } else {
+            // Horizontal line (constant northing)
+            const n = coordinates;
+            for (let e = minE; e <= maxE; e += step) {
+              try {
+                const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+                line.push([ll[1], ll[0]]);
+              } catch (err) {
+                console.warn('Grid conversion error:', err);
+              }
+            }
+          }
+      
+          return line;
+        }
+
+        // GUARANTEED CENTER LINES FIRST (drawn before regular grid)
+        // Find grid lines closest to center that are WITHIN visible bounds
+    
+        // Find nearest easting within bounds
+        let guaranteedE = Math.round(centerE / gridInterval) * gridInterval;
+    
+        // If nearest easting is outside bounds, find the closest one that's inside
+        if (guaranteedE < minE || guaranteedE > maxE) {
+          // Find all possible eastings within bounds
+          const possibleE = [];
+          for (let e = minE; e <= maxE; e += gridInterval) {
+            possibleE.push(e);
+          }
+      
+          // If no grid lines fit in bounds, use the center point directly
+          if (possibleE.length === 0) {
+            guaranteedE = Math.floor(centerE / gridInterval) * gridInterval;
+            if (guaranteedE < minE) guaranteedE += gridInterval;
+            if (guaranteedE > maxE) guaranteedE -= gridInterval;
+          } else {
+            // Find closest to center
+            guaranteedE = possibleE.reduce((prev, curr) => 
+              Math.abs(curr - centerE) < Math.abs(prev - centerE) ? curr : prev
+            );
+          }
+        }
+    
+        // Draw guaranteed easting line (vertical)
+        const centerEastingLine = createGridLine(guaranteedE, true);
+        if (centerEastingLine.length > 1) {
+          allLines.push(centerEastingLine);
+          eastingsDrawn.add(guaranteedE);
+          console.log(`✓ Drew guaranteed easting at ${guaranteedE}m (center was ${centerE.toFixed(0)})`);
+        } else {
+          console.warn(`⚠️ Failed to create easting line at ${guaranteedE}m`);
+        }
+
+        // Find nearest northing within bounds
+        let guaranteedN = Math.round(centerN / gridInterval) * gridInterval;
+    
+        // If nearest northing is outside bounds, find the closest one that's inside
+        if (guaranteedN < minN || guaranteedN > maxN) {
+          // Find all possible northings within bounds
+          const possibleN = [];
+          for (let n = minN; n <= maxN; n += gridInterval) {
+            possibleN.push(n);
+          }
+      
+          // If no grid lines fit in bounds, use the center point directly
+          if (possibleN.length === 0) {
+            guaranteedN = Math.floor(centerN / gridInterval) * gridInterval;
+            if (guaranteedN < minN) guaranteedN += gridInterval;
+            if (guaranteedN > maxN) guaranteedN -= gridInterval;
+          } else {
+            // Find closest to center
+            guaranteedN = possibleN.reduce((prev, curr) => 
+              Math.abs(curr - centerN) < Math.abs(prev - centerN) ? curr : prev
+            );
+          }
+        }
+    
+        // Draw guaranteed northing line (horizontal)
+        const centerNorthingLine = createGridLine(guaranteedN, false);
+        if (centerNorthingLine.length > 1) {
+          allLines.push(centerNorthingLine);
+          northingsDrawn.add(guaranteedN);
+          console.log(`✓ Drew guaranteed northing at ${guaranteedN}m (center was ${centerN.toFixed(0)})`);
+        } else {
+          console.warn(`⚠️ Failed to create northing line at ${guaranteedN}m`);
+        }
+
+        // Now draw additional grid lines at regular intervals (skipping center if already drawn)
+    
+        // Draw vertical lines (eastings)
+        for (let e = minE; e <= maxE; e += gridInterval) {
+          if (eastingsDrawn.has(e)) continue; // Skip if already drawn
+      
+          const line = createGridLine(e, true);
+          if (line.length > 1) {
+            allLines.push(line);
+            eastingsDrawn.add(e);
+          }
+        }
+
+        // Draw horizontal lines (northings)
+        for (let n = minN; n <= maxN; n += gridInterval) {
+          if (northingsDrawn.has(n)) continue; // Skip if already drawn
+      
+          const line = createGridLine(n, false);
+          if (line.length > 1) {
+            allLines.push(line);
+            northingsDrawn.add(n);
+          }
+        }
+
+        // Draw all lines on map
+        if (allLines.length > 0) {
+          gridLineLayer = L.polyline(allLines, {
+            color: '#ff0000',
+            weight: 2,
+            opacity: 0.7,
+            interactive: false
+          }).addTo(map);
+        }
+
+        console.log(`Drew ${eastingsDrawn.size} eastings and ${northingsDrawn.size} northings (${allLines.length} total lines)`);
+
+        // Adaptive label positioning based on zoom level
+        // Higher zoom = labels need to be further from edges to avoid UI elements and stay visible
+        let eastingLabelOffset, northingLabelOffset;
+    
+        if (zoom >= 18) {
+          // Very high zoom - place labels well into the visible area
+          eastingLabelOffset = 0.50;  // 50% from top (center of screen)
+          northingLabelOffset = 0.45; // 45% from left
+        } else if (zoom >= 17) {
+          // Zoom 17 - need significant offset to clear banner and be visible
+          eastingLabelOffset = 0.45;  // 45% from top
+          northingLabelOffset = 0.40; // 40% from left
+        } else if (zoom >= 16) {
+          // High zoom - moderate offset to avoid banner and stay visible
+          eastingLabelOffset = 0.35;  // 35% from top
+          northingLabelOffset = 0.30; // 30% from left
+        } else {
+          // Normal zoom - smaller offset is fine
+          eastingLabelOffset = 0.22;  // 22% from top
+          northingLabelOffset = 0.18; // 18% from left
+        }
+    
+        console.log(`Label offsets at zoom ${zoom}: easting=${eastingLabelOffset}, northing=${northingLabelOffset}`);
+
+        // Draw labels for all drawn grid lines
+        eastingsDrawn.forEach(e => {
+          try {
+            // Position label BELOW the top edge to avoid banner and UI
+            const labelN = maxN - (maxN - minN) * eastingLabelOffset;
+            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, labelN]);
+            const eastingLabel = Math.floor((e % 100000) / 1000).toString().padStart(2, '0');
+    
+            console.log(`Easting label "${eastingLabel}" at E=${e}, N=${labelN.toFixed(0)} -> lat=${ll[1].toFixed(6)}, lon=${ll[0].toFixed(6)}`);
+    
+            labels.push({
+              position: [ll[1], ll[0]],
+              text: eastingLabel,
+              color: '#ff0000'
+            });
+          } catch (err) {
+            console.warn('Easting label error:', err);
+          }
+        });
+
+        northingsDrawn.forEach(n => {
+          try {
+            // Position label further from left edge for better visibility
+            const labelE = minE + (maxE - minE) * northingLabelOffset;
+            const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [labelE, n]);
+            const northingLabel = Math.floor((n % 100000) / 1000).toString().padStart(2, '0');
+    
+            console.log(`Northing label "${northingLabel}" at E=${labelE.toFixed(0)}, N=${n} -> lat=${ll[1].toFixed(6)}, lon=${ll[0].toFixed(6)}`);
+    
+            labels.push({
+              position: [ll[1], ll[0]],
+              text: northingLabel,
+              color: '#0000ff'
+            });
+          } catch (err) {
+            console.warn('Northing label error:', err);
+          }
+        });
+
+        labels.forEach(label => {
+          const marker = L.marker(label.position, {
+            icon: L.divIcon({
+              className: 'grid-label-marker',
+              html: `<div style="background: rgba(255,255,255,0.95); padding: 3px 6px; font-size: 11px; font-weight: bold; border: 2px solid ${label.color}; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); white-space: nowrap; color: ${label.color};">${label.text}</div>`,
+              iconSize: [30, 22],
+              iconAnchor: [15, 11]
+            }),
+            interactive: false
+          }).addTo(map);
+  
+          gridLabelMarkers.push(marker);
+        });
+
+        // Draw sub-grids if enabled
+        if (grid100mVisible) {
+          draw100mGrid();
+        }
+
+        if (grid10mVisible) {
+          draw10mGrid();
+        }
+
+      } catch (error) {
+        console.error('Error drawing grid lines:', error);
+      }
+    }
+
+    function draw100mGrid() {
+      clearGrid100m();
+
+      try {
+        const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+
+        if (zoom < 13) {
+          console.log('Zoom too low for 100m grid display');
+          return;
+        }
+
+        const lat = center.lat;
+        const lon = center.lng;
+        const zone = getUTMZone(lon);
+        const epsg = getEPSG(zone);
+
+        const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
+        const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
+
+        const minE = Math.floor(sw[0] / 100) * 100;
+        const maxE = Math.ceil(ne[0] / 100) * 100;
+        const minN = Math.floor(sw[1] / 100) * 100;
+        const maxN = Math.ceil(ne[1] / 100) * 100;
+
+        const allLines = [];
+
+        for (let e = minE; e <= maxE; e += 100) {
+          if (e % 1000 === 0) continue;
+          
+          const line = [];
+          for (let n = minN; n <= maxN; n += 50) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('100m grid conversion error:', err);
+            }
+          }
+          
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        for (let n = minN; n <= maxN; n += 100) {
+          if (n % 1000 === 0) continue;
+          
+          const line = [];
+          for (let e = minE; e <= maxE; e += 50) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('100m grid conversion error:', err);
+            }
+          }
+          
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        if (allLines.length > 0) {
+          grid100mLayer = L.polyline(allLines, {
+            color: '#3366cc',
+            weight: 1,
+            opacity: 0.9,
+            dashArray: '4, 4',
+            interactive: false
+          }).addTo(map);
+        }
+
+      } catch (error) {
+        console.error('Error drawing 100m grid lines:', error);
+      }
+    }
+
+    function draw10mGrid() {
+      clearGrid10m();
+
+      try {
+        const bounds = map.getBounds();
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+
+        if (zoom < 17) {
+          console.log('Zoom too low for 10m grid display');
+          return;
+        }
+
+        const lat = center.lat;
+        const lon = center.lng;
+        const zone = getUTMZone(lon);
+        const epsg = getEPSG(zone);
+
+        const sw = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getWest(), bounds.getSouth()]);
+        const ne = proj4('EPSG:4326', `EPSG:${epsg}`, [bounds.getEast(), bounds.getNorth()]);
+
+        const minE = Math.floor(sw[0] / 10) * 10;
+        const maxE = Math.ceil(ne[0] / 10) * 10;
+        const minN = Math.floor(sw[1] / 10) * 10;
+        const maxN = Math.ceil(ne[1] / 10) * 10;
+
+        const allLines = [];
+
+        for (let e = minE; e <= maxE; e += 10) {
+          if (e % 100 === 0) continue;
+      
+          const line = [];
+          for (let n = minN; n <= maxN; n += 5) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('10m grid conversion error:', err);
+            }
+          }
+      
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        for (let n = minN; n <= maxN; n += 10) {
+          if (n % 100 === 0) continue;
+      
+          const line = [];
+          for (let e = minE; e <= maxE; e += 5) {
+            try {
+              const ll = proj4(`EPSG:${epsg}`, 'EPSG:4326', [e, n]);
+              line.push([ll[1], ll[0]]);
+            } catch (err) {
+              console.warn('10m grid conversion error:', err);
+            }
+          }
+      
+          if (line.length > 1) {
+            allLines.push(line);
+          }
+        }
+
+        if (allLines.length > 0) {
+          grid10mLayer = L.polyline(allLines, {
+            color: '#ff9900',
+            weight: 1,
+            opacity: 0.6,
+            dashArray: '2, 3',
+            interactive: false
+          }).addTo(map);
+        }
+
+      } catch (error) {
+        console.error('Error drawing 10m grid lines:', error);
+      }
+    }
+
+    function toggleGridLines() {
+      gridLinesVisible = !gridLinesVisible;
+      if (gridLinesVisible) {
+        drawGridLines();
+      } else {
+        clearGridLines();
+        clearGrid100m();
+        clearGrid10m();
+      }
+    }
+
+    function toggle100mGrid() {
+      grid100mVisible = !grid100mVisible;
+      if (grid100mVisible) {
+        if (!gridLinesVisible) {
+          gridLinesVisible = true;
+          document.getElementById('grid-toggle').checked = true;
+          drawGridLines();
+        } else {
+          draw100mGrid();
+        }
+      } else {
+        clearGrid100m();
+      }
+    }
+
+    function toggle10mGrid() {
+      grid10mVisible = !grid10mVisible;
+      if (grid10mVisible) {
+        if (!gridLinesVisible) {
+          gridLinesVisible = true;
+          document.getElementById('grid-toggle').checked = true;
+          drawGridLines();
+        } else {
+          draw10mGrid();
+        }
+      } else {
+        clearGrid10m();
+      }
+    }
+
+    const deviceStartPoints = {};
+    const MAX_DISTANCE_KM = 150;
+    let rejectedPointsCount = 0;
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Add this new function RIGHT AFTER calculateDistance
+    function calculatePointDistance(lat1, lon1, lat2, lon2) {
+      // Returns distance in meters
+      const R = 6371000; // Earth's radius in meters
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function isValidDistance(deviceId, lat, lon) {
+      if (!deviceStartPoints[deviceId]) {
+        deviceStartPoints[deviceId] = { lat: lat, lon: lon };
+        console.log(`📍 Setting start point for device ${deviceId}: (${lat.toFixed(6)}, ${lon.toFixed(6)})`);
+        return true;
+      }
+
+      const startPoint = deviceStartPoints[deviceId];
+      const distance = calculateDistance(startPoint.lat, startPoint.lon, lat, lon);
+      
+      if (distance > MAX_DISTANCE_KM) {
+        console.warn(`🚫 Rejecting point for device ${deviceId}: ${distance.toFixed(2)}km > ${MAX_DISTANCE_KM}km limit`);
+        rejectedPointsCount++;
+        return false;
+      }
+      
+      return true;
+    }
+
+    const STORAGE_VERSION = '1.1';
+    const VERSION_KEY = 'mackstrack_version';
+    
+    const STORAGE_KEYS = {
+      GPS_TRAILS: 'mackstrack_gps_trails',
+      PACKET_COUNTS: 'mackstrack_packet_counts',
+      LATEST_PACKETS: 'mackstrack_latest_packets',
+      DEVICE_START_POINTS: 'mackstrack_device_start_points',
+      REJECTED_COUNT: 'mackstrack_rejected_count',
+      DEVICE_DISTANCES: 'mackstrack_device_distances'
+    };
+
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem(VERSION_KEY, STORAGE_VERSION);  
+        localStorage.setItem(STORAGE_KEYS.GPS_TRAILS, JSON.stringify(gpsTrails));
+        localStorage.setItem(STORAGE_KEYS.PACKET_COUNTS, JSON.stringify(packetCounts));
+        localStorage.setItem(STORAGE_KEYS.LATEST_PACKETS, JSON.stringify(latestPackets));
+        localStorage.setItem(STORAGE_KEYS.DEVICE_START_POINTS, JSON.stringify(deviceStartPoints));
+        localStorage.setItem(STORAGE_KEYS.REJECTED_COUNT, rejectedPointsCount.toString());
+        localStorage.setItem(STORAGE_KEYS.DEVICE_DISTANCES, JSON.stringify(deviceDistances));
+        console.log('💾 Data saved to localStorage');
+        updateStoredCount();
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const storedVersion = localStorage.getItem(VERSION_KEY);
+    
+        // If version mismatch, clear everything
+        if (storedVersion !== STORAGE_VERSION) {
+          console.warn(`⚠️ Storage version mismatch (stored: ${storedVersion}, current: ${STORAGE_VERSION}). Clearing old data.`);
+          localStorage.clear();
+          localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
+          return false;
+        }
+    
+        const trails = localStorage.getItem(STORAGE_KEYS.GPS_TRAILS);
+        const counts = localStorage.getItem(STORAGE_KEYS.PACKET_COUNTS);
+        const packets = localStorage.getItem(STORAGE_KEYS.LATEST_PACKETS);
+        const startPoints = localStorage.getItem(STORAGE_KEYS.DEVICE_START_POINTS);
+        const rejectedCount = localStorage.getItem(STORAGE_KEYS.REJECTED_COUNT);
+
+        if (trails) {
+          const loadedTrails = JSON.parse(trails);
+          Object.assign(gpsTrails, loadedTrails);
+        }
+
+        if (counts) {
+          const loadedCounts = JSON.parse(counts);
+          Object.assign(packetCounts, loadedCounts);
+        }
+
+        if (packets) {
+          const loadedPackets = JSON.parse(packets);
+          Object.assign(latestPackets, loadedPackets);
+        }
+
+        if (startPoints) {
+          const loadedStartPoints = JSON.parse(startPoints);
+          Object.assign(deviceStartPoints, loadedStartPoints);
+        }
+
+        if (rejectedCount) {
+          rejectedPointsCount = parseInt(rejectedCount) || 0;
+        }
+
+        const distances = localStorage.getItem(STORAGE_KEYS.DEVICE_DISTANCES);
+        if (distances) {
+          const loadedDistances = JSON.parse(distances);
+          Object.assign(deviceDistances, loadedDistances);
+        }
+          
+        // Try to restore, if it fails, function handles cleanup
+        const restored = restoreMapFromStorage();
+
+        if (!restored) {
+          console.log('⚠️ Restoration failed but recovered gracefully');
+        }
+          
+        updateStoredCount();
+        
+        return restored;
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        // Clear everything and set default view
+        localStorage.clear();
+        setTimeout(() => {
+          // Marangaroo
+          // map.setView([-33.4452, 150.1528], 15);
+          // SHORE
+          map.setView([-33.8411, 151.2058], 15);
+          map.invalidateSize();
+        }, 300); 
+        return false;
+      }
+    }
+
+    function clearStoredData() {
+      if (confirm('⚠️ Are you sure you want to clear all stored GPS data? This cannot be undone!')) {
+        try {
+          localStorage.removeItem(STORAGE_KEYS.GPS_TRAILS);
+          localStorage.removeItem(STORAGE_KEYS.PACKET_COUNTS);
+          localStorage.removeItem(STORAGE_KEYS.LATEST_PACKETS);
+          localStorage.removeItem(STORAGE_KEYS.DEVICE_START_POINTS);
+          localStorage.removeItem(STORAGE_KEYS.REJECTED_COUNT);
+          
+          Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
+          Object.keys(packetCounts).forEach(key => delete packetCounts[key]);
+          Object.keys(latestPackets).forEach(key => delete latestPackets[key]);
+          Object.keys(deviceStartPoints).forEach(key => delete deviceStartPoints[key]);
+          rejectedPointsCount = 0;
+          totalPoints = 0;
+          
+          Object.keys(allMarkers).forEach(deviceId => {
+            hideDeviceMarkers(deviceId);
+          });
+          Object.keys(allMarkers).forEach(key => delete allMarkers[key]);
+          Object.keys(trailLayers).forEach(key => delete trailLayers[key]);
+          
+          updateTable();
+          updateDebugInfo();
+          updateStoredCount();
+          
+          alert('✅ All stored data has been cleared!');
+        } catch (error) {
+          console.error('Error clearing localStorage:', error);
+          alert('❌ Error clearing data: ' + error.message);
+        }
+      }
+    }
+
+    function restoreMapFromStorage() {
+      console.log('🔄 Restoring map from stored data...');
+  
+      try {
+        let restoredCount = 0;
+    
+        Object.keys(gpsTrails).forEach(deviceId => {
+          const trail = gpsTrails[deviceId];
+          if (!trail || !Array.isArray(trail) || trail.length === 0) return;
+      
+          const latestTimestamp = latestPackets[deviceId]?.timestamp 
+            ? new Date(latestPackets[deviceId].timestamp).getTime()
+            : Date.now();
+      
+          // Pre-calculate distance and speed for all points
+          const pointsWithData = [];
+      
+          trail.forEach((point, index) => {
+            if (!Array.isArray(point) || point.length < 2) return;
+        
+            const lat = parseFloat(point[0]);
+            const lon = parseFloat(point[1]);
+        
+            if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+              return;
+            }
+        
+            const estimatedTime = latestTimestamp - ((trail.length - 1 - index) * 10000);
+            const estimatedTimestamp = new Date(estimatedTime).toISOString();
+        
+            // Calculate distance and speed from previous point
+            let distanceFromPrev = 0;
+            let speedFromPrev = 0;
+            let totalDistance = 0;
+        
+            if (index > 0 && pointsWithData.length > 0) {
+              const prevPoint = pointsWithData[pointsWithData.length - 1];
+              distanceFromPrev = calculatePointDistance(prevPoint.lat, prevPoint.lon, lat, lon);
+              totalDistance = prevPoint.totalDistance + distanceFromPrev;
+          
+              const timeDiff = (estimatedTime - prevPoint.timestamp) / 1000;
+              if (timeDiff > 0) {
+                speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600);
+              }
+            }
+        
+            pointsWithData.push({
+              lat: lat,
+              lon: lon,
+              timestamp: estimatedTime,
+              timestampISO: estimatedTimestamp,
+              distanceFromPrev: distanceFromPrev,
+              speedFromPrev: speedFromPrev,
+              totalDistance: totalDistance
+            });
+          });
+      
+          // Now add all points with their calculated data
+          pointsWithData.forEach((pointData, index) => {
+            const isLast = index === pointsWithData.length - 1;
+            const packet = {
+              device_id: deviceId,
+              latitude: pointData.lat,
+              longitude: pointData.lon,
+              timestamp: pointData.timestampISO,
+              sats: latestPackets[deviceId]?.sats,
+              // Add these for use in popup
+              distanceFromPrev: pointData.distanceFromPrev,
+              speedFromPrev: pointData.speedFromPrev,
+              totalDistance: pointData.totalDistance
+            };
+        
+            addDataPoint(packet, isLast);
+            restoredCount++;
+          });
+      
+          drawTrail(deviceId);
+        });
+    
+        console.log(`✅ Restored ${restoredCount} points`);
+    
+        updateTable();
+        updateDebugInfo();
+    
+        if (restoredCount > 0 && Object.keys(gpsTrails).length > 0) {
+          const tempBounds = L.latLngBounds();
+      
+          Object.keys(gpsTrails).forEach(deviceId => {
+            gpsTrails[deviceId].forEach(point => {
+              if (Array.isArray(point) && point.length >= 2) {
+                tempBounds.extend([point[0], point[1]]);
+              }
+            });
+          });
+      
+          if (tempBounds.isValid()) {
+            map.fitBounds(tempBounds, { padding: [30, 30], maxZoom: 16 });
+            hasInitialData = true;
+          }
+        }
+    
+        return true;
+    
+      } catch (error) {
+        console.error('❌ Error restoring:', error);
+        return false;
+      }
+    }
+   
+    function updateStoredCount() {
+      const storedCount = document.getElementById('stored-count');
+      let totalStoredPoints = 0;
+      Object.values(gpsTrails).forEach(trail => {
+        totalStoredPoints += trail.length;
+      });
+      storedCount.textContent = totalStoredPoints;
+    }
+
+    function toggleTable() {
+      const table = document.getElementById("device-table");
+      const button = document.getElementById("toggle-button");
+      
+      if (table.style.display === "none") {
+        table.style.display = "table";
+        button.textContent = "Hide Table";
+      } else {
+        table.style.display = "none";
+        button.textContent = "Show Table";
+      }
+    }
+
+    function toggleTable2() {
+      const table = document.getElementById("device-table2");
+      const button = document.getElementById("toggle-button2");
+      
+      if (table.style.display === "none") {
+        table.style.display = "table";
+        button.textContent = "Hide Table";
+      } else {
+        table.style.display = "none";
+        button.textContent = "Show Table";
+      }
+    }
+
+    function makeDraggable(element) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      let isDragging = false;
+
+      element.onmousedown = dragMouseDown;
+      element.ontouchstart = dragTouchStart;
+
+      function dragMouseDown(e) {
+        // Allow dragging for the playback-toggle button itself
+        if (element.id === 'playback-toggle') {
+          e.preventDefault();
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          isDragging = true;
+          element.classList.add('dragging');
+          document.onmouseup = closeDragElement;
+          document.onmousemove = elementDrag;
+          return;
+        }
+          
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+            e.target.closest('table') || e.target.closest('button')) {
+          return;
+        }
+        
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        isDragging = true;
+        element.classList.add('dragging');
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+      }
+
+      function dragTouchStart(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+            e.target.closest('table') || e.target.closest('button')) {
+          return;
+        }
+        
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        isDragging = true;
+        element.classList.add('dragging');
+        document.ontouchend = closeDragElement;
+        document.ontouchmove = elementDragTouch;
+      }
+
+      function elementDrag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        const newTop = element.offsetTop - pos2;
+        const newLeft = element.offsetLeft - pos1;
+        
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+      }
+
+      function elementDragTouch(e) {
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        
+        const newTop = element.offsetTop - pos2;
+        const newLeft = element.offsetLeft - pos1;
+        
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        element.style.right = "auto";
+        element.style.bottom = "auto";
+      }
+
+      function closeDragElement() {
+        const wasDragging = isDragging;
+        isDragging = false;
+        element.classList.remove('dragging');
+        document.onmouseup = null;
+        document.onmousemove = null;
+        document.ontouchend = null;
+        document.ontouchmove = null;
+
+        // If we actually dragged (moved more than a few pixels), prevent the click
+        if (wasDragging && element.id === 'playback-toggle' && (Math.abs(pos1) > 5 || Math.abs(pos2) > 5)) {
+          setTimeout(() => {
+            element.addEventListener('click', function preventClick(e) {
+              e.stopImmediatePropagation();
+              element.removeEventListener('click', preventClick);
+            }, true);
+          }, 0);
+        }
+      }
+    }
+
+    const map = L.map("map", {
+      maxZoom: 22
+    }).setView([-33.8411, 151.2058], 15);
+
+    // Add this after map creation:
+    map.whenReady(function() {
+      console.log('🗺️ Map is ready');
+      setTimeout(() => {
+        map.invalidateSize();
+        console.log('🗺️ Map size invalidated');
+    
+        // Add CUO rank slide marker at -33°50'23.27" 151°12'16.76"
+        // Convert DMS to decimal degrees
+        const lat = -33 - (50/60) - (23.27/3600); // -33.839797
+        const lon = 151 + (12/60) + (16.76/3600); // 151.204656
+    
+        console.log(`CUO marker position: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    
+        // Function to calculate icon size based on zoom level
+        function getCUOIconSize(zoom) {
+          // Base size at zoom 15
+          const baseSize = 20;
+          const baseZoom = 15;
+          // Scale factor: 1.3x size increase per zoom level
+          const scaleFactor = 1.01;
+          const size = baseSize * Math.pow(scaleFactor, zoom - baseZoom);
+          return Math.max(20, Math.min(size, 200)); // Clamp between 20 and 200 pixels
+        }
+    
+        // Create initial icon
+        let currentZoom = map.getZoom();
+        let iconSize = getCUOIconSize(currentZoom);
+    
+        const cuoIcon = L.icon({
+          iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
+          iconSize: [iconSize, iconSize],
+          iconAnchor: [iconSize/2, iconSize/2],
+          popupAnchor: [0, -iconSize/2],
+          opacity: 0.5
+        });
+    
+        const cuoMarker = L.marker([lat, lon], {
+          icon: cuoIcon,
+          title: "CUO Rank Position"
+        });
+    
+        const gridRefDisplay = latLonToGridReference(lat, lon);
+        cuoMarker.bindPopup(`
+          <strong>Australian Army Cadet</strong><br>
+          <strong>CUO Rank Position</strong><br>
+          <hr style="margin: 5px 0;">
+          <strong>Grid Reference:</strong> ${gridRefDisplay}<br>
+          <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+          <strong>DMS:</strong> 33°50'23.27"S 151°12'16.76"E
+        `);
+    
+        cuoMarker.addTo(map);
+        console.log(`✅ CUO rank marker placed at ${lat.toFixed(6)}, ${lon.toFixed(6)} (Grid: ${gridRefDisplay})`);
+    
+        // Update icon size when zoom changes
+        map.on('zoomend', function() {
+          currentZoom = map.getZoom();
+          iconSize = getCUOIconSize(currentZoom);
+      
+          const updatedIcon = L.icon({
+            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize/2, iconSize/2],
+            popupAnchor: [0, -iconSize/2]
+          });
+      
+          cuoMarker.setIcon(updatedIcon);
+          console.log(`🔍 Zoom ${currentZoom}: CUO icon resized to ${iconSize.toFixed(0)}px`);
+        });
+      }, 100);
+    });
+    
+    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 22,
+      maxNativeZoom: 19,
+      attribution: "© OpenStreetMap contributors"
+    });
+
+    const nswTopoLayer = L.esri.tiledMapLayer({
+      url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+      attribution: '© NSW Spatial Services',
+      maxZoom: 22,
+      maxNativeZoom: 16,
+      opacity: 1
+    });
+
+    const nswImageryLayer = L.esri.tiledMapLayer({
+      url: 'https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer',
+      attribution: '© NSW Spatial Services',
+      maxZoom: 22,
+      maxNativeZoom: 18,
+      opacity: 1
+    });
+
+    const worldImageryGoogle = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      attribution: '© Google',
+      maxZoom: 22,
+      maxNativeZoom: 20
+    });
+
+    nswTopoLayer.addTo(map);
+    let currentBaseLayer = nswTopoLayer;
+
+    const baseLayers = {
+      "NSW Topographic": nswTopoLayer,
+      "NSW Imagery": nswImageryLayer,
+      "World Imagery (Google)": worldImageryGoogle,
+      "OpenStreetMap": osmLayer
+    };
+
+    const layerControl = L.control.layers(baseLayers, null, {
+      position: 'topleft'
+    }).addTo(map);
+
+    const currentZoomSpan = document.getElementById('current-zoom');
+    map.on('zoomend', function() {
+      currentZoomSpan.textContent = map.getZoom();
+      drawGridLines();
+    });
+
+    map.on('moveend', function() {
+      drawGridLines();
+    });
+
+    const gridToggle = document.getElementById('grid-toggle');
+    gridToggle.addEventListener('change', function() {
+      toggleGridLines();
+    });
+
+    const grid100mToggle = document.getElementById('grid-100m-toggle');
+    grid100mToggle.addEventListener('change', function() {
+      toggle100mGrid();
+    });
+
+    const grid10mToggle = document.getElementById('grid-10m-toggle');
+    grid10mToggle.addEventListener('change', function() {
+      toggle10mGrid();
+    });
+
+    const opacitySlider = document.getElementById('opacity-slider');
+    const opacityValue = document.getElementById('opacity-value');
+
+    opacitySlider.addEventListener('input', function() {
+      const opacity = parseFloat(this.value);
+      currentBaseLayer.setOpacity(opacity);
+      opacityValue.textContent = Math.round(opacity * 100) + '%';
+    });
+
+    map.on('baselayerchange', function(e) {
+      currentBaseLayer = e.layer;
+      const opacity = parseFloat(opacitySlider.value);
+      currentBaseLayer.setOpacity(opacity);
+    });
+
+    const deviceColors = {
+      '1': '#E74C3C',   '2': '#3498DB',   '3': '#2ECC71',   '4': '#F39C12',   '5': '#9B59B6',
+      '6': '#1ABC9C',   '7': '#E67E22',   '8': '#34495E',   '9': '#E91E63',   '10': '#FF5722',
+      '11': '#795548',  '12': '#607D8B',  '13': '#FF9800',  '14': '#4CAF50',  '15': '#673AB7',
+      '16': '#FF1744',  '17': '#448AFF',  '18': '#00E676',  '19': '#FFC107',  '20': '#AB47BC',
+      '21': '#26C6DA',  '22': '#FF6F00',  '23': '#546E7A',  '24': '#EC407A',  '25': '#8BC34A',
+      '26': '#5E35B1',  '27': '#FF5252',  '28': '#00BCD4',  '29': '#FFEB3B',  '30': '#795548',
+      'I': '#E74C3C',     'II': '#3498DB',    'III': '#2ECC71',   'IV': '#F39C12',    'V': '#9B59B6',
+      'VI': '#1ABC9C',    'VII': '#E67E22',   'VIII': '#34495E',  'IX': '#E91E63',    'X': '#FF5722',
+      'XI': '#795548',    'XII': '#607D8B',   'XIII': '#FF9800',  'XIV': '#4CAF50',   'XV': '#673AB7',
+      'XVI': '#FF1744',   'XVII': '#448AFF',  'XVIII': '#00E676', 'XIX': '#FFC107',   'XX': '#AB47BC',
+      'XXI': '#26C6DA',   'XXII': '#FF6F00',  'XXIII': '#546E7A', 'XXIV': '#EC407A',  'XXV': '#8BC34A',
+      'XXVI': '#5E35B1',  'XXVII': '#FF5252', 'XXVIII': '#00BCD4','XXIX': '#FFEB3B',  'XXX': '#795548'
     };
     
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'coord-marker-remove';
-    removeBtn.textContent = '✕';
-    removeBtn.onclick = () => removeCoordMarker(coord.id);
+    const socket = io({ 
+      transports: ['websocket'],
+      timeout: 5000,
+      forceNew: true
+    });
     
-    item.appendChild(nameSpan);
-    item.appendChild(removeBtn);
-    container.appendChild(item);
-  });
-}
+    const socketStatus = document.getElementById('socket-status');
+    const deviceCount = document.getElementById('device-count');
+    const pointCount = document.getElementById('point-count');
+    const rejectedCount = document.getElementById('rejected-count');
+    const lastUpdate = document.getElementById('last-update');
+    
+    let totalPoints = 0;
 
-// Connect button
-document.getElementById('coord-plotter-btn').addEventListener('click', openCoordPlotter);
+    socket.on('connect', () => {
+      console.log('✅ Socket connected');
+      socketStatus.textContent = '✅';
+      socketStatus.style.color = '#2ECC71';
+    });
 
-// Allow closing modal by clicking outside
-document.getElementById('coord-plotter-modal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeCoordPlotter();
-  }
-});
+    socket.on('disconnect', () => {
+      console.log('❌ Socket disconnected');
+      socketStatus.textContent = '❌';
+      socketStatus.style.color = '#E74C3C';
+    });
 
-console.log('✅ Coordinate plotter initialized');
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      socketStatus.textContent = '⚠️';
+      socketStatus.style.color = '#F39C12';
+    });
 
-</script>
+    const gpsTrails = {};
+    const packetCounts = {};
+    const latestPackets = {};
+    const deviceDistances = {};  // Track total distance per device
+    const lastPointData = {};     // Track last point for distance calculation
+    const allPointsBounds = L.latLngBounds();
+    const allMarkers = {};
+    const trailLayers = {};
+    const deviceVisibility = {};
+    let selectedDevice = null;
+    let hasInitialData = false;
+
+    function toggleDeviceVisibility(deviceId) {
+      if (selectedDevice === deviceId) {
+        selectedDevice = null;
+        showAllDevices();
+      } else {
+        selectedDevice = deviceId;
+        hideAllDevicesExcept(deviceId);
+      }
+    }
+
+    function showAllDevices() {
+      Object.keys(allMarkers).forEach(deviceId => {
+        deviceVisibility[deviceId] = true;
+        showDeviceMarkers(deviceId);
+      });
+    }
+
+    function hideAllDevicesExcept(keepDeviceId) {
+      Object.keys(allMarkers).forEach(deviceId => {
+        if (deviceId === keepDeviceId) {
+          deviceVisibility[deviceId] = true;
+          showDeviceMarkers(deviceId);
+        } else {
+          deviceVisibility[deviceId] = false;
+          hideDeviceMarkers(deviceId);
+        }
+      });
+    }
+
+    function showDeviceMarkers(deviceId) {
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        allMarkers[deviceId].current.circle.addTo(map);
+        allMarkers[deviceId].current.label.addTo(map);
+      }
+      
+      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
+        allMarkers[deviceId].history.forEach(marker => {
+          marker.addTo(map);
+        });
+      }
+      
+      if (trailLayers[deviceId]) {
+        trailLayers[deviceId].forEach(layer => {
+          layer.addTo(map);
+        });
+      }
+    }
+
+    function hideDeviceMarkers(deviceId) {
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        map.removeLayer(allMarkers[deviceId].current.circle);
+        map.removeLayer(allMarkers[deviceId].current.label);
+      }
+      
+      if (allMarkers[deviceId] && allMarkers[deviceId].history) {
+        allMarkers[deviceId].history.forEach(marker => {
+          map.removeLayer(marker);
+        });
+      }
+      
+      if (trailLayers[deviceId]) {
+        trailLayers[deviceId].forEach(layer => {
+          map.removeLayer(layer);
+        });
+      }
+    }
+
+    function addDataPoint(point, isLatest = false) {
+      const lat = parseFloat(point.latitude);
+      const lon = parseFloat(point.longitude);
+      
+      if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        console.warn('Invalid coordinates:', point);
+        return;
+      }
+
+      const color = deviceColors[point.device_id] || "#7F8C8D";
+      const gridRef = latLonToGridReference(lat, lon);
+
+      // Use pre-calculated values if available, otherwise calculate
+      let distanceFromPrev = point.distanceFromPrev !== undefined ? point.distanceFromPrev : 0;
+      let speedFromPrev = point.speedFromPrev !== undefined ? point.speedFromPrev : 0;
+      let totalDistance = point.totalDistance !== undefined ? point.totalDistance : (deviceDistances[point.device_id] || 0);
+
+      // Only calculate if not already provided
+      if (point.distanceFromPrev === undefined && point.speedFromPrev === undefined && lastPointData[point.device_id]) {
+        const lastPoint = lastPointData[point.device_id];
+        distanceFromPrev = calculatePointDistance(
+          lastPoint.lat, 
+          lastPoint.lon, 
+          lat, 
+          lon
+        );
+    
+        totalDistance += distanceFromPrev;
+        deviceDistances[point.device_id] = totalDistance;
+    
+        // Calculate speed (km/h)
+        if (lastPoint.timestamp && point.timestamp) {
+          const time1 = new Date(lastPoint.timestamp);
+          const time2 = new Date(point.timestamp);
+          const timeDiff = (time2 - time1) / 1000; // seconds
+
+          console.log(`Speed calc for ${point.device_id}:`, {
+            lastTime: lastPoint.timestamp,
+            currentTime: point.timestamp,
+            time1: time1.toISOString(),
+            time2: time2.toISOString(),
+            timeDiff: timeDiff,
+            distance: distanceFromPrev
+          });
+            
+          if (timeDiff > 0) {
+            speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600); // km/h
+            console.log(`Calculated speed: ${speedFromPrev.toFixed(2)} km/h`);
+          } else {
+              console.warn(`Time diff is ${timeDiff} - cannot calculate speed`);
+          }
+        } else {
+          console.warn(`Missing timestamps - last: ${lastPoint.timestamp}, current: ${point.timestamp}`);
+        }  
+      } else {
+        // Values were provided, use them
+        if (point.totalDistance !== undefined) {
+          deviceDistances[point.device_id] = point.totalDistance;
+        }
+      }
+  
+      // Store this point for next calculation
+      lastPointData[point.device_id] = {
+        lat: lat,
+        lon: lon,
+        timestamp: point.timestamp
+      };
+        
+      if (isLatest) {
+        const circle = L.circleMarker([lat, lon], {
+          radius: 10,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.7,
+          weight: 3
+        });
+
+        const deviceLabels = {
+          'I': 'PLT 1-1', 'II': 'PLT 1-2', 'III': 'PLT 1-3',
+          'IV': 'PLT 2-1', 'V': 'PLT 2-2', 'VI': 'PLT 2-3',
+          'VII': 'PLT 3-1', 'VIII': 'PLT 3-2', 'IX': 'PLT 3-3',
+          'X': 'PLT 4-1', 'XI': 'PLT 4-2', 'XII': 'PLT 4-3',
+          'XIII': 'E COY 1-1', 'XIV': 'E COY 1-2', 'XV': 'E COY 1-3',
+          'XVI': 'E COY 2-1', 'XVII': 'E COY 2-2', 'XVIII': 'E COY 2-3',
+          'XIX': 'E COY 3-1', 'XX': 'E COY 3-2', 'XXI': 'E COY 3-3',
+          'XXII': 'E COY 4-1', 'XXIII': 'E COY 4-2', 'XXIV': 'E COY 4-3',
+          'XXV': 'IND REC PLT-1', 'XXVI': 'IND REC PLT-2', 'XXVII': 'IND REC PLT-3',
+          'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+        };
+        const displayLabel = deviceLabels[point.device_id] || point.device_id;
+
+        const popupContent = `
+          <strong>Callsign:</strong> ${displayLabel}<br>
+          <strong>Device ID:</strong> ${point.device_id}<br>
+          <strong>Grid Reference:</strong> ${gridRef}<br>
+          <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+          <strong>Timestamp:</strong> ${point.timestamp}<br>
+          <strong>Satellites:</strong> ${point.sats || 'N/A'}<br>
+          <hr style="margin: 5px 0;">
+          <strong>Distance from prev:</strong> ${distanceFromPrev.toFixed(1)} m<br>
+          <strong>Speed from prev:</strong> ${speedFromPrev.toFixed(2)} km/h<br>
+          <strong>Total distance:</strong> ${(totalDistance / 1000).toFixed(2)} km
+        `;
+        circle.bindPopup(popupContent);
+
+        const deviceLabelsForMap = {
+          'I': 'PLT 1-1', 'II': 'PLT 1-2', 'III': 'PLT 1-3',
+          'IV': 'PLT 2-1', 'V': 'PLT 2-2', 'VI': 'PLT 2-3',
+          'VII': 'PLT 3-1', 'VIII': 'PLT 3-2', 'IX': 'PLT 3-3',
+          'X': 'PLT 4-1', 'XI': 'PLT 4-2', 'XII': 'PLT 4-3',
+          'XIII': 'E COY 1-1', 'XIV': 'E COY 1-2', 'XV': 'E COY 1-3',
+          'XVI': 'E COY 2-1', 'XVII': 'E COY 2-2', 'XVIII': 'E COY 2-3',
+          'XIX': 'E COY 3-1', 'XX': 'E COY 3-2', 'XXI': 'E COY 3-3',
+          'XXII': 'E COY 4-1', 'XXIII': 'E COY 4-2', 'XXIV': 'E COY 4-3',
+          'XXV': 'IND REC PLT-1', 'XXVI': 'IND REC PLT-2', 'XXVII': 'IND REC PLT-3',
+          'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+        };
+        const mapLabel = deviceLabelsForMap[point.device_id] || point.device_id;
+
+        const label = L.divIcon({
+          html: `<div style="color: ${color}; font-weight: bold; text-shadow: 1px 1px 2px white; font-size: 10px;">${mapLabel}</div>`,
+          className: 'device-label',
+          iconSize: [60, 20]
+        });
+
+        const labelMarker = L.marker([lat, lon], { icon: label, interactive: false });
+        
+        if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+        
+        if (allMarkers[point.device_id].current) {
+          map.removeLayer(allMarkers[point.device_id].current.circle);
+          map.removeLayer(allMarkers[point.device_id].current.label);
+        }
+        
+        allMarkers[point.device_id].current = { circle, label: labelMarker };
+        
+        if (deviceVisibility[point.device_id] !== false) {
+          circle.addTo(map);
+          labelMarker.addTo(map);
+        }
+        
+        totalPoints++;
+        
+      } else {
+        const isFirstPoint = !allMarkers[point.device_id] || allMarkers[point.device_id].history.length === 0;
+        
+        if (isFirstPoint) {
+          const crestIcon = L.icon({
+            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png",
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+          });
+
+          const crestMarker = L.marker([lat, lon], { 
+            icon: crestIcon,
+            interactive: true
+          });
+
+          const deviceLabels = {
+            'I': 'PLT 1-1', 'II': 'PLT 1-2', 'III': 'PLT 1-3',
+            'IV': 'PLT 2-1', 'V': 'PLT 2-2', 'VI': 'PLT 2-3',
+            'VII': 'PLT 3-1', 'VIII': 'PLT 3-2', 'IX': 'PLT 3-3',
+            'X': 'PLT 4-1', 'XI': 'PLT 4-2', 'XII': 'PLT 4-3',
+            'XIII': 'E COY 1-1', 'XIV': 'E COY 1-2', 'XV': 'E COY 1-3',
+            'XVI': 'E COY 2-1', 'XVII': 'E COY 2-2', 'XVIII': 'E COY 2-3',
+            'XIX': 'E COY 3-1', 'XX': 'E COY 3-2', 'XXI': 'E COY 3-3',
+            'XXII': 'E COY 4-1', 'XXIII': 'E COY 4-2', 'XXIV': 'E COY 4-3',
+            'XXV': 'IND REC PLT-1', 'XXVI': 'IND REC PLT-2', 'XXVII': 'IND REC PLT-3',
+            'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+          };
+          const displayLabel = deviceLabels[point.device_id] || point.device_id;
+
+          const popupContent = `
+            <strong>Callsign:</strong> ${displayLabel} (START)<br>
+            <strong>Device ID:</strong> ${point.device_id}<br>
+            <strong>Grid Reference:</strong> ${gridRef}<br>
+            <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+            <strong>Timestamp:</strong> ${point.timestamp}<br>
+            <strong>Total distance:</strong> 0.00km
+          `;
+          crestMarker.bindPopup(popupContent);
+
+          if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+          allMarkers[point.device_id].history.push(crestMarker);
+          
+          if (deviceVisibility[point.device_id] !== false) {
+            crestMarker.addTo(map);
+          }
+          
+          totalPoints++;
+        } else {
+          const pinIcon = L.divIcon({
+            html: `<div style="
+              width: 12px; 
+              height: 12px; 
+              background-color: ${color}; 
+              border: 2px solid white; 
+              border-radius: 50%;
+              box-shadow: 0 0 3px rgba(0,0,0,0.4);
+            "></div>`,
+            className: 'history-pin',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          });
+
+          const pin = L.marker([lat, lon], { 
+            icon: pinIcon,
+            interactive: true
+          });
+
+          const deviceLabels = {
+            'I': 'PLT 1-1', 'II': 'PLT 1-2', 'III': 'PLT 1-3',
+            'IV': 'PLT 2-1', 'V': 'PLT 2-2', 'VI': 'PLT 2-3',
+            'VII': 'PLT 3-1', 'VIII': 'PLT 3-2', 'IX': 'PLT 3-3',
+            'X': 'PLT 4-1', 'XI': 'PLT 4-2', 'XII': 'PLT 4-3',
+            'XIII': 'E COY 1-1', 'XIV': 'E COY 1-2', 'XV': 'E COY 1-3',
+            'XVI': 'E COY 2-1', 'XVII': 'E COY 2-2', 'XVIII': 'E COY 2-3',
+            'XIX': 'E COY 3-1', 'XX': 'E COY 3-2', 'XXI': 'E COY 3-3',
+            'XXII': 'E COY 4-1', 'XXIII': 'E COY 4-2', 'XXIV': 'E COY 4-3',
+            'XXV': 'IND REC PLT-1', 'XXVI': 'IND REC PLT-2', 'XXVII': 'IND REC PLT-3',
+            'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+          };
+          const displayLabel = deviceLabels[point.device_id] || point.device_id;
+
+          const popupContent = `
+            <strong>Callsign:</strong> ${displayLabel}<br>
+            <strong>Device ID:</strong> ${point.device_id}<br>
+            <strong>Grid Reference:</strong> ${gridRef}<br>
+            <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+            <strong>Timestamp:</strong> ${point.timestamp}<br>
+            <hr style="margin: 5px 0;">
+            <strong>Distance from prev:</strong> ${distanceFromPrev.toFixed(1)} m<br>
+            <strong>Speed from prev:</strong> ${speedFromPrev.toFixed(2)} km/h<br>
+            <strong>Total distance:</strong> ${(totalDistance / 1000).toFixed(2)} km
+          `;
+          pin.bindPopup(popupContent);
+
+          if (!allMarkers[point.device_id]) allMarkers[point.device_id] = { current: null, history: [] };
+          allMarkers[point.device_id].history.push(pin);
+          
+          if (deviceVisibility[point.device_id] !== false) {
+            pin.addTo(map);
+          }
+          
+          totalPoints++;
+        }
+      }
+    }
+
+    function drawTrail(device_id) {
+      const trail = gpsTrails[device_id];
+      if (!trail || trail.length < 2) return;
+      
+      const color = deviceColors[device_id] || "#7F8C8D";
+
+      if (trailLayers[device_id]) {
+        trailLayers[device_id].forEach(layer => {
+          if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        });
+      }
+      trailLayers[device_id] = [];
+
+      const polyline = L.polyline(trail, {
+        color: color,
+        weight: 4,
+        opacity: 0.8,
+        className: 'animated-polyline'
+      });
+      
+      trailLayers[device_id].push(polyline);
+      
+      if (deviceVisibility[device_id] !== false) {
+        polyline.addTo(map);
+      }
+    }
+
+    function getRowClass(ts, sats) {
+      const pingTime = new Date(ts);
+      const now = new Date();
+      const diff = (now - pingTime) / 1000;
+
+      if (sats !== undefined && sats < 4) return "row-low-sats";
+
+      if (diff <= 180) return "row-active";
+      if (diff <= 360) return "row-warm";
+      return "row-stale";
+    }
+
+    function updateTable() {
+      console.log('📊 updateTable called');
+      console.log('Latest packets:', latestPackets);
+      console.log('Packet count:', Object.keys(latestPackets).length);
+
+      const deviceLabels = {
+        'I': 'PLT 1-1', 'II': 'PLT 1-2', 'III': 'PLT 1-3',
+        'IV': 'PLT 2-1', 'V': 'PLT 2-2', 'VI': 'PLT 2-3',
+        'VII': 'PLT 3-1', 'VIII': 'PLT 3-2', 'IX': 'PLT 3-3',
+        'X': 'PLT 4-1', 'XI': 'PLT 4-2', 'XII': 'PLT 4-3',
+        'XIII': 'E COY 1-1', 'XIV': 'E COY 1-2', 'XV': 'E COY 1-3',
+        'XVI': 'E COY 2-1', 'XVII': 'E COY 2-2', 'XVIII': 'E COY 2-3',
+        'XIX': 'E COY 3-1', 'XX': 'E COY 3-2', 'XXI': 'E COY 3-3',
+        'XXII': 'E COY 4-1', 'XXIII': 'E COY 4-2', 'XXIV': 'E COY 4-3',
+        'XXV': 'IND REC PLT-1', 'XXVI': 'IND REC PLT-2', 'XXVII': 'IND REC PLT-3',
+        'XXVIII': 'SPARE1', 'XXIX': 'SPARE2', 'XXX': 'SPARE3'
+      };
+  
+      const tbody1 = document.querySelector("#device-table tbody");
+      const tbody2 = document.querySelector("#device-table2 tbody");
+      tbody1.innerHTML = "";
+      tbody2.innerHTML = "";
+
+      const sortedIDs = Object.keys(latestPackets).sort((a, b) =>
+        a.localeCompare(b, 'en', { sensitivity: 'base', numeric: true })
+      );
+
+      console.log('Sorted IDs:', sortedIDs);
+
+      const firstTableDevices = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+      const secondTableDevices = ['XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI', 'XXII', 'XXIII', 'XXIV', 'XXV', 'XXVI', 'XXVII', 'XXVIII', 'XXIX', 'XXX'];
+
+      for (const id of sortedIDs) {
+        const packet = latestPackets[id];
+        const count  = packetCounts[id] || 0;
+        const sats   = packet.sats ?? "—";
+        const lat    = parseFloat(packet.latitude);
+        const lon    = parseFloat(packet.longitude);
+        const gridRef = latLonToGridReference(lat, lon);
+
+        // Get platoon designation - use direct lookup
+        const displayLabel = deviceLabels[id] || id;
+        console.log(`Processing ${id} -> ${displayLabel}`);
+        
+        const row = document.createElement("tr");
+        row.className = getRowClass(packet.timestamp, packet.sats);
+          
+        row.innerHTML = `
+          <td>${displayLabel}</td>
+          <td>${gridRef}</td>
+          <td>${count}</td>
+          <td>${sats}</td>
+        `;
+
+        row.style.cursor = "pointer";
+        row.addEventListener("click", () => {
+          toggleDeviceVisibility(id);
+          updateTable();
+        });
+
+        if (selectedDevice === id) {
+          row.style.border = "2px solid #3498DB";
+        }
+
+        if (firstTableDevices.includes(id)) {
+          tbody1.appendChild(row);
+          console.log(`✅ Added ${displayLabel} to table 1`);
+        } else if (secondTableDevices.includes(id)) {
+          tbody2.appendChild(row);
+          console.log(`✅ Added ${displayLabel} to table 2`);
+        }
+      }
+
+      console.log('📊 updateTable complete');
+      
+    }
+
+    function updateDebugInfo() {
+      deviceCount.textContent = Object.keys(latestPackets).length;
+      pointCount.textContent = totalPoints;
+      rejectedCount.textContent = rejectedPointsCount;
+      lastUpdate.textContent = new Date().toLocaleTimeString();
+      updateStoredCount();
+    }
+    
+    function processGPSUpdate(data) {
+      console.log('📡 Processing GPS update:', data);
+  
+      const { latitude, longitude, device_id, timestamp } = data;
+      if (!latitude || !longitude || !device_id || !timestamp) {
+        console.warn('Missing required data:', data);
+        return;
+      }
+
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+  
+      if (isNaN(lat) || isNaN(lon)) {
+        console.warn('Invalid coordinates:', data);
+        return;
+      }
+
+      if (!isValidDistance(device_id, lat, lon)) {
+        updateDebugInfo();
+        return;
+      }
+  
+      // Convert timestamp to ISO format
+      const isoTimestamp = timestamp.replace(" ", "T") + "Z";
+    
+      // Save the OLD packet before updating
+      const oldPacket = latestPackets[device_id] ? {...latestPackets[device_id]} : null;
+
+      // Calculate distance and speed for THIS point
+      let distanceFromPrev = 0;
+      let speedFromPrev = 0;
+      let totalDistance = deviceDistances[device_id] || 0;
+
+      if (lastPointData[device_id]) {
+        const lastPoint = lastPointData[device_id];
+        distanceFromPrev = calculatePointDistance(
+          lastPoint.lat,
+          lastPoint.lon,
+          lat,
+          lon
+        );
+    
+        totalDistance += distanceFromPrev;
+        deviceDistances[device_id] = totalDistance;
+    
+        // Calculate speed
+        if (lastPoint.timestamp && isoTimestamp) {
+          const time1 = new Date(lastPoint.timestamp);
+          const time2 = new Date(isoTimestamp);
+          const timeDiff = (time2 - time1) / 1000;
+      
+          if (timeDiff > 0) {
+            speedFromPrev = (distanceFromPrev / 1000) / (timeDiff / 3600);
+          }
+        }
+      } else {
+        deviceDistances[device_id] = 0;
+      }
+
+      // Update stored data
+      latestPackets[device_id] = {
+        ...data,
+        timestamp: isoTimestamp
+      };
+
+      packetCounts[device_id] = (packetCounts[device_id] || 0) + 1;
+
+      // Add the previous point first (if exists)
+      if (gpsTrails[device_id] && gpsTrails[device_id].length && oldPacket) {
+        const lastPoint = {
+          device_id: device_id,
+          latitude: gpsTrails[device_id][gpsTrails[device_id].length - 1].lat,
+          longitude: gpsTrails[device_id][gpsTrails[device_id].length - 1].lon,
+          timestamp: oldPacket.timestamp,
+          sats: oldPacket.sats,
+          distanceFromPrev: gpsTrails[device_id][gpsTrails[device_id].length - 1].distanceFromPrev || 0,
+          speedFromPrev: gpsTrails[device_id][gpsTrails[device_id].length - 1].speedFromPrev || 0,
+          totalDistance: gpsTrails[device_id][gpsTrails[device_id].length - 1].totalDistance || 0
+        };
+        addDataPoint(lastPoint, false);
+      }
+
+      // Add the NEW point with calculated data
+      const newPoint = {
+        device_id: device_id,
+        latitude: lat,
+        longitude: lon,
+        timestamp: isoTimestamp,
+        sats: data.sats,
+        distanceFromPrev: distanceFromPrev,
+        speedFromPrev: speedFromPrev,
+        totalDistance: totalDistance
+      };
+      addDataPoint(newPoint, true);
+
+      allPointsBounds.extend([lat, lon]);
+  
+      if (!hasInitialData) {
+        map.fitBounds(allPointsBounds, { padding: [30, 30], maxZoom: 16 });
+        hasInitialData = true;
+      }
+
+      // Store point with ALL calculated data
+      const trailPoint = {
+        lat: lat,
+        lon: lon,
+        timestamp: isoTimestamp,
+        distanceFromPrev: distanceFromPrev,
+        speedFromPrev: speedFromPrev,
+        totalDistance: totalDistance
+      };
+    
+      gpsTrails[device_id] = gpsTrails[device_id] || [];
+      gpsTrails[device_id].push(trailPoint);
+    
+      if (gpsTrails[device_id].length > 100) {
+        gpsTrails[device_id].shift();
+      }
+
+      drawTrail(device_id);
+      updateTable();
+      updateDebugInfo();
+      saveToLocalStorage();
+    }
+    
+    function exportKML(deviceId) {
+      try {
+        console.log(`📥 Exporting KML for: ${deviceId}`);
+    
+        // Check if we have any data at all
+        if (Object.keys(deviceStartPoints).length === 0 && Object.keys(gpsTrails).length === 0) {
+          alert('⚠️ No GPS data available to export. Wait for devices to connect.');
+          return;
+        }
+    
+        let kmlHeader = `<?xml version="1.0" encoding="UTF-8"?>
+        <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+          <Document>
+            <name>GPS MacksTrack Export - ${deviceId === 'all' ? 'All Devices' : 'Device ' + deviceId}</name>
+            <description>Exported on ${new Date().toLocaleString('en-AU', {timeZone: 'Australia/Sydney'})}. Use Google Earth's time slider to animate trails.</description>
+
+            <Style id="startPoint">
+              <IconStyle>
+                <Icon>
+                  <href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href>
+                </Icon>
+              </IconStyle>
+            </Style>
+    
+            <Style id="currentPoint">
+              <IconStyle>
+                <Icon>
+                  <href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href>
+                </Icon>
+              </IconStyle>
+            </Style>`;
+          
+           let kmlFooter = `
+      </Document>
+    </kml>`;
+    
+        let placemarks = '';
+        let deviceCount = 0;
+    
+        // Get list of devices to export
+        const allDeviceIds = [...new Set([
+          ...Object.keys(deviceStartPoints),
+          ...Object.keys(gpsTrails)
+        ])];
+    
+        const devices = deviceId === 'all' ? allDeviceIds : [deviceId];
+    
+        // Check if requested device exists
+        if (devices.length === 0 || (deviceId !== 'all' && !allDeviceIds.includes(deviceId))) {
+          alert(`⚠️ Device "${deviceId}" has no data to export.`);
+          return;
+        }
+    
+        devices.forEach(id => {
+          const start = deviceStartPoints[id];
+          const trail = gpsTrails[id] || [];
+          const color = deviceColors[id] || '#7F8C8D';
+      
+          // Convert hex color to KML format (aabbggrr)
+          const kmlColor = 'ff' + color.slice(5,7) + color.slice(3,5) + color.slice(1,3);
+      
+          let hasData = false;
+      
+          // Start point marker  
+          if (start) {
+            hasData = true;
+            // Use earliest timestamp if available
+            const startTime = latestPackets[id]?.timestamp 
+              ? new Date(new Date(latestPackets[id].timestamp).getTime() - (trail.length * 10000)).toISOString()
+              : new Date(Date.now() - (trail.length * 10000)).toISOString();
+        
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Start Point</name>
+          <description>Starting location for device ${id}</description>
+          <TimeStamp>
+            <when>${startTime}</when>
+          </TimeStamp>
+          <styleUrl>#startPoint</styleUrl>
+          <Point>
+            <coordinates>${start.lon},${start.lat},0</coordinates>
+          </Point>
+        </Placemark>`;
+          }
+      
+          // Current position (if exists)
+          if (latestPackets[id]) {
+            hasData = true;
+            const latest = latestPackets[id];
+            const lat = parseFloat(latest.latitude);
+            const lon = parseFloat(latest.longitude);
+            const gridRef = latLonToGridReference(lat, lon);
+        
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Current Position</name>
+          <description>
+            Grid Reference: ${gridRef}
+            Latitude: ${lat.toFixed(6)}
+            Longitude: ${lon.toFixed(6)}
+            Timestamp: ${latest.timestamp}
+            Satellites: ${latest.sats || 'N/A'}
+            Packet Count: ${packetCounts[id] || 0}
+          </description>
+          <TimeStamp>
+            <when>${latest.timestamp}</when>
+          </TimeStamp>
+          <styleUrl>#currentPoint</styleUrl>
+          <Point>
+            <coordinates>${lon},${lat},0</coordinates>
+          </Point>
+        </Placemark>`;
+          }
+      
+          // Animated trail using gx:Track
+          if (trail.length > 1) {
+            hasData = true;
+        
+            // Generate timestamps for each point (10 seconds apart)
+            const baseTime = latestPackets[id]?.timestamp 
+              ? new Date(latestPackets[id].timestamp).getTime()
+              : Date.now();
+        
+            let whenElements = '';
+            let coordElements = '';
+        
+            trail.forEach((point, index) => {
+              const pointTime = new Date(baseTime - ((trail.length - 1 - index) * 10000)).toISOString();
+              whenElements += `        <when>${pointTime}</when>\n`;
+              coordElements += `        <gx:coord>${point[1]} ${point[0]} 0</gx:coord>\n`;
+            });
+
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Animated Trail</name>
+          <description>GPS trail for device ${id} (${trail.length} points). Use Google Earth's time slider to animate.</description>
+          <Style>
+            <LineStyle>
+              <color>${kmlColor}</color>
+              <width>4</width>
+            </LineStyle>
+            <IconStyle>
+              <Icon>
+                <href>http://earth.google.com/images/kml-icons/track-directional/track-0.png</href>
+              </Icon>
+            </IconStyle>
+          </Style>
+          <gx:Track>
+            <altitudeMode>clampToGround</altitudeMode>
+    ${whenElements}${coordElements}      </gx:Track>
+        </Placemark>`;
+
+            // Also add static line for devices without time support
+            const coordList = trail.map(point => `${point[1]},${point[0]},0`).join(' ');
+            placemarks += `
+        <Placemark>
+          <name>Device ${id} - Static Trail</name>
+          <description>Static GPS trail for device ${id}</description>
+          <visibility>0</visibility>
+          <Style>
+            <LineStyle>
+              <color>${kmlColor}</color>
+              <width>3</width>
+            </LineStyle>
+          </Style>
+          <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>${coordList}</coordinates>
+          </LineString>
+        </Placemark>`;
+          }
+
+          if (hasData) deviceCount++;
+        });
+
+        if (deviceCount === 0) {
+          alert(`⚠️ No GPS data found for ${deviceId === 'all' ? 'any devices' : 'device ' + deviceId}.`);
+          return;
+        }
+
+        const kmlContent = kmlHeader + placemarks + kmlFooter;
+
+        // Create and download file
+        const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+        link.download = `MacksTrack_${deviceId}_${timestamp}.kml`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+
+        console.log(`✅ KML exported: ${deviceCount} device(s), ${placemarks.split('<Placemark>').length - 1} features`);
+        alert(`✅ Successfully exported ${deviceCount} device(s) with animated trails!\n\nOpen in Google Earth and use the time slider to see animation.`);
+
+      } catch (error) {
+        console.error('❌ KML Export Error:', error);
+        console.error('Error type:', typeof error);
+        console.error('Error details:', {
+          message: error?.message,
+          name: error?.name,
+          stack: error?.stack
+        });
+
+        let errorMsg = 'Unknown error occurred';
+        if (error?.message) {
+          errorMsg = error.message;
+        } else if (typeof error === 'string') {
+          errorMsg = error;
+        } else if (error?.toString) {
+          errorMsg = error.toString();
+        }
+
+        alert(`❌ Export failed: ${errorMsg}\n\nCheck browser console (F12) for details.`);
+      }
+    }
+    
+    function downloadKML(content, filename) {
+      const blob = new Blob([content], { type: 'application/vnd.google-earth.kml+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      console.log(`KML exported: ${filename}`);
+    }
+
+    // ==================== PLAYBACK MODE ====================
+
+    let playbackState = {
+      isActive: false,
+      isPlaying: false,
+      currentIndex: 0,
+      speed: 1,
+      intervalId: null,
+      allPoints: [],
+      startTime: null,
+      endTime: null,
+      savedTrails: {},
+      savedMarkers: {},
+      savedCenter: null,
+      savedZoom: null
+    };
+
+    function togglePlaybackMode() {
+      const control = document.getElementById('playback-control');
+      const toggleBtn = document.getElementById('playback-toggle');
+  
+      if (!playbackState.isActive) {
+        // Enter playback mode
+        if (Object.keys(gpsTrails).length === 0) {
+          alert('⚠️ No GPS trails available for playback. Wait for data or load from storage.');
+          return;
+        }
+    
+        initializePlayback();
+        control.classList.add('active');
+        toggleBtn.textContent = '🔴 Exit Playback';
+        playbackState.isActive = true;
+      } else {
+        // Exit playback mode
+        closePlayback();
+      }
+    }
+
+    function initializePlayback() {
+      console.log('🎬 Initializing playback mode...');
+  
+      // Collect all points with timestamps
+      playbackState.allPoints = [];
+  
+      Object.keys(gpsTrails).forEach(deviceId => {
+        const trail = gpsTrails[deviceId];
+        if (!trail || trail.length === 0) return;
+    
+        trail.forEach((point, index) => {
+          // Estimate timestamp if not available
+          const timestamp = latestPackets[deviceId]?.timestamp 
+            ? new Date(latestPackets[deviceId].timestamp).getTime() - ((trail.length - 1 - index) * 10000)
+            : Date.now() - ((trail.length - 1 - index) * 10000);
+      
+          playbackState.allPoints.push({
+            deviceId: deviceId,
+            lat: point[0],
+            lon: point[1],
+            timestamp: timestamp,
+            sats: latestPackets[deviceId]?.sats
+          });
+        });
+      });
+  
+      // Sort by timestamp
+      playbackState.allPoints.sort((a, b) => a.timestamp - b.timestamp);
+  
+      if (playbackState.allPoints.length === 0) {
+        alert('⚠️ No valid points for playback.');
+        return;
+      }
+  
+      playbackState.startTime = playbackState.allPoints[0].timestamp;
+      playbackState.endTime = playbackState.allPoints[playbackState.allPoints.length - 1].timestamp;
+      playbackState.currentIndex = 0;
+
+      // Save current state before clearing
+      playbackState.savedCenter = map.getCenter();
+      playbackState.savedZoom = map.getZoom();
+      playbackState.savedTrails = JSON.parse(JSON.stringify(gpsTrails));
+      playbackState.savedMarkers = {...allMarkers};
+        
+      // Clear current map
+      clearMapForPlayback();
+  
+      // Update UI
+      updatePlaybackUI();
+  
+      console.log(`✅ Loaded ${playbackState.allPoints.length} points for playback`);
+      console.log(`Duration: ${formatDuration(playbackState.endTime - playbackState.startTime)}`);
+      
+      // Make playback control draggable
+      makeDraggable(document.getElementById('playback-control'));
+        
+    }
+
+    function clearMapForPlayback() {
+      // Remove all markers and trails
+      Object.keys(allMarkers).forEach(deviceId => {
+        hideDeviceMarkers(deviceId);
+      });
+  
+      // Clear trail layers
+      Object.values(trailLayers).forEach(layers => {
+        layers.forEach(layer => {
+          if (map.hasLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        });
+      });
+    }
+
+    function togglePlayback() {
+      if (!playbackState.isPlaying) {
+        startPlayback();
+      } else {
+        pausePlayback();
+      }
+    }
+
+    function startPlayback() {
+      if (playbackState.currentIndex >= playbackState.allPoints.length) {
+        restartPlayback();
+        return;
+      }
+  
+      playbackState.isPlaying = true;
+      document.getElementById('play-btn').textContent = '⏸️ Pause';
+      document.getElementById('play-btn').classList.add('playing');
+  
+      const baseInterval = 100; // milliseconds between frames
+      const interval = baseInterval / playbackState.speed;
+  
+      playbackState.intervalId = setInterval(() => {
+        if (playbackState.currentIndex >= playbackState.allPoints.length) {
+          pausePlayback();
+          return;
+        }
+    
+        const point = playbackState.allPoints[playbackState.currentIndex];
+    
+        // Add point to map
+        const packet = {
+          device_id: point.deviceId,
+          latitude: point.lat,
+          longitude: point.lon,
+          timestamp: new Date(point.timestamp).toISOString(),
+          sats: point.sats
+        };
+    
+        addDataPoint(packet, true);
+    
+        // Update trail
+        if (!gpsTrails[point.deviceId]) {
+          gpsTrails[point.deviceId] = [];
+        }
+        gpsTrails[point.deviceId].push([point.lat, point.lon]);
+        drawTrail(point.deviceId);
+    
+        playbackState.currentIndex++;
+        updatePlaybackUI();
+    
+      }, interval);
+    }
+
+    function pausePlayback() {
+      playbackState.isPlaying = false;
+      if (playbackState.intervalId) {
+        clearInterval(playbackState.intervalId);
+        playbackState.intervalId = null;
+      }
+      document.getElementById('play-btn').textContent = '▶️ Play';
+      document.getElementById('play-btn').classList.remove('playing');
+    }
+
+    function restartPlayback() {
+      pausePlayback();
+      playbackState.currentIndex = 0;
+  
+      // Clear map
+      clearMapForPlayback();
+  
+      // Reset trails
+      Object.keys(gpsTrails).forEach(key => {
+        gpsTrails[key] = [];
+      });
+  
+      updatePlaybackUI();
+    }
+
+    function seekPlayback(value) {
+      const wasPlaying = playbackState.isPlaying;
+      pausePlayback();
+  
+      const targetIndex = Math.floor((value / 100) * playbackState.allPoints.length);
+      playbackState.currentIndex = Math.max(0, Math.min(targetIndex, playbackState.allPoints.length));
+  
+      // Rebuild map up to this point
+      clearMapForPlayback();
+      Object.keys(gpsTrails).forEach(key => {
+        gpsTrails[key] = [];
+      });
+  
+      for (let i = 0; i < playbackState.currentIndex; i++) {
+        const point = playbackState.allPoints[i];
+        if (!gpsTrails[point.deviceId]) {
+          gpsTrails[point.deviceId] = [];
+        }
+        gpsTrails[point.deviceId].push([point.lat, point.lon]);
+      }
+  
+      Object.keys(gpsTrails).forEach(deviceId => {
+        if (gpsTrails[deviceId].length > 0) {
+          const lastPoint = gpsTrails[deviceId][gpsTrails[deviceId].length - 1];
+          const packet = {
+            device_id: deviceId,
+            latitude: lastPoint[0],
+            longitude: lastPoint[1],
+            timestamp: new Date().toISOString(),
+            sats: latestPackets[deviceId]?.sats
+          };
+          addDataPoint(packet, true);
+          drawTrail(deviceId);
+        }
+      });
+  
+      updatePlaybackUI();
+  
+      if (wasPlaying) {
+        startPlayback();
+      }
+    }
+
+    function updatePlaybackUI() {
+      if (playbackState.allPoints.length === 0) return;
+  
+      const currentPoint = playbackState.allPoints[playbackState.currentIndex];
+      const currentTime = currentPoint ? currentPoint.timestamp : playbackState.startTime;
+  
+      const elapsed = currentTime - playbackState.startTime;
+      const total = playbackState.endTime - playbackState.startTime;
+  
+      const progress = (playbackState.currentIndex / playbackState.allPoints.length) * 100;
+  
+      document.getElementById('playback-slider').value = progress;
+      document.getElementById('playback-time').textContent = 
+        `${formatDuration(elapsed)} / ${formatDuration(total)}`;
+    }
+
+    function formatDuration(ms) {
+      const seconds = Math.floor(ms / 1000);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+  
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function setPlaybackSpeed(speed) {
+      playbackState.speed = speed;
+  
+      // Update button styles
+      document.querySelectorAll('.playback-speed-btn').forEach(btn => {
+        btn.classList.remove('active-speed');
+      });
+  
+      const speedId = speed === 0.25 ? '025' : speed === 0.5 ? '05' : speed.toString();
+      const activeBtn = document.getElementById(`speed-${speedId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active-speed');
+      }
+  
+      // Restart interval if playing
+      if (playbackState.isPlaying) {
+        pausePlayback();
+        startPlayback();
+      }
+  
+      console.log('⏩ Playback speed changed to:', speed + 'x');
+    }
+
+    function closePlayback() {
+      pausePlayback();
+  
+      const control = document.getElementById('playback-control');
+      const toggleBtn = document.getElementById('playback-toggle');
+  
+      control.classList.remove('active');
+      toggleBtn.textContent = '▶️ Playback Mode';
+      playbackState.isActive = false;
+  
+      // Clear playback visualization
+      clearMapForPlayback();
+  
+      // Restore saved trails
+      if (playbackState.savedTrails && Object.keys(playbackState.savedTrails).length > 0) {
+        Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
+        Object.assign(gpsTrails, JSON.parse(JSON.stringify(playbackState.savedTrails)));
+    
+        // Redraw everything
+        Object.keys(gpsTrails).forEach(deviceId => {
+          const trail = gpsTrails[deviceId];
+          if (trail && trail.length > 0) {
+            // Draw all points
+            trail.forEach((point, index) => {
+              const isLast = index === trail.length - 1;
+              const packet = {
+                device_id: deviceId,
+                latitude: point[0],
+                longitude: point[1],
+                timestamp: latestPackets[deviceId]?.timestamp || new Date().toISOString(),
+                sats: latestPackets[deviceId]?.sats
+              };
+              addDataPoint(packet, isLast);
+            });
+        
+            drawTrail(deviceId);
+          }
+        });
+    
+        // Restore map view
+        if (playbackState.savedCenter && playbackState.savedZoom) {
+          setTimeout(() => {
+            map.setView(playbackState.savedCenter, playbackState.savedZoom);
+          }, 100);
+        }
+      } else {
+        // No saved data, just ensure map is visible
+        setTimeout(() => {
+          map.setView([-33.8411, 151.2058], 15);
+        }, 100);
+      }
+  
+      updateTable();
+      updateDebugInfo();
+  
+      console.log('🎬 Playback mode closed - restored to previous state');
+    }
+
+    // Connect toggle button
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleBtn = document.getElementById('playback-toggle');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', togglePlaybackMode);
+      }
+    });
+
+    // ==================== COMPANY SELECTION ====================
+
+    function initCompanySelection() {
+      const modal = document.getElementById('company-modal');
+      const select = document.getElementById('company-select');
+      const confirmBtn = document.getElementById('company-confirm');
+      const banner = document.getElementById('company-banner');
+      const bannerText = document.getElementById('banner-text');
+
+      // Company to animal icon mapping
+      const companyIcons = {
+        'A COY': '🐺',      // Wolf
+        'B COY': '🐂',      // Bull
+        'C COY': '🐯',      // Tiger
+        'D COY': '🐕',      // Dingo (using dog emoji)
+        'E COY': '🦅', // Eagle
+        'S COY': '🦂'       // Scorpion
+      };
+      
+      // Helper function to get icon for a company
+      function getCompanyIcon(companyName) {
+        return companyIcons[companyName] || '📍';
+      }
+  
+      // Enable confirm button when company is selected
+      select.addEventListener('change', function() {
+        if (this.value) {
+          confirmBtn.disabled = false;
+        }
+      });
+  
+      // Handle confirmation
+      confirmBtn.addEventListener('click', function() {
+        const selectedCompany = select.value;
+    
+        if (selectedCompany) {
+          const icon = getCompanyIcon(selectedCompany);
+            
+          // Hide modal
+          modal.classList.add('hidden');
+      
+          // Show banner with selected company
+          bannerText.textContent = `${icon} ${selectedCompany} - GPS TRACKING ACTIVE ${icon}`;
+          banner.classList.add('active');
+          document.body.classList.add('has-banner');
+      
+          // Save selection to localStorage
+          localStorage.setItem('selected_company', selectedCompany);
+      
+          console.log(`✅ Company selected: ${selectedCompany} ${icon}`);
+        }
+      });
+  
+      // Check if company was previously selected
+      const savedCompany = localStorage.getItem('selected_company');
+      if (savedCompany) {
+          const icon = getCompanyIcon(savedCompany);
+          
+        // Auto-select and show banner
+        modal.classList.add('hidden');
+        bannerText.textContent = `${icon} ${savedCompany} - GPS TRACKING ACTIVE ${icon}`;
+        banner.classList.add('active');
+        document.body.classList.add('has-banner');
+        console.log(`✅ Restored company: ${savedCompany} ${icon}`);
+      }
+    }
+
+    // Initialize on page load
+    initCompanySelection();
+    
+    console.log('Initializing GPS tracker...');
+
+    const hasStoredData = loadFromLocalStorage();
+
+    // Make elements draggable after a small delay to ensure they exist
+    setTimeout(() => {
+      try {
+        const info = document.getElementById('info');
+        const info2 = document.getElementById('info2');
+        const opacityControl = document.getElementById('opacity-control');
+        const gridControl = document.getElementById('grid-control');
+        const playbackToggle = document.getElementById('playback-toggle');
+    
+        if (info) makeDraggable(info);
+        if (info2) makeDraggable(info2);
+        if (opacityControl) makeDraggable(opacityControl);
+        if (gridControl) makeDraggable(gridControl);
+        if (playbackToggle) makeDraggable(playbackToggle);
+    
+        console.log('✅ Draggable elements initialized');
+      } catch (error) {
+        console.error('Error making elements draggable:', error);
+      }
+    }, 100);
+
+    setTimeout(() => {
+      drawGridLines();
+    }, 500);
+    
+    const debugPanel = document.getElementById('debug');
+    let debugTimeout;
+    
+    debugPanel.classList.add('collapsed');
+    
+    debugPanel.addEventListener('mouseenter', () => {
+      clearTimeout(debugTimeout);
+      debugPanel.classList.remove('collapsed');
+    });
+    
+    debugPanel.addEventListener('mouseleave', () => {
+      debugTimeout = setTimeout(() => {
+        debugPanel.classList.add('collapsed');
+      }, 1500);
+    });
+    
+    debugPanel.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      clearTimeout(debugTimeout);
+      
+      if (debugPanel.classList.contains('collapsed')) {
+        debugPanel.classList.remove('collapsed');
+        debugTimeout = setTimeout(() => {
+          debugPanel.classList.add('collapsed');
+        }, 4000);
+      } else {
+        debugPanel.classList.add('collapsed');
+      }
+    });
+    
+    socket.on("gps_update", (data) => {
+      processGPSUpdate(data);
+    });
+
+    setInterval(updateTable, 10000);
+    
+    document.getElementById("build-time").textContent =
+      new Date().toLocaleString("en-AU", {
+        timeZone: "Australia/Sydney",
+        hour12: false,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    function toggleGridPanel() {
+      const panel = document.getElementById('grid-control');
+      panel.classList.toggle('collapsed');
+    }
+
+    function toggleOpacityPanel() {
+      const panel = document.getElementById('opacity-control');
+      panel.classList.toggle('collapsed');
+    }
+  </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
