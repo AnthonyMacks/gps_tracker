@@ -1072,6 +1072,246 @@
         top: 50px;
       }
     }
+
+    /* Coordinate Plotter Control */
+    #coord-plotter-btn {
+      position: absolute;
+      bottom: 180px;
+      left: 10px;
+      background: rgba(46, 204, 113, 0.9);
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      z-index: 1001;
+    }
+
+    #coord-plotter-btn:hover {
+      background: rgba(39, 174, 96, 0.9);
+    }
+
+    /* Coordinate Plotter Modal */
+    #coord-plotter-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #coord-plotter-modal.hidden {
+      display: none;
+    }
+
+    .coord-plotter-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+      font-family: sans-serif;
+    }
+
+    .coord-plotter-content h2 {
+      margin: 0 0 10px 0;
+      color: #2C3E50;
+      font-size: 22px;
+    }
+
+    .coord-plotter-content p {
+      margin: 0 0 20px 0;
+      color: #7F8C8D;
+      font-size: 13px;
+    }
+
+    .coord-input-group {
+      margin-bottom: 15px;
+    }
+
+    .coord-input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #2C3E50;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .coord-input-group input,
+    .coord-input-group select {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 2px solid #BDC3C7;
+      border-radius: 6px;
+      font-family: sans-serif;
+      box-sizing: border-box;
+    }
+
+    .coord-input-group input:focus,
+    .coord-input-group select:focus {
+      outline: none;
+      border-color: #27AE60;
+    }
+
+    .coord-format-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .coord-format-toggle button {
+      flex: 1;
+      padding: 8px;
+      border: 2px solid #BDC3C7;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .coord-format-toggle button.active {
+      background: #27AE60;
+      color: white;
+      border-color: #27AE60;
+    }
+
+    .coord-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .coord-buttons button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .coord-plot-btn {
+      background: #27AE60;
+      color: white;
+    }
+
+    .coord-plot-btn:hover {
+      background: #229954;
+    }
+
+    .coord-cancel-btn {
+      background: #E74C3C;
+      color: white;
+    }
+
+    .coord-cancel-btn:hover {
+      background: #C0392B;
+    }
+
+    .coord-example {
+      background: #ECF0F1;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #7F8C8D;
+      margin-top: 5px;
+    }
+
+    .coord-markers-list {
+      position: absolute;
+      bottom: 220px;
+      left: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      z-index: 1001;
+      max-width: 250px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    .coord-markers-list.active {
+      display: block;
+    }
+
+    .coord-markers-list h4 {
+      margin: 0 0 8px 0;
+      color: #2C3E50;
+      font-size: 13px;
+      border-bottom: 1px solid #BDC3C7;
+      padding-bottom: 5px;
+    }
+
+    .coord-marker-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+      margin-bottom: 5px;
+      background: #ECF0F1;
+      border-radius: 4px;
+    }
+
+    .coord-marker-name {
+      font-weight: bold;
+      color: #2C3E50;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .coord-marker-remove {
+      background: #E74C3C;
+      color: white;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px;
+    }
+
+    .coord-marker-remove:hover {
+      background: #C0392B;
+    }
+
+    @media (max-width: 768px) {
+      #coord-plotter-btn {
+        bottom: 140px;
+        left: 10px;
+        font-size: 10px;
+        padding: 8px 12px;
+      }
+
+      .coord-markers-list {
+        bottom: 180px;
+        max-width: 200px;
+      }
+
+      .coord-plotter-content {
+        padding: 20px;
+      }
+
+      .coord-plotter-content h2 {
+        font-size: 18px;
+      }
+    }
     
   </style>
 </head>
@@ -1098,6 +1338,69 @@
     </select>
     
     <button id="company-confirm" class="company-confirm-btn" disabled>Confirm Selection</button>
+  </div>
+</div>
+
+<!-- Coordinate Plotter Button -->
+<button id="coord-plotter-btn">📍 Plot Coordinates</button>
+
+<!-- Coordinate Markers List -->
+<div id="coord-markers-list" class="coord-markers-list">
+  <h4>Plotted Coordinates</h4>
+  <div id="coord-markers-container"></div>
+</div>
+
+<!-- Coordinate Plotter Modal -->
+<div id="coord-plotter-modal" class="hidden">
+  <div class="coord-plotter-content">
+    <h2>📍 Plot Coordinates</h2>
+    <p>Enter coordinates to plot on the map</p>
+
+    <div class="coord-format-toggle">
+      <button id="format-latlon" class="active" onclick="switchCoordFormat('latlon')">Lat/Lon</button>
+      <button id="format-gridref" onclick="switchCoordFormat('gridref')">Grid Reference</button>
+    </div>
+
+    <div class="coord-input-group">
+      <label for="coord-name">Label (optional)</label>
+      <input type="text" id="coord-name" placeholder="e.g., Rally Point Alpha">
+    </div>
+
+    <div id="latlon-inputs">
+      <div class="coord-input-group">
+        <label for="coord-lat">Latitude</label>
+        <input type="text" id="coord-lat" placeholder="-33.8411">
+        <div class="coord-example">Example: -33.8411 or 33°50'28"S</div>
+      </div>
+
+      <div class="coord-input-group">
+        <label for="coord-lon">Longitude</label>
+        <input type="text" id="coord-lon" placeholder="151.2058">
+        <div class="coord-example">Example: 151.2058 or 151°12'21"E</div>
+      </div>
+    </div>
+
+    <div id="gridref-inputs" style="display: none;">
+      <div class="coord-input-group">
+        <label for="coord-zone">UTM Zone</label>
+        <select id="coord-zone">
+          <option value="55">Zone 55 (NSW Central)</option>
+          <option value="56" selected>Zone 56 (Sydney)</option>
+          <option value="57">Zone 57 (NSW East)</option>
+        </select>
+      </div>
+
+      <div class="coord-input-group">
+        <label for="coord-gridref">Grid Reference</label>
+        <input type="text" id="coord-gridref" placeholder="3388 5415">
+        <div class="coord-example">Example: 3388 5415 (8-digit) or 338 541 (6-digit)</div>
+      </div>
+    </div>
+
+    <div class="coord-buttons">
+      <button class="coord-cancel-btn" onclick="closeCoordPlotter()">Cancel</button>
+      <button class="coord-plot-btn" onclick="plotCoordinate()">Plot on Map</button>
+    </div>
   </div>
 </div>
 
@@ -3844,9 +4147,275 @@
       const panel = document.getElementById('opacity-control');
       panel.classList.toggle('collapsed');
     }
+
+    // ==================== COORDINATE PLOTTER ====================
+
+    let plottedCoordinates = [];
+    let coordMarkerCounter = 1;
+
+    function openCoordPlotter() {
+      document.getElementById('coord-plotter-modal').classList.remove('hidden');
+    }
+
+    function closeCoordPlotter() {
+      document.getElementById('coord-plotter-modal').classList.add('hidden');
+      // Clear inputs
+      document.getElementById('coord-name').value = '';
+      document.getElementById('coord-lat').value = '';
+      document.getElementById('coord-lon').value = '';
+      document.getElementById('coord-gridref').value = '';
+    }
+
+    function switchCoordFormat(format) {
+      const latlonBtn = document.getElementById('format-latlon');
+      const gridrefBtn = document.getElementById('format-gridref');
+      const latlonInputs = document.getElementById('latlon-inputs');
+      const gridrefInputs = document.getElementById('gridref-inputs');
+
+      if (format === 'latlon') {
+        latlonBtn.classList.add('active');
+        gridrefBtn.classList.remove('active');
+        latlonInputs.style.display = 'block';
+        gridrefInputs.style.display = 'none';
+      } else {
+        gridrefBtn.classList.add('active');
+        latlonBtn.classList.remove('active');
+        gridrefInputs.style.display = 'block';
+        latlonInputs.style.display = 'none';
+      }
+    }
+
+    function parseDMS(dmsString) {
+      // Parse DMS format like "33°50'28\"S" or "151°12'21\"E"
+      const regex = /(\d+)[°\s]+(\d+)['\s]+(\d+(?:\.\d+)?)["\s]*([NSEW]?)/i;
+      const match = dmsString.match(regex);
+  
+      if (!match) return null;
+  
+      const degrees = parseInt(match[1]);
+      const minutes = parseInt(match[2]);
+      const seconds = parseFloat(match[3]);
+      const direction = match[4].toUpperCase();
+  
+      let decimal = degrees + minutes/60 + seconds/3600;
+  
+      if (direction === 'S' || direction === 'W') {
+        decimal = -decimal;
+      }
+  
+      return decimal;
+    }
+
+    function parseCoordinate(value) {
+      // Try decimal first
+      const decimal = parseFloat(value);
+      if (!isNaN(decimal)) {
+        return decimal;
+      }
+  
+      // Try DMS format
+      return parseDMS(value);
+    }
+
+    function plotCoordinate() {
+      const formatLatlon = document.getElementById('format-latlon').classList.contains('active');
+      let lat, lon, label;
+  
+      label = document.getElementById('coord-name').value.trim() || `Point ${coordMarkerCounter}`;
+  
+      if (formatLatlon) {
+        // Parse lat/lon
+        const latInput = document.getElementById('coord-lat').value.trim();
+        const lonInput = document.getElementById('coord-lon').value.trim();
+    
+        if (!latInput || !lonInput) {
+          alert('❌ Please enter both latitude and longitude');
+          return;
+        }
+    
+        lat = parseCoordinate(latInput);
+        lon = parseCoordinate(lonInput);
+    
+        if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
+          alert('❌ Invalid coordinates. Use decimal (-33.8411) or DMS (33°50\'28"S) format');
+          return;
+        }
+    
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+          alert('❌ Coordinates out of range. Lat: -90 to 90, Lon: -180 to 180');
+          return;
+        }
+    
+      } else {
+        // Parse grid reference
+        const zone = parseInt(document.getElementById('coord-zone').value);
+        const gridRef = document.getElementById('coord-gridref').value.trim();
+    
+        if (!gridRef) {
+          alert('❌ Please enter a grid reference');
+          return;
+        }
+    
+        const result = gridReferenceToLatLon(gridRef, zone);
+    
+        if (!result) {
+          alert('❌ Invalid grid reference format. Use 8-digit (3388 5415) or 6-digit (338 541) format');
+          return;
+        }
+    
+        lat = result.lat;
+        lon = result.lon;
+      }
+  
+      // Create marker
+      const markerId = `coord-${coordMarkerCounter}`;
+      coordMarkerCounter++;
+  
+      const marker = L.marker([lat, lon], {
+        icon: L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        }),
+        draggable: true
+      });
+  
+      const gridRef = latLonToGridReference(lat, lon);
+  
+      const popupContent = `
+        <strong>${label}</strong><br>
+        <hr style="margin: 5px 0;">
+        <strong>Grid Reference:</strong> ${gridRef}<br>
+        <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+        <button onclick="removeCoordMarker('${markerId}')" style="margin-top: 8px; background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
+      `;
+  
+      marker.bindPopup(popupContent);
+      marker.addTo(map);
+  
+      // Update marker position on drag
+      marker.on('dragend', function(e) {
+        const newPos = e.target.getLatLng();
+        const newGridRef = latLonToGridReference(newPos.lat, newPos.lng);
+    
+        // Update the stored coordinates
+        const coord = plottedCoordinates.find(c => c.id === markerId);
+        if (coord) {
+          coord.lat = newPos.lat;
+          coord.lon = newPos.lng;
+        }
+    
+        // Update popup
+        const newPopupContent = `
+          <strong>${label}</strong><br>
+          <hr style="margin: 5px 0;">
+          <strong>Grid Reference:</strong> ${newGridRef}<br>
+          <strong>Lat/Lon:</strong> ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}<br>
+          <button onclick="removeCoordMarker('${markerId}')" style="margin-top: 8px; background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
+        `;
+        marker.setPopupContent(newPopupContent);
+      });
+  
+      // Store marker info
+      plottedCoordinates.push({
+        id: markerId,
+        label: label,
+        lat: lat,
+        lon: lon,
+        marker: marker
+      });
+  
+      // Update list
+      updateCoordMarkersList();
+  
+      // Pan to marker
+      map.setView([lat, lon], Math.max(map.getZoom(), 15));
+  
+      // Close modal
+      closeCoordPlotter();
+  
+      // Show marker and popup
+      marker.openPopup();
+  
+      console.log(`✅ Plotted coordinate: ${label} at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    }
+
+    function removeCoordMarker(markerId) {
+      const coordIndex = plottedCoordinates.findIndex(c => c.id === markerId);
+  
+      if (coordIndex !== -1) {
+        const coord = plottedCoordinates[coordIndex];
+    
+        // Remove marker from map
+        map.removeLayer(coord.marker);
+    
+        // Remove from array
+        plottedCoordinates.splice(coordIndex, 1);
+    
+        // Update list
+        updateCoordMarkersList();
+    
+        console.log(`🗑️ Removed coordinate: ${coord.label}`);
+      }
+    }
+
+    function updateCoordMarkersList() {
+      const container = document.getElementById('coord-markers-container');
+      const listDiv = document.getElementById('coord-markers-list');
+  
+      if (plottedCoordinates.length === 0) {
+        listDiv.classList.remove('active');
+        container.innerHTML = '<p style="color: #7F8C8D; font-size: 11px; margin: 0;">No coordinates plotted</p>';
+        return;
+      }
+  
+      listDiv.classList.add('active');
+  
+      container.innerHTML = '';
+  
+      plottedCoordinates.forEach(coord => {
+        const item = document.createElement('div');
+        item.className = 'coord-marker-item';
+    
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'coord-marker-name';
+        nameSpan.textContent = coord.label;
+        nameSpan.title = `${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)}`;
+        nameSpan.onclick = () => {
+          map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 15));
+          coord.marker.openPopup();
+        };
+    
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'coord-marker-remove';
+        removeBtn.textContent = '✕';
+        removeBtn.onclick = () => removeCoordMarker(coord.id);
+    
+        item.appendChild(nameSpan);
+        item.appendChild(removeBtn);
+        container.appendChild(item);
+      });
+    }
+
+    // Connect button
+    document.getElementById('coord-plotter-btn').addEventListener('click', openCoordPlotter);
+
+    // Allow closing modal by clicking outside
+    document.getElementById('coord-plotter-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeCoordPlotter();
+      }
+    });
+
+    console.log('✅ Coordinate plotter initialized');
+    
   </script>
 </body>
 </html>
+
 
 
 
