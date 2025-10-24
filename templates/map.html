@@ -1076,8 +1076,8 @@
     /* Coordinate Plotter Control */
     #coord-plotter-btn {
       position: absolute;
-      bottom: 180px;
-      left: 10px;
+      bottom: 80px;
+      right: 150px;
       background: rgba(46, 204, 113, 0.9);
       color: white;
       padding: 10px 15px;
@@ -1233,8 +1233,8 @@
 
     .coord-markers-list {
       position: absolute;
-      bottom: 220px;
-      left: 10px;
+      bottom: 120px;
+      right: 10px;
       background: rgba(255,255,255,0.95);
       padding: 10px;
       border-radius: 6px;
@@ -1293,8 +1293,8 @@
 
     @media (max-width: 768px) {
       #coord-plotter-btn {
-        bottom: 140px;
-        left: 10px;
+        bottom: 70px;
+        right: 10px;
         font-size: 10px;
         padding: 8px 12px;
       }
@@ -1617,41 +1617,60 @@
 
     // New function to convert grid reference to lat/lon
     function gridReferenceToLatLon(gridRef, zone) {
-      // Parse grid reference "3388 5415" format
+      // Parse grid reference "3388 5415" format (8-digit) or "338 541" format (6-digit)
       const parts = gridRef.trim().split(/\s+/);
       if (parts.length !== 2) {
         console.error('Invalid grid reference format');
         return null;
       }
-  
+
       const eastingDigits = parts[0];
       const northingDigits = parts[1];
-  
+
+      // Validate that both parts have the same number of digits
+      if (eastingDigits.length !== northingDigits.length) {
+        console.error('Easting and northing must have the same number of digits');
+        return null;
+      }
+
+      // Determine multiplier based on precision
+      // 6-digit (3+3): multiply by 100 to get meters -> 338 becomes 33800m
+      // 8-digit (4+4): multiply by 10 to get meters -> 3388 becomes 33880m
+      let multiplier;
+      if (eastingDigits.length === 3) {
+        multiplier = 100; // 6-digit format (3+3)
+      } else if (eastingDigits.length === 4) {
+        multiplier = 10;  // 8-digit format (4+4)
+      } else {
+        console.error('Invalid grid reference length. Use 6-digit (e.g., 338 541) or 8-digit (e.g., 3388 5415)');
+        return null;
+      }
+
       // Convert to meters within 100km square
-      const eastingWithin100k = parseInt(eastingDigits) * 10; // 3388 -> 33880 meters
-      const northingWithin100k = parseInt(northingDigits) * 10; // 5415 -> 54150 meters
-  
+      const eastingWithin100k = parseInt(eastingDigits) * multiplier;
+      const northingWithin100k = parseInt(northingDigits) * multiplier;
+
       // Get current map center to determine which 100km grid square we're in
       const center = map.getCenter();
       const centerUTM = proj4('EPSG:4326', `EPSG:${getEPSG(zone)}`, [center.lng, center.lat]);
-  
+
       // Determine the 100km grid square base coordinates
       const base100kE = Math.floor(centerUTM[0] / 100000) * 100000;
       const base100kN = Math.floor(centerUTM[1] / 100000) * 100000;
-  
+
       // Calculate full UTM coordinates
       const fullEasting = base100kE + eastingWithin100k;
       const fullNorthing = base100kN + northingWithin100k;
-  
+
       console.log(`Grid ref ${gridRef} -> UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
-  
+
       // Convert to lat/lon
       const epsg = getEPSG(zone);
       const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
-  
+
       return { lat: latLon[1], lon: latLon[0] };
     }
-
+    
     function latLonToGridReference(lat, lon) {
       try {
         const zone = getUTMZone(lon);
@@ -4415,6 +4434,7 @@
   </script>
 </body>
 </html>
+
 
 
 
