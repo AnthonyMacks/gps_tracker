@@ -1798,36 +1798,65 @@
       console.error('Could not find valid coordinates for grid reference');
       return null;
     }
-
     // Convert grid reference with explicit 100km grid square to lat/lon
     function gridReferenceToLatLonWithSquare(gridRef, zone, gridSquareLetters) {
-      // Parse grid reference
-      const parts = gridRef.trim().split(/\s+/);
+      console.log('=== gridReferenceToLatLonWithSquare ===');
+      console.log('Input gridRef:', JSON.stringify(gridRef));
+      console.log('Zone:', zone);
+      console.log('Grid square:', gridSquareLetters);
+  
+      // Clean and parse grid reference - handle various input formats
+      const cleaned = gridRef.trim().replace(/\s+/g, ' '); // Normalize whitespace
+      console.log('Cleaned input:', JSON.stringify(cleaned));
+  
+      const parts = cleaned.split(' ');
+      console.log('Split parts:', parts, 'Count:', parts.length);
+  
       if (parts.length !== 2) {
-        console.error('Invalid grid reference format');
+        console.error('❌ Must have exactly 2 parts separated by space');
         return null;
       }
 
       const eastingDigits = parts[0];
       const northingDigits = parts[1];
+  
+      console.log('Easting digits:', JSON.stringify(eastingDigits), 'Length:', eastingDigits.length);
+      console.log('Northing digits:', JSON.stringify(northingDigits), 'Length:', northingDigits.length);
+
+      // Check both parts are digits only
+      if (!/^\d+$/.test(eastingDigits) || !/^\d+$/.test(northingDigits)) {
+        console.error('❌ Grid reference must contain only digits');
+        return null;
+      }
 
       if (eastingDigits.length !== northingDigits.length) {
-        console.error('Easting and northing must have the same number of digits');
+        console.error('❌ Easting and northing must have the same number of digits');
         return null;
       }
 
       let multiplier;
       if (eastingDigits.length === 3) {
-        multiplier = 100;
+        multiplier = 100; // 6-digit format
+        console.log('✅ Using 6-digit format (multiplier: 100)');
       } else if (eastingDigits.length === 4) {
-        multiplier = 10;
+        multiplier = 10;  // 8-digit format
+        console.log('✅ Using 8-digit format (multiplier: 10)');
+      } else if (eastingDigits.length === 2) {
+        multiplier = 1000; // 4-digit format
+        console.log('✅ Using 4-digit format (multiplier: 1000)');
+      } else if (eastingDigits.length === 5) {
+        multiplier = 1;    // 10-digit format
+        console.log('✅ Using 10-digit format (multiplier: 1)');
       } else {
-        console.error('Invalid grid reference length. Use 6-digit (e.g., 350 920) or 8-digit (e.g., 3500 9200)');
+        console.error(`❌ Invalid length: ${eastingDigits.length}. Use 4-digit (35 92), 6-digit (350 920), 8-digit (3500 9200), or 10-digit (35000 92000)`);
         return null;
       }
 
       const eastingWithin100k = parseInt(eastingDigits) * multiplier;
       const northingWithin100k = parseInt(northingDigits) * multiplier;
+  
+      console.log('Easting within 100k:', eastingWithin100k);
+      console.log('Northing within 100k:', northingWithin100k);
 
       const targetGridSquare = gridSquareLetters.toUpperCase();
       console.log(`Looking for grid square: ${targetGridSquare} in zone ${zone}`);
@@ -1840,6 +1869,7 @@
       // For NSW, eastings typically 1-8, northings typically 60-65
       let bestMatch = null;
       let bestDistance = Infinity;
+      let matchCount = 0;
   
       for (let e100k = 1; e100k <= 10; e100k++) {
         for (let n100k = 55; n100k <= 70; n100k++) {
@@ -1851,6 +1881,8 @@
       
           // Does it match what the user selected?
           if (testGridSquare === targetGridSquare) {
+            matchCount++;
+        
             // Calculate full coordinates
             const fullEasting = testEasting + eastingWithin100k;
             const fullNorthing = testNorthing + northingWithin100k;
@@ -1879,7 +1911,7 @@
                   };
                 }
             
-                console.log(`Found match: ${testGridSquare} at e100k=${e100k}, n100k=${n100k} -> ${latLon[1].toFixed(6)}, ${latLon[0].toFixed(6)}`);
+                console.log(`Found match #${matchCount}: ${testGridSquare} at e100k=${e100k}, n100k=${n100k} -> ${latLon[1].toFixed(6)}, ${latLon[0].toFixed(6)}, distance=${distance.toFixed(4)}`);
               }
             } catch (error) {
               // Skip invalid coordinates
@@ -1890,16 +1922,16 @@
       }
   
       if (bestMatch) {
-        console.log(`✅ Selected: e100k=${bestMatch.e100k}, n100k=${bestMatch.n100k}`);
+        console.log(`✅ Selected best match: e100k=${bestMatch.e100k}, n100k=${bestMatch.n100k}`);
         console.log(`   UTM: E=${bestMatch.easting}, N=${bestMatch.northing}`);
         console.log(`   Lat/Lon: ${bestMatch.lat.toFixed(6)}, ${bestMatch.lon.toFixed(6)}`);
         return { lat: bestMatch.lat, lon: bestMatch.lon };
       }
 
-      console.error('Could not find matching grid square');
+      console.error(`❌ Could not find matching grid square ${targetGridSquare} (checked ${matchCount} matches)`);
       return null;
     }
-       
+    
     function latLonToGridReference(lat, lon) {
       try {
         const zone = getUTMZone(lon);
@@ -4673,6 +4705,7 @@
   </script>
 </body>
 </html>
+
 
 
 
