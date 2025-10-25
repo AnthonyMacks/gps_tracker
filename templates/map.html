@@ -1450,34 +1450,43 @@
   </div>
 
   <div class="coord-input-group">
-    <label for="coord-grid-square">100km Grid Square (Optional)</label>
-    <select id="coord-grid-square">
-      <option value="">Auto-detect from map view</option>
-      <optgroup label="Zone 55 (NSW Central/West)">
-        <option value="55-GU">GU (Dubbo area)</option>
-        <option value="55-HU">HU (Parkes/Forbes)</option>
-        <option value="55-GV">GV (Coonabarabran)</option>
-        <option value="55-HV">HV (Narrabri/Gunnedah)</option>
-      </optgroup>
-      <optgroup label="Zone 55 (NSW Central/West)">
-        <option value="55-HU">HU (Lithgow/Mudgee)</option>
-        <option value="56-HV">HV (Bathurst/Orange)</option>
-        <option value="56-JU">JU (Katoomba/Blue Mountains)</option>
-        <option value="56-JV">JV (Penrith/Western Sydney)</option>
-        <option value="56-KU">KU (Wollongong/Southern Highlands)</option>
-        <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
-        <option value="56-LU">LU (Nowra/South Coast)</option>
-        <option value="56-LV">LV (Newcastle/Central Coast)</option>
-        <option value="56-MU">MU (Ulladulla)</option>
-        <option value="56-MV">MV (Forster/Taree)</option>
-      </optgroup>
-      <optgroup label="Zone 57 (NSW North Coast)">
-        <option value="57-LV">LV (Coffs Harbour)</option>
-        <option value="57-MV">MV (Grafton)</option>
-      </optgroup>
-    </select>
-    <div class="coord-example">Select grid square for precise placement (e.g., Lithgow is in HU)</div>
-  </div>
+  <label for="coord-zone">UTM Zone</label>
+  <select id="coord-zone">
+    <option value="55">Zone 55 (NSW Central)</option>
+    <option value="56" selected>Zone 56 (Sydney)</option>
+    <option value="57">Zone 57 (NSW East)</option>
+  </select>
+</div>
+
+<div class="coord-input-group">
+  <label for="coord-grid-square">100km Grid Square (Optional)</label>
+  <select id="coord-grid-square">
+    <option value="">Auto-detect from map view</option>
+    <optgroup label="Zone 55 (NSW Central/West)">
+      <option value="55-GU">GU (Dubbo area)</option>
+      <option value="55-GV">GV (Coonabarabran)</option>
+      <option value="55-HV">HV (Narrabri/Gunnedah)</option>
+    </optgroup>
+    <optgroup label="Zone 56 (Sydney/Blue Mountains/Central Coast)">
+      <option value="56-LC">LC (Lithgow)</option>
+      <option value="56-MK">MK (Mudgee)</option>
+      <option value="56-HV">HV (Bathurst/Orange)</option>
+      <option value="56-JU">JU (Katoomba/Blue Mountains)</option>
+      <option value="56-JV">JV (Penrith/Western Sydney)</option>
+      <option value="56-KU">KU (Wollongong/Southern Highlands)</option>
+      <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
+      <option value="56-LU">LU (Nowra/South Coast)</option>
+      <option value="56-LV">LV (Newcastle/Central Coast)</option>
+      <option value="56-MU">MU (Ulladulla)</option>
+      <option value="56-MV">MV (Forster/Taree)</option>
+    </optgroup>
+    <optgroup label="Zone 57 (NSW North Coast)">
+      <option value="57-LV">LV (Coffs Harbour)</option>
+      <option value="57-MV">MV (Grafton)</option>
+    </optgroup>
+  </select>
+  <div class="coord-example">Select grid square for precise placement</div>
+</div>
 
   <div class="coord-input-group">
     <label for="coord-gridref">Grid Reference</label>
@@ -4733,6 +4742,7 @@
   </script>
 </body>
 </html>
+
 
 
 
