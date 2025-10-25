@@ -4296,6 +4296,7 @@
 
     // Distance measurement between coordinate markers
     let selectedCoordMarkers = [];
+    let distanceLine = null;
 
     function selectCoordMarkerForDistance(markerId) {
       const coord = plottedCoordinates.find(c => c.id === markerId);
@@ -4310,7 +4311,12 @@
         coord.marker.setOpacity(1);
         console.log(`Deselected marker: ${coord.label}`);
     
-        // Clear any existing distance popup
+        // Clear any existing distance line and popup
+        if (distanceLine) {
+          map.removeLayer(distanceLine);
+          distanceLine = null;
+        }
+  
         if (selectedCoordMarkers.length < 2) {
           map.closePopup();
         }
@@ -4360,6 +4366,24 @@
 
       // Convert bearing to military mils (6400 mils = 360 degrees)
       const bearingMils = Math.round(bearing * (6400 / 360));
+
+      // Draw line between the two points
+      if (distanceLine) {
+        map.removeLayer(distanceLine);
+      }
+  
+      distanceLine = L.polyline(
+        [[coord1.lat, coord1.lon], [coord2.lat, coord2.lon]], 
+        {
+          color: '#4A90E2',  // Lighter blue than SHORE blue (#003366)
+          weight: 3,
+          opacity: 0.8,
+          dashArray: '10, 5',  // Dashed line
+          interactive: false
+        }
+      ).addTo(map);
+  
+      console.log('📏 Drew distance line between markers');
         
       // Create popup content
       const popupContent = `
@@ -4434,6 +4458,13 @@
     function clearCoordSelection() {
       selectedCoordMarkers.forEach(c => c.marker.setOpacity(1));
       selectedCoordMarkers = [];
+
+      // Remove the distance line
+      if (distanceLine) {
+        map.removeLayer(distanceLine);
+        distanceLine = null;
+      }
+      
       map.closePopup();
       console.log('Selection cleared');
     }
@@ -4917,6 +4948,7 @@
   </script>
 </body>
 </html>
+
 
 
 
