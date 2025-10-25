@@ -1709,25 +1709,64 @@
       const eastingWithin100k = parseInt(eastingDigits) * multiplier;
       const northingWithin100k = parseInt(northingDigits) * multiplier;
 
-      // Get current map center to determine which 100km grid square we're in
+      // Get current map center and bounds
       const center = map.getCenter();
       const centerUTM = proj4('EPSG:4326', `EPSG:${getEPSG(zone)}`, [center.lng, center.lat]);
+  
+      // Search multiple 100km grid squares to find the best match
+      // We'll check a 3x3 grid of 100km squares around the current view
+      const centerBase100kE = Math.floor(centerUTM[0] / 100000) * 100000;
+      const centerBase100kN = Math.floor(centerUTM[1] / 100000) * 100000;
+  
+      let bestMatch = null;
+      let bestDistance = Infinity;
+  
+      // Check 9 possible 100km grid squares (current + 8 surrounding)
+      for (let eOffset = -1; eOffset <= 1; eOffset++) {
+        for (let nOffset = -1; nOffset <= 1; nOffset++) {
+          const base100kE = centerBase100kE + (eOffset * 100000);
+          const base100kN = centerBase100kN + (nOffset * 100000);
+      
+          // Calculate full UTM coordinates for this grid square
+          const testEasting = base100kE + eastingWithin100k;
+          const testNorthing = base100kN + northingWithin100k;
+      
+          // Convert to lat/lon
+          try {
+            const epsg = getEPSG(zone);
+            const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [testEasting, testNorthing]);
+        
+            // Calculate distance from current map center
+            const distance = Math.sqrt(
+              Math.pow(latLon[1] - center.lat, 2) + 
+              Math.pow(latLon[0] - center.lng, 2)
+            );
+        
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              bestMatch = {
+                lat: latLon[1],
+                lon: latLon[0],
+                easting: testEasting,
+                northing: testNorthing,
+                gridSquare: `E${eOffset} N${nOffset}`
+              };
+            }
+          } catch (error) {
+            // Skip invalid coordinates
+            continue;
+          }
+        }
+      }
+  
+      if (bestMatch) {
+        console.log(`Grid ref ${gridRef} -> UTM: E=${bestMatch.easting}, N=${bestMatch.northing} (zone ${zone}, grid offset: ${bestMatch.gridSquare})`);
+        console.log(`Lat/Lon: ${bestMatch.lat.toFixed(6)}, ${bestMatch.lon.toFixed(6)}`);
+        return { lat: bestMatch.lat, lon: bestMatch.lon };
+      }
 
-      // Determine the 100km grid square base coordinates
-      const base100kE = Math.floor(centerUTM[0] / 100000) * 100000;
-      const base100kN = Math.floor(centerUTM[1] / 100000) * 100000;
-
-      // Calculate full UTM coordinates
-      const fullEasting = base100kE + eastingWithin100k;
-      const fullNorthing = base100kN + northingWithin100k;
-
-      console.log(`Grid ref ${gridRef} -> UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
-
-      // Convert to lat/lon
-      const epsg = getEPSG(zone);
-      const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
-
-      return { lat: latLon[1], lon: latLon[0] };
+      console.error('Could not find valid coordinates for grid reference');
+      return null;
     }
     
     function latLonToGridReference(lat, lon) {
@@ -4493,6 +4532,7 @@
   </script>
 </body>
 </html>
+
 
 
 
