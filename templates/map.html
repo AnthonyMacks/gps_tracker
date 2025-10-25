@@ -94,12 +94,15 @@
       cursor: move;
       user-select: none;
       transition: padding 0.3s ease, opacity 0.3s ease;
-      max-width: 200px;
+      max-width: 180px;
       min-width: 180px;
+      width: 180px;
     }
 
     #opacity-control.collapsed {
       padding: 5px 10px;
+      width: 180px;
+      height: 30px;  /* Fixed height when collapsed */
     }
 
     #opacity-control.dragging {
@@ -171,12 +174,15 @@
       cursor: move;
       user-select: none;
       transition: padding 0.3s ease, opacity 0.3s ease;
-      max-width: 200px
+      max-width: 180px;
       min-width: 180px;
+      width: 180 px;
     }
 
     #grid-control.collapsed {
       padding: 5px 10px;
+      width: 180px;
+      height: 30px;  /* Fixed height when collapsed */
     }
 
     #grid-control.dragging {
@@ -4735,6 +4741,7 @@
   </script>
 </body>
 </html>
+
 
 
 
