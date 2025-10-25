@@ -1440,21 +1440,51 @@
     </div>
 
     <div id="gridref-inputs" style="display: none;">
-      <div class="coord-input-group">
-        <label for="coord-zone">UTM Zone</label>
-        <select id="coord-zone">
-          <option value="55">Zone 55 (NSW Central)</option>
-          <option value="56" selected>Zone 56 (Sydney)</option>
-          <option value="57">Zone 57 (NSW East)</option>
-        </select>
-      </div>
+  <div class="coord-input-group">
+    <label for="coord-zone">UTM Zone</label>
+    <select id="coord-zone">
+      <option value="55">Zone 55 (NSW Central)</option>
+      <option value="56" selected>Zone 56 (Sydney)</option>
+      <option value="57">Zone 57 (NSW East)</option>
+    </select>
+  </div>
 
-      <div class="coord-input-group">
-        <label for="coord-gridref">Grid Reference</label>
-        <input type="text" id="coord-gridref" placeholder="3388 5415">
-        <div class="coord-example">Example: 3388 5415 (8-digit) or 338 541 (6-digit)</div>
-      </div>
-    </div>
+  <div class="coord-input-group">
+    <label for="coord-grid-square">100km Grid Square (Optional)</label>
+    <select id="coord-grid-square">
+      <option value="">Auto-detect from map view</option>
+      <optgroup label="Zone 55 (NSW Central/West)">
+        <option value="55-GU">GU (Dubbo area)</option>
+        <option value="55-HU">HU (Parkes/Forbes)</option>
+        <option value="55-GV">GV (Coonabarabran)</option>
+        <option value="55-HV">HV (Narrabri/Gunnedah)</option>
+      </optgroup>
+      <optgroup label="Zone 56 (Sydney/Central Coast)">
+        <option value="56-HU">HU (Lithgow/Mudgee)</option>
+        <option value="56-HV">HV (Bathurst/Orange)</option>
+        <option value="56-JU">JU (Katoomba/Blue Mountains)</option>
+        <option value="56-JV">JV (Penrith/Western Sydney)</option>
+        <option value="56-KU">KU (Wollongong/Southern Highlands)</option>
+        <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
+        <option value="56-LU">LU (Nowra/South Coast)</option>
+        <option value="56-LV">LV (Newcastle/Central Coast)</option>
+        <option value="56-MU">MU (Ulladulla)</option>
+        <option value="56-MV">MV (Forster/Taree)</option>
+      </optgroup>
+      <optgroup label="Zone 57 (NSW North Coast)">
+        <option value="57-LV">LV (Coffs Harbour)</option>
+        <option value="57-MV">MV (Grafton)</option>
+      </optgroup>
+    </select>
+    <div class="coord-example">Select grid square for precise placement (e.g., Lithgow is in HU)</div>
+  </div>
+
+  <div class="coord-input-group">
+    <label for="coord-gridref">Grid Reference</label>
+    <input type="text" id="coord-gridref" placeholder="350 920">
+    <div class="coord-example">Example: 350 920 (6-digit) or 3500 9200 (8-digit)</div>
+  </div>
+</div>
 
     <div class="coord-buttons">
       <button class="coord-cancel-btn" onclick="closeCoordPlotter()">Cancel</button>
@@ -1767,6 +1797,86 @@
 
       console.error('Could not find valid coordinates for grid reference');
       return null;
+    }
+
+    // Convert grid reference with explicit 100km grid square to lat/lon
+    function gridReferenceToLatLonWithSquare(gridRef, zone, gridSquareLetters) {
+      // Parse grid reference
+      const parts = gridRef.trim().split(/\s+/);
+      if (parts.length !== 2) {
+        console.error('Invalid grid reference format');
+        return null;
+      }
+
+      const eastingDigits = parts[0];
+      const northingDigits = parts[1];
+
+      if (eastingDigits.length !== northingDigits.length) {
+        console.error('Easting and northing must have the same number of digits');
+        return null;
+      }
+
+      let multiplier;
+      if (eastingDigits.length === 3) {
+        multiplier = 100;
+      } else if (eastingDigits.length === 4) {
+        multiplier = 10;
+      } else {
+        console.error('Invalid grid reference length. Use 6-digit (e.g., 350 920) or 8-digit (e.g., 3500 9200)');
+        return null;
+      }
+
+      const eastingWithin100k = parseInt(eastingDigits) * multiplier;
+      const northingWithin100k = parseInt(northingDigits) * multiplier;
+
+      // Decode 100km grid square letters to get base coordinates
+      const gridSquare = gridSquareLetters.toUpperCase();
+      if (gridSquare.length !== 2) {
+        console.error('Grid square must be 2 letters');
+        return null;
+      }
+
+      // Determine base 100km grid for this zone
+      let colStart;
+      if (zone === 54) colStart = 16;
+      else if (zone === 55) colStart = 0;
+      else if (zone === 56) colStart = 9;
+      else if (zone === 57) colStart = 18;
+      else colStart = 0;
+
+      // Decode the letters
+      const eIndex = e100kLetters.indexOf(gridSquare[0]);
+      const nIndex = n100kLetters.indexOf(gridSquare[1]);
+
+      if (eIndex === -1 || nIndex === -1) {
+        console.error('Invalid grid square letters');
+        return null;
+      }
+
+      // Calculate 100km grid square number
+      const e100kSquare = ((eIndex - colStart + 24) % 24) + 1;
+      const n100kSquare = nIndex;
+
+      // Calculate full UTM coordinates
+      const base100kE = e100kSquare * 100000;
+      const base100kN = n100kSquare * 100000;
+  
+      const fullEasting = base100kE + eastingWithin100k;
+      const fullNorthing = base100kN + northingWithin100k;
+
+      console.log(`Grid ref ${gridSquare} ${gridRef} -> UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
+
+      // Convert to lat/lon
+      try {
+        const epsg = getEPSG(zone);
+        const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
+    
+        console.log(`Lat/Lon: ${latLon[1].toFixed(6)}, ${latLon[0].toFixed(6)}`);
+        return { lat: latLon[1], lon: latLon[0] };
+      } catch (error) {
+        console.error('Coordinate conversion error:', error);
+        return null;
+      }
     }
     
     function latLonToGridReference(lat, lon) {
@@ -4367,19 +4477,29 @@
         // Parse grid reference
         const zone = parseInt(document.getElementById('coord-zone').value);
         const gridRef = document.getElementById('coord-gridref').value.trim();
-    
+        const gridSquareSelect = document.getElementById('coord-grid-square').value;
+  
         if (!gridRef) {
           alert('❌ Please enter a grid reference');
           return;
         }
-    
-        const result = gridReferenceToLatLon(gridRef, zone);
-    
+  
+        let result;
+  
+        if (gridSquareSelect) {
+          // User specified a 100km grid square
+          const [zoneStr, gridSquare] = gridSquareSelect.split('-');
+          result = gridReferenceToLatLonWithSquare(gridRef, parseInt(zoneStr), gridSquare);
+        } else {
+          // Auto-detect from current map view
+          result = gridReferenceToLatLon(gridRef, zone);
+        }
+  
         if (!result) {
-          alert('❌ Invalid grid reference format. Use 8-digit (3388 5415) or 6-digit (338 541) format');
+          alert('❌ Invalid grid reference format. Use 6-digit (350 920) or 8-digit (3500 9200) format');
           return;
         }
-    
+  
         lat = result.lat;
         lon = result.lon;
       }
@@ -4532,6 +4652,7 @@
   </script>
 </body>
 </html>
+
 
 
 
