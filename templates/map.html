@@ -1141,7 +1141,7 @@
     /* Coordinate Plotter Control */
     #coord-plotter-btn {
       position: absolute;
-      top: 120px;
+      top: 200px;
       right: 10px;
       background: rgba(0, 51, 102, 0.95);  /* SHORE School Blue */
       color: white;
@@ -4752,13 +4752,31 @@
       coordMarkerCounter++;
   
       const marker = L.marker([lat, lon], {
-        icon: L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        icon: L.divIcon({
+          html: `<div style="
+            width: 25px;
+            height: 41px;
+            background-color: #003366;
+            clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+            border: 2px solid white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            position: relative;
+          ">
+            <div style="
+              position: absolute;
+              top: 3px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 8px;
+              height: 8px;
+              background: white;
+              border-radius: 50%;
+            "></div>
+          </div>`,
+          className: 'shore-blue-marker',
           iconSize: [25, 41],
           iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
+          popupAnchor: [1, -34]
         }),
         draggable: true
       });
@@ -4899,6 +4917,7 @@
   </script>
 </body>
 </html>
+
 
 
 
