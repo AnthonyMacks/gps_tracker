@@ -4294,6 +4294,145 @@
       }
     });
 
+    // Distance measurement between coordinate markers
+    let selectedCoordMarkers = [];
+
+    function selectCoordMarkerForDistance(markerId) {
+      const coord = plottedCoordinates.find(c => c.id === markerId);
+      if (!coord) return;
+  
+      // Check if already selected
+      const alreadySelected = selectedCoordMarkers.findIndex(s => s.id === markerId);
+  
+      if (alreadySelected !== -1) {
+        // Deselect
+        selectedCoordMarkers.splice(alreadySelected, 1);
+        coord.marker.setOpacity(1);
+        console.log(`Deselected marker: ${coord.label}`);
+    
+        // Clear any existing distance popup
+        if (selectedCoordMarkers.length < 2) {
+          map.closePopup();
+        }
+        return;
+      }
+  
+      // Add to selection
+      if (selectedCoordMarkers.length < 2) {
+        selectedCoordMarkers.push(coord);
+        coord.marker.setOpacity(0.5); // Visual feedback
+        console.log(`Selected marker ${selectedCoordMarkers.length}/2: ${coord.label}`);
+    
+        // If we now have 2 markers, calculate and show distance
+        if (selectedCoordMarkers.length === 2) {
+          calculateAndShowDistance();
+        }
+      } else {
+        // Already have 2 selected, clear and start fresh
+        selectedCoordMarkers.forEach(c => c.marker.setOpacity(1));
+        selectedCoordMarkers = [coord];
+        coord.marker.setOpacity(0.5);
+        console.log(`Reset selection. Selected marker 1/2: ${coord.label}`);
+      }
+    }
+
+    function calculateAndShowDistance() {
+      if (selectedCoordMarkers.length !== 2) return;
+  
+      const coord1 = selectedCoordMarkers[0];
+      const coord2 = selectedCoordMarkers[1];
+  
+      // Calculate distance in meters
+      const distanceMeters = calculatePointDistance(
+        coord1.lat, coord1.lon,
+        coord2.lat, coord2.lon
+      );
+  
+      // Convert to km
+      const distanceKm = distanceMeters / 1000;
+  
+      // Calculate midpoint for popup placement
+      const midLat = (coord1.lat + coord2.lat) / 2;
+      const midLon = (coord1.lon + coord2.lon) / 2;
+  
+      // Calculate bearing (direction from coord1 to coord2)
+      const bearing = calculateBearing(coord1.lat, coord1.lon, coord2.lat, coord2.lon);
+  
+      // Create popup content
+      const popupContent = `
+        <div style="font-family: sans-serif; min-width: 250px;">
+          <h4 style="margin: 0 0 10px 0; color: #2C3E50; border-bottom: 2px solid #3498DB; padding-bottom: 5px;">
+            📏 Distance Measurement
+          </h4>
+          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 4px; font-weight: bold;">From:</td>
+              <td style="padding: 4px;">${coord1.label}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px; font-weight: bold;">To:</td>
+              <td style="padding: 4px;">${coord2.label}</td>
+            </tr>
+            <tr style="background: #ECF0F1;">
+              <td style="padding: 4px; font-weight: bold;">Distance:</td>
+              <td style="padding: 4px; font-weight: bold; color: #E74C3C;">
+                ${distanceMeters.toFixed(1)} m (${distanceKm.toFixed(3)} km)
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 4px; font-weight: bold;">Bearing:</td>
+              <td style="padding: 4px;">${bearing.toFixed(1)}° ${getCardinalDirection(bearing)}</td>
+            </tr>
+          </table>
+          <div style="margin-top: 10px; text-align: center;">
+            <button onclick="clearCoordSelection()" style="background: #3498DB; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      `;
+  
+      // Show popup at midpoint
+      L.popup({
+        maxWidth: 300,
+        closeButton: true
+      })
+        .setLatLng([midLat, midLon])
+        .setContent(popupContent)
+        .openOn(map);
+  
+      console.log(`Distance: ${distanceMeters.toFixed(1)}m (${distanceKm.toFixed(3)}km), Bearing: ${bearing.toFixed(1)}°`);
+    }
+
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const lat1Rad = lat1 * Math.PI / 180;
+      const lat2Rad = lat2 * Math.PI / 180;
+  
+      const y = Math.sin(dLon) * Math.cos(lat2Rad);
+      const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+                Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+  
+      let bearing = Math.atan2(y, x) * 180 / Math.PI;
+      bearing = (bearing + 360) % 360; // Normalize to 0-360
+  
+      return bearing;
+    }
+
+    function getCardinalDirection(bearing) {
+      const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
+                          'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+      const index = Math.round(bearing / 22.5) % 16;
+      return directions[index];
+    }
+
+    function clearCoordSelection() {
+      selectedCoordMarkers.forEach(c => c.marker.setOpacity(1));
+      selectedCoordMarkers = [];
+      map.closePopup();
+      console.log('Selection cleared');
+    }
+    
     // ==================== COMPANY SELECTION ====================
 
     function initCompanySelection() {
@@ -4626,7 +4765,14 @@
         <hr style="margin: 5px 0;">
         <strong>Grid Reference:</strong> ${gridRef}<br>
         <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
-        <button onclick="removeCoordMarker('${markerId}')" style="margin-top: 8px; background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
+        <div style="margin-top: 8px; display: flex; gap: 5px;">
+          <button onclick="selectCoordMarkerForDistance('${markerId}')" style="background: #3498DB; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+            📏 Measure
+          </button>
+          <button onclick="removeCoordMarker('${markerId}')" style="background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+            Remove
+          </button>
+        </div>
       `;
   
       marker.bindPopup(popupContent);
@@ -4648,7 +4794,14 @@
           <hr style="margin: 5px 0;">
           <strong>Grid Reference:</strong> ${newGridRef}<br>
           <strong>Lat/Lon:</strong> ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}<br>
-          <button onclick="removeCoordMarker('${markerId}')" style="margin-top: 8px; background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
+          <div style="margin-top: 8px; display: flex; gap: 5px;">
+            <button onclick="selectCoordMarkerForDistance('${markerId}')" style="background: #3498DB; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+              📏 Measure
+            </button>
+            <button onclick="removeCoordMarker('${markerId}')" style="background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+              Remove
+            </button>
+          </div>
         `;
         marker.setPopupContent(newPopupContent);
       });
@@ -4741,6 +4894,7 @@
   </script>
 </body>
 </html>
+
 
 
 
