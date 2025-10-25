@@ -1829,22 +1829,13 @@
       const eastingWithin100k = parseInt(eastingDigits) * multiplier;
       const northingWithin100k = parseInt(northingDigits) * multiplier;
 
-      // Decode 100km grid square letters to get base coordinates
+      // Decode 100km grid square letters
       const gridSquare = gridSquareLetters.toUpperCase();
       if (gridSquare.length !== 2) {
         console.error('Grid square must be 2 letters');
         return null;
       }
 
-      // Determine base 100km grid for this zone
-      let colStart;
-      if (zone === 54) colStart = 16;
-      else if (zone === 55) colStart = 0;
-      else if (zone === 56) colStart = 9;
-      else if (zone === 57) colStart = 18;
-      else colStart = 0;
-
-      // Decode the letters
       const eIndex = e100kLetters.indexOf(gridSquare[0]);
       const nIndex = n100kLetters.indexOf(gridSquare[1]);
 
@@ -1853,25 +1844,60 @@
         return null;
       }
 
-      // Calculate 100km grid square number
-      const e100kSquare = ((eIndex - colStart + 24) % 24) + 1;
-      const n100kSquare = nIndex;
+      // Determine base column start for this zone
+      let colStart;
+      if (zone === 54) colStart = 16;
+      else if (zone === 55) colStart = 0;
+      else if (zone === 56) colStart = 9;
+      else if (zone === 57) colStart = 18;
+      else colStart = 0;
 
-      // Calculate full UTM coordinates
-      const base100kE = e100kSquare * 100000;
-      const base100kN = n100kSquare * 100000;
+      // Calculate e100k (which 100km square in easting)
+      // Reverse the formula: eIndex = (colStart + (e100k - 1)) % 24
+      const e100k = ((eIndex - colStart + 24) % 24) + 1;
   
-      const fullEasting = base100kE + eastingWithin100k;
-      const fullNorthing = base100kN + northingWithin100k;
+      // For northing, nIndex = n100k % 20
+      // We need to find the correct n100k by checking which multiple of 20 makes sense
+      // Use current map view as reference to determine the correct range
+      const center = map.getCenter();
+      let referenceN = 6200000; // Default to central NSW
+  
+      try {
+        const centerUTM = proj4('EPSG:4326', `EPSG:${getEPSG(zone)}`, [center.lng, center.lat]);
+        referenceN = centerUTM[1];
+      } catch (e) {
+        // Use default if conversion fails
+      }
+  
+      // Find which n100k value (that gives us nIndex) is closest to our reference
+      const referenceN100k = Math.floor(referenceN / 100000);
+      let bestN100k = nIndex;
+      let bestDiff = Math.abs(nIndex - referenceN100k);
+  
+      // Check n100k values: nIndex, nIndex+20, nIndex+40, nIndex+60, nIndex+80
+      for (let offset = 0; offset <= 80; offset += 20) {
+        const testN100k = nIndex + offset;
+        const diff = Math.abs(testN100k - referenceN100k);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestN100k = testN100k;
+        }
+      }
+  
+      // Calculate full UTM coordinates
+      const fullEasting = e100k * 100000 + eastingWithin100k;
+      const fullNorthing = bestN100k * 100000 + northingWithin100k;
 
-      console.log(`Grid ref ${gridSquare} ${gridRef} -> UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
+      console.log(`Grid ref ${gridSquare} ${gridRef}:`);
+      console.log(`  e100k=${e100k}, n100k=${bestN100k} (nIndex=${nIndex}, ref=${referenceN100k})`);
+      console.log(`  UTM: E=${fullEasting}, N=${fullNorthing} (zone ${zone})`);
 
       // Convert to lat/lon
       try {
         const epsg = getEPSG(zone);
         const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
     
-        console.log(`Lat/Lon: ${latLon[1].toFixed(6)}, ${latLon[0].toFixed(6)}`);
+        console.log(`  Lat/Lon: ${latLon[1].toFixed(6)}, ${latLon[0].toFixed(6)}`);
         return { lat: latLon[1], lon: latLon[0] };
       } catch (error) {
         console.error('Coordinate conversion error:', error);
@@ -4652,6 +4678,7 @@
   </script>
 </body>
 </html>
+
 
 
 
