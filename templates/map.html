@@ -78,12 +78,13 @@
       background-color: #005A9E;
     }
 
+    /* Opacity Control - Bottom Left */
     #opacity-control {
       position: absolute;
-      bottom: 60px;
-      left: 10px;
+      bottom: 10px;  /* Aligned with footer */
+      left: 180px;  /* Next to footer */
       background: rgba(255,255,255,0.9);
-      padding: 10px;
+      padding: 5px 10px;
       border-radius: 6px;
       font-family: sans-serif;
       font-size: 12px;
@@ -92,6 +93,7 @@
       cursor: move;
       user-select: none;
       transition: padding 0.3s ease, opacity 0.3s ease;
+      max-width: 200px;
     }
 
     #opacity-control.collapsed {
@@ -103,10 +105,41 @@
       cursor: grabbing;
     }
 
+    #opacity-control .opacity-header {
+      font-weight: bold;
+      margin-bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    #opacity-control.collapsed .opacity-header {
+      margin-bottom: 0;
+    }
+
+    /* Slide UP effect for opacity content */
+    #opacity-control .opacity-content {
+      transition: all 0.3s ease;
+      opacity: 1;
+      max-height: 100px;
+      overflow: hidden;
+      margin-top: 8px;
+      margin-bottom: 0;
+      /* Content appears ABOVE the header */
+      transform-origin: bottom;
+    }
+
+    #opacity-control.collapsed .opacity-content {
+      opacity: 0;
+      max-height: 0;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
     #opacity-control label {
       display: block;
       margin-bottom: 5px;
-      font-weight: bold;
     }
 
     #opacity-control input[type="range"] {
@@ -114,12 +147,13 @@
       margin-right: 10px;
     }
 
+    /* Grid Control - Bottom Left (next to opacity) */
     #grid-control {
       position: absolute;
-      bottom: 120px;
-      left: 10px;
+      bottom: 10px;  /* Same level as opacity control */
+      left: 400px;   /* To the right of opacity control */
       background: rgba(255,255,255,0.9);
-      padding: 10px;
+      padding: 5px 10px;
       border-radius: 6px;
       font-family: sans-serif;
       font-size: 12px;
@@ -128,6 +162,7 @@
       cursor: move;
       user-select: none;
       transition: padding 0.3s ease, opacity 0.3s ease;
+      max-width: 200px
     }
 
     #grid-control.collapsed {
@@ -138,18 +173,37 @@
       opacity: 0.8;
       cursor: grabbing;
     }
+    
+    #grid-control .grid-header {
+      font-weight: bold;
+      margin-bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
 
+    #grid-control.collapsed .grid-header {
+      margin-bottom: 0;
+    }
+
+    /* Slide UP effect for grid content */
     #grid-control .grid-content {
       transition: all 0.3s ease;
       opacity: 1;
       max-height: 200px;
       overflow: hidden;
+      margin-top: 8px;
+      margin-bottom: 0;
+      /* Content appears ABOVE the header */
+      transform-origin: bottom;
     }
 
     #grid-control.collapsed .grid-content {
       opacity: 0;
       max-height: 0;
       margin-top: 0;
+`     margin-bottom: 0;
     }
 
     #grid-control .grid-header {
@@ -164,37 +218,16 @@
     #grid-control.collapsed .grid-header {
       margin-bottom: 0;
     }
-
-    #opacity-control .opacity-content {
-      transition: all 0.3s ease;
-      opacity: 1;
-      max-height: 100px;
-      overflow: hidden;
-    }
-
-    #opacity-control.collapsed .opacity-content {
-      opacity: 0;
-      max-height: 0;
-      margin-top: 0;
-    }
-
-    #opacity-control .opacity-header {
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-    }
-
-    #opacity-control.collapsed .opacity-header {
-      margin-bottom: 0;
-    }
     
     #grid-control label {
       display: flex;
       align-items: center;
       cursor: pointer;
+      margin-bottom: 5 px;
+    }
+
+    #grid-control label:last-child {
+      margin-bottom: 0;
     }
 
     #grid-control input[type="checkbox"] {
@@ -352,10 +385,11 @@
       animation: pulse 2s infinite;
     }
 
+    /* Debug Info - Just above footer */
     #debug {
       position: absolute;
-      bottom: 160px;
-      right: 10px;
+      bottom: 45px;  /* Just above the footer (footer is at 10px + ~25px height) 
+      left: 10px;    /* Aligned with footer */
       background: rgba(0,0,0,0.7);
       color: white;
       padding: 10px;
@@ -380,6 +414,7 @@
       transition: all 0.3s ease;
       opacity: 1;
       max-height: 200px;
+      margin-top: 5px;
     }
 
     #debug.collapsed .debug-content {
@@ -451,6 +486,7 @@
       font-weight: bold;
     }
 
+    /* Mobile Device adjustments */
     @media (max-width: 768px) {
       #info {
         max-width: none;
@@ -486,21 +522,27 @@
       }
 
       #opacity-control {
-        bottom: 60px;
+        bottom: 10px;
         left: 10px;
         font-size: 10px;
-        padding: 6px;
+        padding: 4px 6px;
+        max-width: 140px
       }
 
       #opacity-control.collapsed {
         padding: 4px 6px;
       }
+      
+      #opacity-control input[type="range"] {
+        width: 100px;
+      }
 
       #grid-control {
         bottom: 110px;
-        left: 10px;
+        left: 160px; /* Adjusted for Mobile Device */
         font-size: 10px;
         padding: 6px;
+        max-width: 140px;
       }
 
       #grid-control.collapsed {
@@ -508,7 +550,7 @@
       }
 
       #debug {
-        bottom: 140px;
+        bottom: 35px;
         left: 10px;
         font-size: 9px;
         padding: 6px;
@@ -529,10 +571,7 @@
       }
 
       footer {
-        bottom: 10px;
-        left: 10px;
-        font-size: 10px;
-        padding: 2px 4px;
+        display: none; /* Hide footer on Mobile to save space */
       }
 
       #export-control {
@@ -583,17 +622,19 @@
       }
 
       #opacity-control {
-        bottom: 60px;
+        bottom: 45px;  /* Stack vertically on very small screens */
         left: 10px;
         font-size: 9px;
-        padding: 4px;
+        padding: 3px 5px;
+        max-width: 120px;
       }
 
       #grid-control {
-        bottom: 100px;
+        bottom: 10px;
         left: 10px;
         font-size: 9px;
-        padding: 4px;
+        padding: 3px 5px;
+        max-width: 120px;
       }
 
       #grid-control button {
@@ -602,11 +643,10 @@
       }
 
       #debug {
-        bottom: 130px;
-        right: 10px;
-        left: auto;
+        bottom: 80px;  /* Move higher to avoid stacked controls */
+        left: 10px;
         font-size: 8px;
-        padding: 4px;
+        padding: 3px 5px;
         max-width: 150px;
       }
 
@@ -676,18 +716,19 @@
         bottom: 10px;
         left: 10px;
         font-size: 10px;
+        max-width: 140px;
       }
 
       #grid-control {
         bottom: 50px;
-        left: 10px;
+        left: 160px;
         font-size: 10px;
+        max-width: 140px;
       }
 
       #debug {
-        bottom: 140px;
-        right: 10px;
-        left: auto;
+        bottom: 35px;
+        left: 10px;
         font-size: 9px;
         max-width: 180px;
       }
@@ -703,6 +744,12 @@
 
       #debug.collapsed .debug-title {
         font-size: 8px;
+      }
+
+      footer {
+        font-size: 10px;
+        bottom: 10px;
+        left: 320px;  /* To the right of grid control in landscape */
       }
 
       #export-control {
@@ -4434,6 +4481,7 @@
   </script>
 </body>
 </html>
+
 
 
 
