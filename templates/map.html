@@ -4358,7 +4358,7 @@
       // Calculate bearing (direction from coord1 to coord2)
       const bearing = calculateBearing(coord1.lat, coord1.lon, coord2.lat, coord2.lon);
 
-      / Convert bearing to military mils (6400 mils = 360 degrees)
+      // Convert bearing to military mils (6400 mils = 360 degrees)
       const bearingMils = Math.round(bearing * (6400 / 360));
         
       // Create popup content
@@ -4899,6 +4899,7 @@
   </script>
 </body>
 </html>
+
 
 
 
