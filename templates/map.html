@@ -1459,8 +1459,8 @@
         <option value="55-GV">GV (Coonabarabran)</option>
         <option value="55-HV">HV (Narrabri/Gunnedah)</option>
       </optgroup>
-      <optgroup label="Zone 56 (Sydney/Central Coast)">
-        <option value="56-HU">HU (Lithgow/Mudgee)</option>
+      <optgroup label="Zone 55 (NSW Central/West)">
+        <option value="55-HU">HU (Lithgow/Mudgee)</option>
         <option value="56-HV">HV (Bathurst/Orange)</option>
         <option value="56-JU">JU (Katoomba/Blue Mountains)</option>
         <option value="56-JV">JV (Penrith/Western Sydney)</option>
@@ -4543,31 +4543,54 @@
     
       } else {
         // Parse grid reference
-        const zone = parseInt(document.getElementById('coord-zone').value);
+        const selectedZone = parseInt(document.getElementById('coord-zone').value);
         const gridRef = document.getElementById('coord-gridref').value.trim();
         const gridSquareSelect = document.getElementById('coord-grid-square').value;
-  
+    
         if (!gridRef) {
           alert('❌ Please enter a grid reference');
           return;
         }
-  
+    
         let result;
-  
+    
         if (gridSquareSelect) {
-          // User specified a 100km grid square
+          // User specified a grid square - SEARCH ALL ZONES
           const [zoneStr, gridSquare] = gridSquareSelect.split('-');
-          result = gridReferenceToLatLonWithSquare(gridRef, parseInt(zoneStr), gridSquare);
+          const userZone = parseInt(zoneStr);
+      
+          console.log(`🎯 User selected: Grid Square "${gridSquare}" in Zone ${userZone}`);
+      
+          // Try the user-specified zone first
+          result = gridReferenceToLatLonWithSquare(gridRef, userZone, gridSquare);
+      
+          // If not found, automatically search other zones
+          if (!result) {
+            console.log(`⚠️ Grid square "${gridSquare}" not found in Zone ${userZone}, searching other zones...`);
+        
+            for (let zone of [54, 55, 56, 57]) {
+              if (zone === userZone) continue; // Already tried
+          
+              console.log(`  Trying Zone ${zone}...`);
+              result = gridReferenceToLatLonWithSquare(gridRef, zone, gridSquare);
+          
+              if (result) {
+                console.log(`  ✅ Found in Zone ${zone}!`);
+                alert(`ℹ️ Note: Grid square "${gridSquare}" was found in Zone ${zone}, not Zone ${userZone}.\nThe point has been plotted correctly.`);
+                break;
+              }
+            }
+          }
         } else {
           // Auto-detect from current map view
-          result = gridReferenceToLatLon(gridRef, zone);
+          result = gridReferenceToLatLon(gridRef, selectedZone);
         }
-  
+    
         if (!result) {
-          alert('❌ Invalid grid reference format. Use 6-digit (350 920) or 8-digit (3500 9200) format');
+          alert('❌ Invalid grid reference or grid square not found in any zone.\nCheck the F12 console for details.');
           return;
         }
-  
+    
         lat = result.lat;
         lon = result.lon;
       }
@@ -4606,14 +4629,12 @@
         const newPos = e.target.getLatLng();
         const newGridRef = latLonToGridReference(newPos.lat, newPos.lng);
     
-        // Update the stored coordinates
         const coord = plottedCoordinates.find(c => c.id === markerId);
         if (coord) {
           coord.lat = newPos.lat;
           coord.lon = newPos.lng;
         }
     
-        // Update popup
         const newPopupContent = `
           <strong>${label}</strong><br>
           <hr style="margin: 5px 0;">
@@ -4624,7 +4645,6 @@
         marker.setPopupContent(newPopupContent);
       });
   
-      // Store marker info
       plottedCoordinates.push({
         id: markerId,
         label: label,
@@ -4633,16 +4653,9 @@
         marker: marker
       });
   
-      // Update list
       updateCoordMarkersList();
-  
-      // Pan to marker
       map.setView([lat, lon], Math.max(map.getZoom(), 15));
-  
-      // Close modal
       closeCoordPlotter();
-  
-      // Show marker and popup
       marker.openPopup();
   
       console.log(`✅ Plotted coordinate: ${label} at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
@@ -4720,6 +4733,7 @@
   </script>
 </body>
 </html>
+
 
 
 
