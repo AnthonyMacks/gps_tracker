@@ -1845,17 +1845,16 @@
 
       const targetGridSquare = gridSquareLetters.toUpperCase();
       console.log(`🔍 Searching for grid square: ${targetGridSquare}`);
-      console.log(`📍 Within 100km square: E=${eastingWithin100k}, N=${northingWithin100k}`);
-
+        
       // Get current map center
       const center = map.getCenter();
   
-      // EXPANDED SEARCH: Check a much wider range
-      console.log('🔎 Scanning all 100km grid squares in zone', zone);
+      // MASSIVELY EXPANDED SEARCH: Check e100k 1-20, n100k 50-80
+      console.log('🔎 Scanning WIDE RANGE of 100km grid squares...');
       const foundSquares = new Map();
   
-      for (let e100k = 1; e100k <= 10; e100k++) {
-        for (let n100k = 55; n100k <= 70; n100k++) {
+      for (let e100k = 1; e100k <= 20; e100k++) {
+        for (let n100k = 50; n100k <= 80; n100k++) {
           const testEasting = e100k * 100000;
           const testNorthing = n100k * 100000;
           const testGridSquare = get100kmGridSquare(testEasting, testNorthing, zone);
@@ -1867,20 +1866,43 @@
         }
       }
   
-      console.log(`📊 Found ${foundSquares.size} unique grid squares:`);
-      const sortedSquares = Array.from(foundSquares.keys()).sort();
-      console.log(sortedSquares.join(', '));
-  
+      console.log(`📊 Found ${foundSquares.size} unique grid squares in zone ${zone}`);
+      
       // Check if target exists
       if (!foundSquares.has(targetGridSquare)) {
-        console.error(`❌ Grid square "${targetGridSquare}" not found in search range!`);
-        console.log('💡 Available grid squares:', sortedSquares.join(', '));
+        console.error(`❌ Grid square "${targetGridSquare}" NOT FOUND in zone ${zone}!`);
+        
+        // Try other zones
+        console.log('🔍 Searching in Zone 55...');
+        const zone55Squares = new Map();
+        for (let e100k = 1; e100k <= 20; e100k++) {
+          for (let n100k = 50; n100k <= 80; n100k++) {
+            const testEasting = e100k * 100000;
+            const testNorthing = n100k * 100000;
+            const testGridSquare = get100kmGridSquare(testEasting, testNorthing, 55);
+            if (testGridSquare === targetGridSquare) {
+              console.log(`  ✅ Found "${targetGridSquare}" in ZONE 55 at e100k=${e100k}, n100k=${n100k}`);
+            }
+          }
+        }
+    
+        console.log('🔍 Searching in Zone 57...');
+        for (let e100k = 1; e100k <= 20; e100k++) {
+          for (let n100k = 50; n100k <= 80; n100k++) {
+            const testEasting = e100k * 100000;
+            const testNorthing = n100k * 100000;
+            const testGridSquare = get100kmGridSquare(testEasting, testNorthing, 57);
+            if (testGridSquare === targetGridSquare) {
+              console.log(`  ✅ Found "${targetGridSquare}" in ZONE 57 at e100k=${e100k}, n100k=${n100k}`);
+            }
+          }
+        }
+    
         return null;
       }
   
-      console.log(`✅ Found ${foundSquares.get(targetGridSquare).length} instances of "${targetGridSquare}"`);
+      console.log(`✅ Found ${foundSquares.get(targetGridSquare).length} instances of "${targetGridSquare}" in zone ${zone}`);
   
-      // Try all instances and pick the closest to map center
       let bestMatch = null;
       let bestDistance = Infinity;
   
@@ -1893,14 +1915,13 @@
           const epsg = getEPSG(zone);
           const latLon = proj4(`EPSG:${epsg}`, 'EPSG:4326', [fullEasting, fullNorthing]);
       
-          // Check if in Australia
           if (latLon[1] >= -45 && latLon[1] <= -10 && latLon[0] >= 110 && latLon[0] <= 155) {
             const distance = Math.sqrt(
               Math.pow(latLon[1] - center.lat, 2) + 
               Math.pow(latLon[0] - center.lng, 2)
             );
         
-            console.log(`  Option: e100k=${e100k}, n100k=${n100k} -> ${latLon[1].toFixed(4)}°S, ${latLon[0].toFixed(4)}°E (distance: ${distance.toFixed(4)})`);
+            console.log(`  Option: e100k=${e100k}, n100k=${n100k} -> ${latLon[1].toFixed(4)}°, ${latLon[0].toFixed(4)}° (distance: ${distance.toFixed(4)})`);
         
             if (distance < bestDistance) {
               bestDistance = distance;
@@ -1920,11 +1941,9 @@
   
       if (bestMatch) {
         console.log(`✅ SELECTED: ${targetGridSquare} ${gridRef} = ${bestMatch.lat.toFixed(6)}, ${bestMatch.lon.toFixed(6)}`);
-        console.log(`   UTM Zone ${zone}: ${bestMatch.easting}E ${bestMatch.northing}N`);
         return { lat: bestMatch.lat, lon: bestMatch.lon };
       }
 
-      console.error('❌ No valid match found');
       return null;
     }
     
@@ -4701,6 +4720,7 @@
   </script>
 </body>
 </html>
+
 
 
 
