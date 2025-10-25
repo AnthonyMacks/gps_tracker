@@ -4357,7 +4357,10 @@
   
       // Calculate bearing (direction from coord1 to coord2)
       const bearing = calculateBearing(coord1.lat, coord1.lon, coord2.lat, coord2.lon);
-  
+
+      / Convert bearing to military mils (6400 mils = 360 degrees)
+      const bearingMils = Math.round(bearing * (6400 / 360));
+        
       // Create popup content
       const popupContent = `
         <div style="font-family: sans-serif; min-width: 250px;">
@@ -4381,7 +4384,9 @@
             </tr>
             <tr>
               <td style="padding: 4px; font-weight: bold;">Bearing:</td>
-              <td style="padding: 4px;">${bearing.toFixed(1)}° ${getCardinalDirection(bearing)}</td>
+              <td style="padding: 4px; font-weight: bold; color: #27AE60;">
+                ${bearingMils} mils
+              </td>
             </tr>
           </table>
           <div style="margin-top: 10px; text-align: center;">
@@ -4401,7 +4406,7 @@
         .setContent(popupContent)
         .openOn(map);
   
-      console.log(`Distance: ${distanceMeters.toFixed(1)}m (${distanceKm.toFixed(3)}km), Bearing: ${bearing.toFixed(1)}°`);
+      console.log(`Distance: ${distanceMeters.toFixed(1)}m (${distanceKm.toFixed(3)}km), Bearing: ${bearingMils} mils`);
     }
 
     function calculateBearing(lat1, lon1, lat2, lon2) {
@@ -4894,6 +4899,7 @@
   </script>
 </body>
 </html>
+
 
 
 
