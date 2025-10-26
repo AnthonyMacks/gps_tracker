@@ -4333,15 +4333,16 @@
         coord.marker.setOpacity(1);
         console.log(`Deselected marker: ${coord.label}`);
     
-        // Clear any existing distance line and popup
+        // ALWAYS clear the distance line when deselecting any marker
         if (distanceLine) {
           map.removeLayer(distanceLine);
           distanceLine = null;
+          console.log('📏 Distance line removed');
         }
-  
-        if (selectedCoordMarkers.length < 2) {
-          map.closePopup();
-        }
+
+        // Close popup
+        map.closePopup();
+    
         return;
       }
   
@@ -4358,6 +4359,13 @@
       } else {
         // Already have 2 selected, clear and start fresh
         selectedCoordMarkers.forEach(c => c.marker.setOpacity(1));
+
+        // Clear old line
+        if (distanceLine) {
+          map.removeLayer(distanceLine);
+          distanceLine = null;
+        }
+          
         selectedCoordMarkers = [coord];
         coord.marker.setOpacity(0.5);
         console.log(`Reset selection. Selected marker 1/2: ${coord.label}`);
@@ -4907,6 +4915,24 @@
         // Remove marker from map
         map.removeLayer(coord.marker);
     
+        // Check if this marker was selected for distance measurement
+        const selectedIndex = selectedCoordMarkers.findIndex(c => c.id === markerId);
+        if (selectedIndex !== -1) {
+          // Remove from selection
+          selectedCoordMarkers.splice(selectedIndex, 1);
+      
+          // Clear the distance line since one of the points is being removed
+          if (distanceLine) {
+            map.removeLayer(distanceLine);
+            distanceLine = null;
+          }
+      
+          // Clear any open popup
+          map.closePopup();
+      
+          console.log('🗑️ Cleared distance measurement (removed point was selected)');
+        }
+    
         // Remove from array
         plottedCoordinates.splice(coordIndex, 1);
     
@@ -4970,6 +4996,7 @@
   </script>
 </body>
 </html>
+
 
 
 
