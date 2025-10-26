@@ -1378,6 +1378,22 @@
       }
     }
     
+    .shadow-box {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        z-index: 1000;
+    }
+
+    .lower-right-image {
+        width: 100px; /* adjust as needed */
+        height: auto;
+    }
+
   </style>
 </head>
 <body>
@@ -1505,8 +1521,9 @@
 <div id="company-banner">
   <div class="banner-content" id="banner-text"></div>
 </div>
-
-<img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
+<div class="shadow-box">
+    <img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
+</div>
 <div id="map"></div>
 <div id="info">
 <strong>📡 GPS MacksTrack Data (I-XII) <span style="float: right; cursor: move; font-size: 18px;">☰</span></strong>
@@ -4948,6 +4965,7 @@
   </script>
 </body>
 </html>
+
 
 
 
