@@ -1142,6 +1142,20 @@
       }
     }
 
+    /* NAVEX Start Point Modal */
+    #navex-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
     /* Coordinate Plotter Control */
     #coord-plotter-btn {
       position: absolute;
@@ -1162,7 +1176,7 @@
     #coord-plotter-btn:hover {
       background: rgba(0, 71, 142, 0.95);  /* Lighter SHORE Blue on hover */
     }
-
+    
     /* Coordinate Plotter Modal */
     #coord-plotter-modal {
       position: fixed;
@@ -1423,6 +1437,60 @@
     </select>
     
     <button id="company-confirm" class="company-confirm-btn" disabled>Confirm Selection</button>
+  </div>
+</div>
+
+<!-- NAVEX Start Point Modal -->
+<div id="navex-modal">
+  <div class="company-modal-content">
+    <h2>📍 NAVEX Start Point</h2>
+    <p>Enter coordinates for CUO rank position</p>
+    
+    <div class="coord-format-toggle" style="margin-bottom: 15px;">
+      <button id="navex-format-latlon" class="active" onclick="switchNavexFormat('latlon')">Lat/Lon</button>
+      <button id="navex-format-gridref" onclick="switchNavexFormat('gridref')">Grid Reference</button>
+    </div>
+
+    <div id="navex-latlon-inputs">
+      <div class="coord-input-group">
+        <label for="navex-lat">Latitude</label>
+        <input type="text" id="navex-lat" placeholder="-33.8411 or 33°50'28&quot;S">
+      </div>
+
+      <div class="coord-input-group">
+        <label for="navex-lon">Longitude</label>
+        <input type="text" id="navex-lon" placeholder="151.2058 or 151°12'21&quot;E">
+      </div>
+    </div>
+
+    <div id="navex-gridref-inputs" style="display: none;">
+      <div class="coord-input-group">
+        <label for="navex-zone">UTM Zone</label>
+        <select id="navex-zone">
+          <option value="55">Zone 55 (NSW Central)</option>
+          <option value="56" selected>Zone 56 (Sydney)</option>
+          <option value="57">Zone 57 (NSW East)</option>
+        </select>
+      </div>
+
+      <div class="coord-input-group">
+        <label for="navex-grid-square">100km Grid Square</label>
+        <select id="navex-grid-square">
+          <option value="">Auto-detect from map view</option>
+          <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
+          <option value="56-JV">JV (Penrith/Western Sydney)</option>
+          <option value="56-LV">LV (Newcastle/Central Coast)</option>
+        </select>
+      </div>
+
+      <div class="coord-input-group">
+        <label for="navex-gridref">Grid Reference</label>
+        <input type="text" id="navex-gridref" placeholder="364 918">
+      </div>
+    </div>
+    
+    <button id="navex-confirm" class="company-confirm-btn">Set Start Point</button>
+    <button onclick="skipNavexSetup()" style="margin-top: 10px; background: #95A5A6;" class="company-confirm-btn">Skip (Use Default)</button>
   </div>
 </div>
 
@@ -2957,70 +3025,217 @@
         map.invalidateSize();
         console.log('🗺️ Map size invalidated');
     
-        // Add CUO rank slide marker at -33°50'23.27" 151°12'16.76"
-        // Convert DMS to decimal degrees
-        const lat = -33 - (50/60) - (23.27/3600); // -33.839797
-        const lon = 151 + (12/60) + (16.76/3600); // 151.204656
-    
-        console.log(`CUO marker position: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-    
-        // Function to calculate icon size based on zoom level
-        function getCUOIconSize(zoom) {
-          // Base size at zoom 15
-          const baseSize = 20;
-          const baseZoom = 15;
-          // Scale factor: 1.3x size increase per zoom level
-          const scaleFactor = 1.01;
-          const size = baseSize * Math.pow(scaleFactor, zoom - baseZoom);
-          return Math.max(20, Math.min(size, 200)); // Clamp between 20 and 200 pixels
+        // Check if NAVEX start point is already set
+        const savedNavexPoint = localStorage.getItem('navex_start_point');
+        if (savedNavexPoint) {
+          const coords = JSON.parse(savedNavexPoint);
+          createCUOMarker(coords.lat, coords.lon);
+        } else {
+          // Show NAVEX modal if not set
+          document.getElementById('navex-modal').style.display = 'flex';
         }
+      }, 100);
+    });
+
+    let cuoMarker = null;
+
+    function createCUOMarker(lat, lon) {
+      // Remove existing marker if present
+      if (cuoMarker) {
+        map.removeLayer(cuoMarker);
+      }
+
+      // Function to calculate icon size based on zoom level
+      function getCUOIconSize(zoom) {
+        const baseSize = 20;
+        const baseZoom = 15;
+        const scaleFactor = 1.01;
+        const size = baseSize * Math.pow(scaleFactor, zoom - baseZoom);
+        return Math.max(20, Math.min(size, 200));
+      }
+
+      let currentZoom = map.getZoom();
+      let iconSize = getCUOIconSize(currentZoom);
+
+      const cuoIcon = L.icon({
+        iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
+        iconSize: [iconSize, iconSize],
+        iconAnchor: [iconSize/2, iconSize/2],
+        popupAnchor: [0, -iconSize/2],
+        opacity: 0.5
+      });
+
+      cuoMarker = L.marker([lat, lon], {
+        icon: cuoIcon,
+        title: "NAVEX Start Point",
+        draggable: true
+      });
+
+      const gridRefDisplay = latLonToGridReference(lat, lon);
+      cuoMarker.bindPopup(`
+        <strong>NAVEX Start Point</strong><br>
+        <strong>SCU</strong><br>
+        <hr style="margin: 5px 0;">
+        <strong>Grid Reference:</strong> ${gridRefDisplay}<br>
+        <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
+        <div style="margin-top: 8px;">
+          <button onclick="resetNavexPoint()" style="background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+            Reset Position
+          </button>
+        </div>
+      `);
+
+      // Update position on drag
+      cuoMarker.on('dragend', function(e) {
+        const newPos = e.target.getLatLng();
+        const newGridRef = latLonToGridReference(newPos.lat, newPos.lng);
     
-        // Create initial icon
-        let currentZoom = map.getZoom();
-        let iconSize = getCUOIconSize(currentZoom);
+        // Save new position
+        localStorage.setItem('navex_start_point', JSON.stringify({
+          lat: newPos.lat,
+          lon: newPos.lng
+        }));
     
-        const cuoIcon = L.icon({
+        // Update popup
+        cuoMarker.setPopupContent(`
+          <strong>NAVEX Start Point</strong><br>
+          <strong>SCU</strong><br>
+          <hr style="margin: 5px 0;">
+          <strong>Grid Reference:</strong> ${newGridRef}<br>
+          <strong>Lat/Lon:</strong> ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}<br>
+          <div style="margin-top: 8px;">
+            <button onclick="resetNavexPoint()" style="background: #E74C3C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+              Reset Position
+            </button>
+          </div>
+        `);
+    
+        console.log(`📍 NAVEX Start Point moved to: ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)} (Grid: ${newGridRef})`);
+      });
+
+      cuoMarker.addTo(map);
+      console.log(`✅ CUO rank marker placed at ${lat.toFixed(6)}, ${lon.toFixed(6)} (Grid: ${gridRefDisplay})`);
+
+      // Update icon size when zoom changes
+      map.on('zoomend', function() {
+        currentZoom = map.getZoom();
+        iconSize = getCUOIconSize(currentZoom);
+    
+        const updatedIcon = L.icon({
           iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
           iconSize: [iconSize, iconSize],
           iconAnchor: [iconSize/2, iconSize/2],
-          popupAnchor: [0, -iconSize/2],
-          opacity: 0.5
+          popupAnchor: [0, -iconSize/2]
         });
     
-        const cuoMarker = L.marker([lat, lon], {
-          icon: cuoIcon,
-          title: "CUO Rank Position"
-        });
+        cuoMarker.setIcon(updatedIcon);
+      });
+    }
+
+    function switchNavexFormat(format) {
+      const latlonBtn = document.getElementById('navex-format-latlon');
+      const gridrefBtn = document.getElementById('navex-format-gridref');
+      const latlonInputs = document.getElementById('navex-latlon-inputs');
+      const gridrefInputs = document.getElementById('navex-gridref-inputs');
+
+      if (format === 'latlon') {
+        latlonBtn.classList.add('active');
+        gridrefBtn.classList.remove('active');
+        latlonInputs.style.display = 'block';
+        gridrefInputs.style.display = 'none';
+      } else {
+        gridrefBtn.classList.add('active');
+        latlonBtn.classList.remove('active');
+        gridrefInputs.style.display = 'block';
+        latlonInputs.style.display = 'none';
+      }
+    }
+
+    function skipNavexSetup() {
+      // Use default SHORE location
+      const defaultLat = -33.8411;
+      const defaultLon = 151.2058;
+  
+      localStorage.setItem('navex_start_point', JSON.stringify({
+        lat: defaultLat,
+        lon: defaultLon
+      }));
+  
+      createCUOMarker(defaultLat, defaultLon);
+      document.getElementById('navex-modal').style.display = 'none';
+      console.log('✅ Using default NAVEX start point');
+    }
+
+    function resetNavexPoint() {
+      if (confirm('Reset NAVEX Start Point? This will show the input dialog again.')) {
+        localStorage.removeItem('navex_start_point');
+        if (cuoMarker) {
+          map.removeLayer(cuoMarker);
+          cuoMarker = null;
+        }
+        document.getElementById('navex-modal').style.display = 'flex';
+      }
+    }
+
+    // Handle NAVEX confirmation
+    document.addEventListener('DOMContentLoaded', function() {
+      const navexConfirm = document.getElementById('navex-confirm');
+  
+      navexConfirm.addEventListener('click', function() {
+        const formatLatlon = document.getElementById('navex-format-latlon').classList.contains('active');
+        let lat, lon;
     
-        const gridRefDisplay = latLonToGridReference(lat, lon);
-        cuoMarker.bindPopup(`
-          <strong>Australian Army Cadet</strong><br>
-          <strong>CUO Rank Position</strong><br>
-          <hr style="margin: 5px 0;">
-          <strong>Grid Reference:</strong> ${gridRefDisplay}<br>
-          <strong>Lat/Lon:</strong> ${lat.toFixed(6)}, ${lon.toFixed(6)}<br>
-          <strong>DMS:</strong> 33°50'23.27"S 151°12'16.76"E
-        `);
-    
-        cuoMarker.addTo(map);
-        console.log(`✅ CUO rank marker placed at ${lat.toFixed(6)}, ${lon.toFixed(6)} (Grid: ${gridRefDisplay})`);
-    
-        // Update icon size when zoom changes
-        map.on('zoomend', function() {
-          currentZoom = map.getZoom();
-          iconSize = getCUOIconSize(currentZoom);
+        if (formatLatlon) {
+          const latInput = document.getElementById('navex-lat').value.trim();
+          const lonInput = document.getElementById('navex-lon').value.trim();
       
-          const updatedIcon = L.icon({
-            iconUrl: "https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/CUO_rankslide.jpg",
-            iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize/2, iconSize/2],
-            popupAnchor: [0, -iconSize/2]
-          });
+          if (!latInput || !lonInput) {
+            alert('❌ Please enter both latitude and longitude');
+            return;
+          }
       
-          cuoMarker.setIcon(updatedIcon);
-          console.log(`🔍 Zoom ${currentZoom}: CUO icon resized to ${iconSize.toFixed(0)}px`);
-        });
-      }, 100);
+          lat = parseCoordinate(latInput);
+          lon = parseCoordinate(lonInput);
+      
+          if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
+            alert('❌ Invalid coordinates');
+            return;
+          }
+        } else {
+          const zone = parseInt(document.getElementById('navex-zone').value);
+          const gridRef = document.getElementById('navex-gridref').value.trim();
+          const gridSquare = document.getElementById('navex-grid-square').value;
+      
+          if (!gridRef) {
+            alert('❌ Please enter a grid reference');
+           return;
+          }
+      
+          let result;
+          if (gridSquare) {
+            const [zoneStr, gridSquareLetters] = gridSquare.split('-');
+            result = gridReferenceToLatLonWithSquare(gridRef, parseInt(zoneStr), gridSquareLetters);
+          } else {
+            result = gridReferenceToLatLon(gridRef, zone);
+          }
+      
+          if (!result) {
+            alert('❌ Invalid grid reference');
+            return;
+          }
+      
+          lat = result.lat;
+          lon = result.lon;
+        }
+    
+        // Save and create marker
+        localStorage.setItem('navex_start_point', JSON.stringify({ lat, lon }));
+        createCUOMarker(lat, lon);
+        document.getElementById('navex-modal').style.display = 'none';
+        map.setView([lat, lon], 15);
+    
+        console.log(`✅ NAVEX Start Point set at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+      });
     });
     
     const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
