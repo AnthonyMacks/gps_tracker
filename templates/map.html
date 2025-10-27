@@ -1544,35 +1544,43 @@
       </div>
 
       <div class="coord-input-group">
-        <label for="coord-grid-square">100km Grid Square (Optional)</label>
-        <select id="coord-grid-square">
-          <option value="">Auto-detect from map view</option>
+        <label for="navex-grid-square">100km Grid Square</label>
+        <select id="navex-grid-square">
+          <option value="">Auto-detect (searches all zones)</option>
+          <optgroup label="Zone 54 (NSW Far West)">
+            <option value="54-HV">HV (Broken Hill area)</option>
+            <option value="54-JV">JV (Tibooburra area)</option>
+          </optgroup>
           <optgroup label="Zone 55 (NSW Central/West)">
             <option value="55-GU">GU (Dubbo area)</option>
             <option value="55-GV">GV (Coonabarabran)</option>
+            <option value="55-HU">HU (Forbes/Parkes)</option>
             <option value="55-HV">HV (Narrabri/Gunnedah)</option>
+            <option value="55-JU">JU (Wagga Wagga)</option>
+            <option value="55-JV">JV (Tamworth area)</option>
           </optgroup>
           <optgroup label="Zone 56 (Sydney/Blue Mountains/Central Coast)">
-            <option value="56-LC">LC (Lithgow)</option>
-            <option value="56-MD">MD (Singleton/Hunter Valley)</option>
-            <option value="56-MC">MC (Sydney CBD/Inner West)</option>
-            <option value="56-MK">MK (Mudgee)</option>
             <option value="56-HV">HV (Bathurst/Orange)</option>
             <option value="56-JU">JU (Katoomba/Blue Mountains)</option>
             <option value="56-JV">JV (Penrith/Western Sydney)</option>
             <option value="56-KU">KU (Wollongong/Southern Highlands)</option>
             <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
+            <option value="56-LC">LC (Lithgow)</option>
             <option value="56-LU">LU (Nowra/South Coast)</option>
             <option value="56-LV">LV (Newcastle/Central Coast)</option>
+            <option value="56-MC">MC (Sydney CBD/Inner West)</option>
+            <option value="56-MD">MD (Singleton/Hunter Valley)</option>
+            <option value="56-MK">MK (Mudgee)</option>
             <option value="56-MU">MU (Ulladulla)</option>
             <option value="56-MV">MV (Forster/Taree)</option>
           </optgroup>
           <optgroup label="Zone 57 (NSW North Coast)">
             <option value="57-LV">LV (Coffs Harbour)</option>
             <option value="57-MV">MV (Grafton)</option>
+            <option value="57-NV">NV (Byron Bay/Lismore)</option>
           </optgroup>
         </select>
-        <div class="coord-example">Select grid square for precise placement</div>
+        <div class="coord-example">Select for precise placement, or leave as "Auto-detect"</div>
       </div>
 
       <div class="coord-input-group">
@@ -3202,43 +3210,112 @@
             return;
           }
         } else {
-          const zone = parseInt(document.getElementById('navex-zone').value);
+          // Grid Reference mode 
+          const selectedzone = parseInt(document.getElementById('navex-zone').value);
           const gridRef = document.getElementById('navex-gridref').value.trim();
-          const gridSquare = document.getElementById('navex-grid-square').value;
+          const gridSquareSelect = document.getElementById('navex-grid-square').value;
       
           if (!gridRef) {
             alert('❌ Please enter a grid reference');
            return;
           }
       
-          let result;
-          if (gridSquare) {
-            const [zoneStr, gridSquareLetters] = gridSquare.split('-');
-            result = gridReferenceToLatLonWithSquare(gridRef, parseInt(zoneStr), gridSquareLetters);
+          let result = null;
+          let actualZone = selectZone;
+            
+          if (gridSquareSelect) {
+            // User specified a grid square - extract zone from selection
+            const [zoneStr, gridSquareLetters] = gridSquareSelect.split('-');
+            actualZone = parseInt(zoneStr);
+        
+            console.log(`🎯 NAVEX: User selected Grid Square "${gridSquareLetters}" in Zone ${actualZone}`);
+
+            // Try the selected zone first
+            result = gridReferenceToLatLonWithSquare(gridRef, actualZone, gridSquareLetters);
+
+            // If not found in selected zone, search ALL zones
+            if (!result) {
+              console.log(`⚠️ Not found in Zone ${actualZone}, searching all zones...`);
+          
+              for (let testZone of [54, 55, 56, 57]) {
+                if (testZone === actualZone) continue; // Already tried
+            
+                console.log(`  Trying Zone ${testZone}...`);
+                result = gridReferenceToLatLonWithSquare(gridRef, testZone, gridSquareLetters);
+            
+                if (result) {
+                  actualZone = testZone;
+                  console.log(`  ✅ Found in Zone ${testZone}!`);
+                  alert(`ℹ️ Grid square "${gridSquareLetters}" was found in Zone ${testZone}.\nThe NAVEX start point has been plotted correctly.`);
+                  break;
+                }
+              }
+            }
           } else {
-            result = gridReferenceToLatLon(gridRef, zone);
+            // Auto-detect mode - search all zones
+            console.log(`🔍 NAVEX: Auto-detecting zone for grid ref "${gridRef}"`);
+        
+            // Try selected zone first
+            result = gridReferenceToLatLon(gridRef, selectedZone);
+        
+            // If not found, try all other zones
+            if (!result) {
+              console.log(`⚠️ Not found in Zone ${selectedZone}, trying other zones...`);
+          
+              for (let testZone of [54, 55, 56, 57]) {
+                if (testZone === selectedZone) continue;
+            
+                console.log(`  Trying Zone ${testZone}...`);
+                result = gridReferenceToLatLon(gridRef, testZone);
+            
+                if (result) {
+                  actualZone = testZone;
+                  console.log(`  ✅ Found in Zone ${testZone}!`);
+                  alert(`ℹ️ Grid reference found in Zone ${testZone}.\nThe NAVEX start point has been plotted correctly.`);
+                  break;
+                }
+              }
+            }
           }
       
           if (!result) {
-            alert('❌ Invalid grid reference');
+            alert('❌ Invalid grid reference. Could not find coordinates in any zone.\n\nCheck:\n- Grid reference format (e.g., "364 918")\n- Grid square selection matches your location\n- Zone selection is correct\n\nSee F12 console for details.');
             return;
           }
       
           lat = result.lat;
           lon = result.lon;
+      
+          console.log(`✅ NAVEX: Final coordinates - Zone ${actualZone}, Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
+        }
+    
+        // Validate coordinates are in reasonable range for Australia
+        if (lat < -45 || lat > -10 || lon < 110 || lon > 155) {
+          if (!confirm(`⚠️ Warning: Coordinates appear to be outside mainland Australia.\n\nLat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}\n\nDo you want to continue?`)) {
+            return;
+          }
         }
     
         // Save and create marker
         localStorage.setItem('navex_start_point', JSON.stringify({ lat, lon }));
         createCUOMarker(lat, lon);
         document.getElementById('navex-modal').style.display = 'none';
+    
+        // Center map on the new position
         map.setView([lat, lon], 15);
+    
+        // Open the marker popup to confirm placement
+        setTimeout(() => {
+          if (cuoMarker) {
+            cuoMarker.openPopup();
+          }
+        }, 500);
     
         console.log(`✅ NAVEX Start Point set at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
       });
     });
-    
-    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              
+      const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
       maxNativeZoom: 19,
       attribution: "© OpenStreetMap contributors"
@@ -5210,6 +5287,7 @@
   </script>
 </body>
 </html>
+
 
 
 
