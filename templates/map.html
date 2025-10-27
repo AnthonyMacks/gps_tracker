@@ -3076,6 +3076,12 @@
       // Remove existing marker if present
       if (cuoMarker) {
         map.removeLayer(cuoMarker);
+
+        // Remove from plottedCoordinates if it exists
+        const navexIndex = plottedCoordinates.findIndex(c => c.id === 'navex-start');
+        if (navexIndex !== -1) {
+          plottedCoordinates.splice(navexIndex, 1);
+        }
       }
 
       // Function to calculate icon size based on zoom level
@@ -3128,6 +3134,14 @@
           lat: newPos.lat,
           lon: newPos.lng
         }));
+
+        // Update plottedCoordinates array
+        const navexCoord = plottedCoordinates.find(c => c.id === 'navex-start');
+        if (navexCoord) {
+          navexCoord.lat = newPos.lat;
+          navexCoord.lon = newPos.lng;
+          updateCoordMarkersList();
+        }
     
         // Update popup
         cuoMarker.setPopupContent(`
@@ -3149,8 +3163,21 @@
       cuoMarker.addTo(map);
       console.log(`✅ CUO rank marker placed at ${lat.toFixed(6)}, ${lon.toFixed(6)} (Grid: ${gridRefDisplay})`);
 
+      / Add to plottedCoordinates array
+      plottedCoordinates.push({
+        id: 'navex-start',
+        label: '🎯 NAVEX Start',
+        lat: lat,
+        lon: lon,
+        marker: cuoMarker
+      });
+  
+      // Update the coordinate markers list
+      updateCoordMarkersList();
+
       // Update icon size when zoom changes
       map.on('zoomend', function() {
+        if (!cuoMarker) return;
         currentZoom = map.getZoom();
         iconSize = getCUOIconSize(currentZoom);
     
@@ -5223,6 +5250,12 @@
     }
 
     function removeCoordMarker(markerId) {
+      // Prevent removing NAVEX start point this way
+      if (markerId === 'navex-start') {
+        alert('ℹ️ To reset the NAVEX Start Point, click on it and use the "Reset Position" button.');
+        return;
+      }
+  
       const coordIndex = plottedCoordinates.findIndex(c => c.id === markerId);
   
       if (coordIndex !== -1) {
@@ -5312,6 +5345,7 @@
   </script>
 </body>
 </html>
+
 
 
 
