@@ -1444,7 +1444,7 @@
 <div id="navex-modal">
   <div class="company-modal-content">
     <h2>📍 NAVEX Start Point</h2>
-    <p>Enter coordinates for CUO rank position</p>
+    <p>Enter coordinates for start position</p>
     
     <div class="coord-format-toggle" style="margin-bottom: 15px;">
       <button id="navex-format-latlon" class="active" onclick="switchNavexFormat('latlon')">Lat/Lon</button>
@@ -1455,11 +1455,13 @@
       <div class="coord-input-group">
         <label for="navex-lat">Latitude</label>
         <input type="text" id="navex-lat" placeholder="-33.8411 or 33°50'28&quot;S">
+        <div class="coord-example">Example: -33.8411 or 33°50'28"S</div>
       </div>
 
       <div class="coord-input-group">
         <label for="navex-lon">Longitude</label>
         <input type="text" id="navex-lon" placeholder="151.2058 or 151°12'21&quot;E">
+        <div class="coord-example">Example: 151.2058 or 151°12'21"E</div>
       </div>
     </div>
 
@@ -1474,18 +1476,41 @@
       </div>
 
       <div class="coord-input-group">
-        <label for="navex-grid-square">100km Grid Square</label>
+        <label for="navex-grid-square">100km Grid Square (Optional)</label>
         <select id="navex-grid-square">
           <option value="">Auto-detect from map view</option>
-          <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
-          <option value="56-JV">JV (Penrith/Western Sydney)</option>
-          <option value="56-LV">LV (Newcastle/Central Coast)</option>
+          <optgroup label="Zone 55 (NSW Central/West)">
+            <option value="55-GU">GU (Dubbo area)</option>
+            <option value="55-GV">GV (Coonabarabran)</option>
+            <option value="55-HV">HV (Narrabri/Gunnedah)</option>
+          </optgroup>
+          <optgroup label="Zone 56 (Sydney/Blue Mountains/Central Coast)">
+            <option value="56-LC">LC (Lithgow)</option>
+            <option value="56-MD">MD (Singleton/Hunter Valley)</option>
+            <option value="56-MC">MC (Sydney CBD/Inner West)</option>
+            <option value="56-MK">MK (Mudgee)</option>
+            <option value="56-HV">HV (Bathurst/Orange)</option>
+            <option value="56-JU">JU (Katoomba/Blue Mountains)</option>
+            <option value="56-JV">JV (Penrith/Western Sydney)</option>
+            <option value="56-KU">KU (Wollongong/Southern Highlands)</option>
+            <option value="56-KV">KV (Sydney CBD/Eastern Suburbs)</option>
+            <option value="56-LU">LU (Nowra/South Coast)</option>
+            <option value="56-LV">LV (Newcastle/Central Coast)</option>
+            <option value="56-MU">MU (Ulladulla)</option>
+            <option value="56-MV">MV (Forster/Taree)</option>
+          </optgroup>
+          <optgroup label="Zone 57 (NSW North Coast)">
+            <option value="57-LV">LV (Coffs Harbour)</option>
+            <option value="57-MV">MV (Grafton)</option>
+          </optgroup>
         </select>
+        <div class="coord-example">Select grid square for precise placement</div>
       </div>
 
       <div class="coord-input-group">
         <label for="navex-gridref">Grid Reference</label>
         <input type="text" id="navex-gridref" placeholder="364 918">
+        <div class="coord-example">Example: 364 918 (6-digit) or 3640 9183 (8-digit)</div>
       </div>
     </div>
     
@@ -1493,7 +1518,7 @@
     <button onclick="skipNavexSetup()" style="margin-top: 10px; background: #95A5A6;" class="company-confirm-btn">Skip (Use Default)</button>
   </div>
 </div>
-
+    
 <!-- Coordinate Plotter Button -->
 <button id="coord-plotter-btn">🧭 Plot Coordinates</button>
 
@@ -5287,6 +5312,7 @@
   </script>
 </body>
 </html>
+
 
 
 
