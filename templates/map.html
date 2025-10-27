@@ -3211,7 +3211,7 @@
           }
         } else {
           // Grid Reference mode 
-          const selectedzone = parseInt(document.getElementById('navex-zone').value);
+          const selectedZone = parseInt(document.getElementById('navex-zone').value);
           const gridRef = document.getElementById('navex-gridref').value.trim();
           const gridSquareSelect = document.getElementById('navex-grid-square').value;
       
@@ -3221,7 +3221,7 @@
           }
       
           let result = null;
-          let actualZone = selectZone;
+          let actualZone = selectedZone;
             
           if (gridSquareSelect) {
             // User specified a grid square - extract zone from selection
@@ -5287,6 +5287,7 @@
   </script>
 </body>
 </html>
+
 
 
 
