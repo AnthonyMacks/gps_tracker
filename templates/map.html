@@ -3066,23 +3066,28 @@
         document.ontouchend = null;
         document.ontouchmove = null;
 
-        // Handle button clicks
+        console.log(`🖱️ closeDragElement for ${element.id}: wasDragging=${wasDragging}`);
+
+        // Handle button clicks - ONLY if we didn't drag
         if (element.id === 'coord-plotter-btn') {
           if (!wasDragging) {
-            // This was a click, not a drag
+            console.log('📍 Opening coordinate plotter (was a click, not a drag)');
             openCoordPlotter();
+          } else {
+            console.log('🚫 Not opening coordinate plotter (was dragging)');
           }
         } else if (element.id === 'playback-toggle') {
           if (!wasDragging) {
             togglePlaybackMode();
           }
         }
-    
+  
         // Reset dragging state
         isDragging = false;
         startX = 0;
         startY = 0;
       }
+          
     }
 
     const map = L.map("map", {
@@ -5202,6 +5207,17 @@
       document.getElementById('coord-plotter-modal').classList.remove('hidden');
     }
 
+    // Remove any existing click handlers and let makeDraggable handle everything
+    document.addEventListener('DOMContentLoaded', function() {
+      const coordBtn = document.getElementById('coord-plotter-btn');
+      if (coordBtn) {
+        // Clone the button to remove ALL event listeners
+        const newCoordBtn = coordBtn.cloneNode(true);
+        coordBtn.parentNode.replaceChild(newCoordBtn, coordBtn);
+        console.log('✅ Coordinate plotter button event listeners cleared');
+      }
+    });
+    
     function closeCoordPlotter() {
       document.getElementById('coord-plotter-modal').classList.add('hidden');
       // Clear inputs
@@ -5547,6 +5563,7 @@
   </script>
 </body>
 </html>
+
 
 
 
