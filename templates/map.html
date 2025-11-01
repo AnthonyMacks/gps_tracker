@@ -5115,7 +5115,7 @@
     }
 
     // Connect toggle button
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
       const toggleBtn = document.getElementById('playback-toggle');
       if (toggleBtn) {
         toggleBtn.addEventListener('click', togglePlaybackMode);
@@ -5312,6 +5312,12 @@
       const banner = document.getElementById('company-banner');
       const bannerText = document.getElementById('banner-text');
 
+      // Check if elements exist
+      if (!modal || !select || !confirmBtn || !banner || !bannerText) {
+        console.warn('⚠️ Company selection elements not found');
+        return;
+      }
+        
       // Company to animal icon mapping
       const companyIcons = {
         'A COY': '🐺',      // Wolf
@@ -5792,11 +5798,14 @@
     }
     
     // Allow closing modal by clicking outside
-    document.getElementById('coord-plotter-modal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeCoordPlotter();
-      }
-    });
+    const coordPlotterModal = document.getElementById('coord-plotter-modal');
+    if (coordPlotterModal) {
+      coordPlotterModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeCoordPlotter();
+        }
+      });
+    }
 
     console.log('✅ Coordinate plotter initialized');
 
@@ -5888,6 +5897,7 @@
   </script>
 </body>
 </html>
+
 
 
 
