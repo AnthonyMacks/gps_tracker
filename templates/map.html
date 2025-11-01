@@ -1317,35 +1317,6 @@
       margin-top: 5px;
     }
 
-    .coord-markers-list {
-      position: absolute;
-      bottom: 140px;
-      right: 10px;
-      background: rgba(255,255,255,0.95);
-      padding: 10px;
-      border-radius: 6px;
-      font-family: sans-serif;
-      font-size: 12px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 1001;
-      max-width: 250px;
-      max-height: 200px;
-      overflow-y: auto;
-      display: none;
-    }
-
-    .coord-markers-list.active {
-      display: block;
-    }
-
-    .coord-markers-list h4 {
-      margin: 0 0 8px 0;
-      color: #2C3E50;
-      font-size: 13px;
-      border-bottom: 1px solid #BDC3C7;
-      padding-bottom: 5px;
-    }
-
     .coord-marker-item {
       display: flex;
       justify-content: space-between;
@@ -1732,12 +1703,6 @@
     
 <!-- Coordinate Plotter Button -->
 <button id="coord-plotter-btn">🧭 Plot Coordinates</button>
-
-<!-- Coordinate Markers List -->
-<div id="coord-markers-list" class="coord-markers-list">
-  <h4>NAV Points</h4>
-  <div id="coord-markers-container"></div>
-</div>
 
 <!-- Coordinate Plotter Modal -->
 <div id="coord-plotter-modal" class="hidden">
@@ -6045,6 +6010,7 @@
   </script>
 </body>
 </html>
+
 
 
 
