@@ -3041,7 +3041,11 @@
         document.ontouchmove = null;
 
         // If we actually dragged (moved more than a few pixels), prevent the click
-        if (wasDragging && element.id === 'playback-toggle'  || element.id === 'coord-plotter-btn') && (Math.abs(pos1) > 5 || Math.abs(pos2) > 5)) {
+
+        const isSpecialButton = element.id === 'playback-toggle' || element.id === 'coord-plotter-btn';
+        const didMove = Math.abs(pos1) > 5 || Math.abs(pos2) > 5;
+    
+        if (wasDragging && isSpecialButton && didMove) {
           setTimeout(() => {
             element.addEventListener('click', function preventClick(e) {
               e.stopImmediatePropagation();
@@ -5506,6 +5510,7 @@
   </script>
 </body>
 </html>
+
 
 
 
