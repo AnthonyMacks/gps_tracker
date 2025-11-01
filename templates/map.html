@@ -3735,28 +3735,36 @@
     });
 
     const gridToggle = document.getElementById('grid-toggle');
-    gridToggle.addEventListener('change', function() {
-      toggleGridLines();
-    });
+    if (gridToggle) {
+      gridToggle.addEventListener('change', function() {
+        toggleGridLines();
+      });
+    }
 
-    const grid100mToggle = document.getElementById('grid-100m-toggle');
-    grid100mToggle.addEventListener('change', function() {
-      toggle100mGrid();
-    });
+    const grid100mToggle = document.getElementById('grid-100m-toggle');  
+    if (grid100mToggle) {
+      grid100mToggle.addEventListener('change', function() {
+        toggle100mGrid();
+      });
+    }
 
     const grid10mToggle = document.getElementById('grid-10m-toggle');
-    grid10mToggle.addEventListener('change', function() {
-      toggle10mGrid();
-    });
+    if (grid10mToggle) {
+      grid10mToggle.addEventListener('change', function() {
+        toggle10mGrid();
+      });
+    }
 
     const opacitySlider = document.getElementById('opacity-slider');
     const opacityValue = document.getElementById('opacity-value');
 
-    opacitySlider.addEventListener('input', function() {
-      const opacity = parseFloat(this.value);
-      currentBaseLayer.setOpacity(opacity);
-      opacityValue.textContent = Math.round(opacity * 100) + '%';
-    });
+    if (opacitySlider && opacityValue) {
+      opacitySlider.addEventListener('input', function() {
+        const opacity = parseFloat(this.value);
+        currentBaseLayer.setOpacity(opacity);
+        opacityValue.textContent = Math.round(opacity * 100) + '%';
+      });
+    }
 
     map.on('baselayerchange', function(e) {
       currentBaseLayer = e.layer;
@@ -5412,34 +5420,36 @@
     
     const debugPanel = document.getElementById('debug');
     let debugTimeout;
-    
-    debugPanel.classList.add('collapsed');
-    
-    debugPanel.addEventListener('mouseenter', () => {
-      clearTimeout(debugTimeout);
-      debugPanel.classList.remove('collapsed');
-    });
-    
-    debugPanel.addEventListener('mouseleave', () => {
-      debugTimeout = setTimeout(() => {
-        debugPanel.classList.add('collapsed');
-      }, 1500);
-    });
-    
-    debugPanel.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      clearTimeout(debugTimeout);
-      
-      if (debugPanel.classList.contains('collapsed')) {
+
+    if (debugPanel) {
+      debugPanel.classList.add('collapsed');
+  
+      debugPanel.addEventListener('mouseenter', () => {
+        clearTimeout(debugTimeout);
         debugPanel.classList.remove('collapsed');
+      });
+  
+      debugPanel.addEventListener('mouseleave', () => {
         debugTimeout = setTimeout(() => {
           debugPanel.classList.add('collapsed');
-        }, 4000);
-      } else {
-        debugPanel.classList.add('collapsed');
-      }
-    });
+        }, 1500);
+      });
+  
+      debugPanel.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearTimeout(debugTimeout);
+    
+        if (debugPanel.classList.contains('collapsed')) {
+          debugPanel.classList.remove('collapsed');
+          debugTimeout = setTimeout(() => {
+            debugPanel.classList.add('collapsed');
+          }, 4000);
+        } else {
+          debugPanel.classList.add('collapsed');
+        }
+      });
+    }
     
     socket.on("gps_update", (data) => {
       processGPSUpdate(data);
@@ -5897,6 +5907,7 @@
   </script>
 </body>
 </html>
+
 
 
 
