@@ -1097,7 +1097,6 @@
       font-weight: bold;
       color: white;
       font-family: sans-serif;
-      animation: scroll-left 15s linear infinite;
     }
 
     @keyframes scroll-left {
@@ -1128,7 +1127,6 @@
       .banner-content {
         line-height: 40px;
         font-size: 18px;
-        animation: scroll-left 15s linear infinite;
       }
   
       body.has-banner #map {
@@ -1455,7 +1453,7 @@
       padding: 15px;
       margin-top: 5px;
       min-width: 250px;
-      max-height: 500px;
+      max-height: 600px;
       overflow-y: auto;
       left: 0; /* Default: align with button left edge */
     }
@@ -1932,9 +1930,12 @@
       <h4>🧭 Coordinate Tools</h4>
       <button class="secondary" onclick="openCoordPlotter()">📍 Plot New Coordinate</button>
       <button class="secondary" onclick="resetNavexPoint()">🎯 Reset NAVEX Start Point</button>
-      <div style="margin-top: 10px; max-height: 200px; overflow-y: auto;">
-        <h4 style="font-size: 12px; margin: 10px 0 5px 0; color: #2C3E50;">Plotted NAV Points (<span id="coord-count">0</span>)</h4>
-        <div id="coord-markers-container" style="max-height: 180px; overflow-y: auto;"></div>
+
+      <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+        <div style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: #2C3E50;">
+          Plotted NAV Points (<span id="coord-count">0</span>)
+        </div>
+        <div id="coord-markers-container" style="max-height: 200px; overflow-y: auto; min-height: 30px;"></div>
       </div>
     </div>
   </div>
@@ -6022,6 +6023,7 @@
   </script>
 </body>
 </html>
+
 
 
 
