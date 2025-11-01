@@ -3285,7 +3285,8 @@
           return;
         }
       
-        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' ||
+            e.target.tagName === 'SELECT' || e.target.closest('select') ||
             e.target.closest('table') || e.target.closest('button')) {
           return;
         }
@@ -3301,7 +3302,8 @@
       }
 
       function dragTouchStart(e) {
-        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' ||
+            e.target.tagName === 'SELECT' || e.target.closest('select') ||
             e.target.closest('table') || e.target.closest('button')) {
           return;
         }
@@ -3592,141 +3594,6 @@
         document.getElementById('navex-modal').style.display = 'flex';
       }
     }
-
-    // Handle NAVEX confirmation
-    (function() {
-      const navexConfirm = document.getElementById('navex-confirm');
-
-      if (!navexConfirm) {
-        console.warn('⚠️ navex-confirm button not found');
-        return;
-      }
-        
-      navexConfirm.addEventListener('click', function() {
-        const formatLatlon = document.getElementById('navex-format-latlon').classList.contains('active');
-        let lat, lon;
-    
-        if (formatLatlon) {
-          const latInput = document.getElementById('navex-lat').value.trim();
-          const lonInput = document.getElementById('navex-lon').value.trim();
-      
-          if (!latInput || !lonInput) {
-            alert('❌ Please enter both latitude and longitude');
-            return;
-          }
-      
-          lat = parseCoordinate(latInput);
-          lon = parseCoordinate(lonInput);
-      
-          if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
-            alert('❌ Invalid coordinates');
-            return;
-          }
-        } else {
-          // Grid Reference mode 
-          const selectedZone = parseInt(document.getElementById('navex-zone').value);
-          const gridRef = document.getElementById('navex-gridref').value.trim();
-          const gridSquareSelect = document.getElementById('navex-grid-square').value;
-      
-          if (!gridRef) {
-            alert('❌ Please enter a grid reference');
-           return;
-          }
-      
-          let result = null;
-          let actualZone = selectedZone;
-            
-          if (gridSquareSelect) {
-            // User specified a grid square - extract zone from selection
-            const [zoneStr, gridSquareLetters] = gridSquareSelect.split('-');
-            actualZone = parseInt(zoneStr);
-        
-            console.log(`🎯 NAVEX: User selected Grid Square "${gridSquareLetters}" in Zone ${actualZone}`);
-
-            // Try the selected zone first
-            result = gridReferenceToLatLonWithSquare(gridRef, actualZone, gridSquareLetters);
-
-            // If not found in selected zone, search ALL zones
-            if (!result) {
-              console.log(`⚠️ Not found in Zone ${actualZone}, searching all zones...`);
-          
-              for (let testZone of [54, 55, 56, 57]) {
-                if (testZone === actualZone) continue; // Already tried
-            
-                console.log(`  Trying Zone ${testZone}...`);
-                result = gridReferenceToLatLonWithSquare(gridRef, testZone, gridSquareLetters);
-            
-                if (result) {
-                  actualZone = testZone;
-                  console.log(`  ✅ Found in Zone ${testZone}!`);
-                  alert(`ℹ️ Grid square "${gridSquareLetters}" was found in Zone ${testZone}.\nThe NAVEX start point has been plotted correctly.`);
-                  break;
-                }
-              }
-            }
-          } else {
-            // Auto-detect mode - search all zones
-            console.log(`🔍 NAVEX: Auto-detecting zone for grid ref "${gridRef}"`);
-        
-            // Try selected zone first
-            result = gridReferenceToLatLon(gridRef, selectedZone);
-        
-            // If not found, try all other zones
-            if (!result) {
-              console.log(`⚠️ Not found in Zone ${selectedZone}, trying other zones...`);
-          
-              for (let testZone of [54, 55, 56, 57]) {
-                if (testZone === selectedZone) continue;
-            
-                console.log(`  Trying Zone ${testZone}...`);
-                result = gridReferenceToLatLon(gridRef, testZone);
-            
-                if (result) {
-                  actualZone = testZone;
-                  console.log(`  ✅ Found in Zone ${testZone}!`);
-                  alert(`ℹ️ Grid reference found in Zone ${testZone}.\nThe NAVEX start point has been plotted correctly.`);
-                  break;
-                }
-              }
-            }
-          }
-      
-          if (!result) {
-            alert('❌ Invalid grid reference. Could not find coordinates in any zone.\n\nCheck:\n- Grid reference format (e.g., "364 918")\n- Grid square selection matches your location\n- Zone selection is correct\n\nSee F12 console for details.');
-            return;
-          }
-      
-          lat = result.lat;
-          lon = result.lon;
-      
-          console.log(`✅ NAVEX: Final coordinates - Zone ${actualZone}, Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
-        }
-    
-        // Validate coordinates are in reasonable range for Australia
-        if (lat < -45 || lat > -10 || lon < 110 || lon > 155) {
-          if (!confirm(`⚠️ Warning: Coordinates appear to be outside mainland Australia.\n\nLat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}\n\nDo you want to continue?`)) {
-            return;
-          }
-        }
-    
-        // Save and create marker
-        localStorage.setItem('navex_start_point', JSON.stringify({ lat, lon }));
-        createCUOMarker(lat, lon);
-        document.getElementById('navex-modal').style.display = 'none';
-    
-        // Center map on the new position
-        map.setView([lat, lon], 15);
-    
-        // Open the marker popup to confirm placement
-        setTimeout(() => {
-          if (cuoMarker) {
-            cuoMarker.openPopup();
-          }
-        }, 500);
-    
-        console.log(`✅ NAVEX Start Point set at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-      });
-    });
               
       const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 22,
@@ -5435,6 +5302,139 @@
     
     console.log('Initializing GPS tracker...');
 
+    // Initialize NAVEX confirmation handler
+    setTimeout(() => {
+      const navexConfirm = document.getElementById('navex-confirm');
+
+      if (!navexConfirm) {
+        console.warn('⚠️ navex-confirm button not found');
+        return;
+      }
+
+      console.log('✅ NAVEX confirm button found, attaching listener');
+    
+      navexConfirm.addEventListener('click', function() {
+        console.log('🎯 NAVEX confirm button clicked');
+    
+        const formatLatlon = document.getElementById('navex-format-latlon').classList.contains('active');
+        let lat, lon;
+    
+        if (formatLatlon) {
+          const latInput = document.getElementById('navex-lat').value.trim();
+          const lonInput = document.getElementById('navex-lon').value.trim();
+      
+          if (!latInput || !lonInput) {
+            alert('❌ Please enter both latitude and longitude');
+            return;
+          }
+      
+          lat = parseCoordinate(latInput);
+          lon = parseCoordinate(lonInput);
+      
+          if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) {
+            alert('❌ Invalid coordinates');
+            return;
+          }
+        } else {
+          // Grid Reference mode 
+          const selectedZone = parseInt(document.getElementById('navex-zone').value);
+          const gridRef = document.getElementById('navex-gridref').value.trim();
+          const gridSquareSelect = document.getElementById('navex-grid-square').value;
+      
+          if (!gridRef) {
+            alert('❌ Please enter a grid reference');
+            return;
+          }
+      
+          let result = null;
+          let actualZone = selectedZone;
+        
+          if (gridSquareSelect) {
+            const [zoneStr, gridSquareLetters] = gridSquareSelect.split('-');
+            actualZone = parseInt(zoneStr);
+    
+            console.log(`🎯 NAVEX: User selected Grid Square "${gridSquareLetters}" in Zone ${actualZone}`);
+
+            result = gridReferenceToLatLonWithSquare(gridRef, actualZone, gridSquareLetters);
+
+            if (!result) {
+              console.log(`⚠️ Not found in Zone ${actualZone}, searching all zones...`);
+      
+              for (let testZone of [54, 55, 56, 57]) {
+                if (testZone === actualZone) continue;
+        
+                console.log(`  Trying Zone ${testZone}...`);
+                result = gridReferenceToLatLonWithSquare(gridRef, testZone, gridSquareLetters);
+        
+                if (result) {
+                  actualZone = testZone;
+                  console.log(`  ✅ Found in Zone ${testZone}!`);
+                  alert(`ℹ️ Grid square "${gridSquareLetters}" was found in Zone ${testZone}.\nThe NAVEX start point has been plotted correctly.`);
+                  break;
+                }
+              }
+            }
+          } else {
+            console.log(`🔍 NAVEX: Auto-detecting zone for grid ref "${gridRef}"`);
+    
+            result = gridReferenceToLatLon(gridRef, selectedZone);
+    
+            if (!result) {
+              console.log(`⚠️ Not found in Zone ${selectedZone}, trying other zones...`);
+      
+              for (let testZone of [54, 55, 56, 57]) {
+                if (testZone === selectedZone) continue;
+        
+                console.log(`  Trying Zone ${testZone}...`);
+                result = gridReferenceToLatLon(gridRef, testZone);
+        
+                if (result) {
+                  actualZone = testZone;
+                  console.log(`  ✅ Found in Zone ${testZone}!`);
+                  alert(`ℹ️ Grid reference found in Zone ${testZone}.\nThe NAVEX start point has been plotted correctly.`);
+                  break;
+                }
+              }
+            }
+          }
+      
+          if (!result) {
+            alert('❌ Invalid grid reference. Could not find coordinates in any zone.\n\nCheck:\n- Grid reference format (e.g., "364 918")\n- Grid square selection matches your location\n- Zone selection is correct\n\nSee F12 console for details.');
+            return;
+          }
+      
+          lat = result.lat;
+          lon = result.lon;
+      
+          console.log(`✅ NAVEX: Final coordinates - Zone ${actualZone}, Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
+        }
+    
+        // Validate coordinates are in reasonable range for Australia
+        if (lat < -45 || lat > -10 || lon < 110 || lon > 155) {
+          if (!confirm(`⚠️ Warning: Coordinates appear to be outside mainland Australia.\n\nLat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}\n\nDo you want to continue?`)) {
+            return;
+          }
+        }
+    
+        // Save and create marker
+        localStorage.setItem('navex_start_point', JSON.stringify({ lat, lon }));
+        createCUOMarker(lat, lon);
+        document.getElementById('navex-modal').style.display = 'none';
+    
+        // Center map on the new position
+        map.setView([lat, lon], 15);
+    
+        // Open the marker popup to confirm placement
+        setTimeout(() => {
+          if (cuoMarker) {
+            cuoMarker.openPopup();
+          }
+        }, 500);
+    
+        console.log(`✅ NAVEX Start Point set at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+      });
+    }, 500);
+
     const hasStoredData = loadFromLocalStorage();
 
     // Make elements draggable after a small delay to ensure they exist
@@ -5973,6 +5973,7 @@
   </script>
 </body>
 </html>
+
 
 
 
