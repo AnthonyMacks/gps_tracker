@@ -4368,25 +4368,53 @@
       Object.keys(gpsTrails).forEach(deviceId => {
         const trail = gpsTrails[deviceId];
         if (!trail || trail.length === 0) return;
+            
+        // Get the latest known timestamp for this device
+        const latestTimestamp = latestPackets[deviceId]?.timestamp 
+          ? new Date(latestPackets[deviceId].timestamp).getTime()
+          : Date.now();
     
+        console.log(`📊 Device ${deviceId}: ${trail.length} points, latest timestamp: ${new Date(latestTimestamp).toISOString()}`);
+       
         trail.forEach((point, index) => {
           // FIX: Handle both array format [lat, lon] and object format {lat, lon, ...}
           let lat, lon, timestamp;
-      
+     
           if (Array.isArray(point)) {
             // Old format: [lat, lon]
             lat = point[0];
             lon = point[1];
-            timestamp = latestPackets[deviceId]?.timestamp 
-              ? new Date(latestPackets[deviceId].timestamp).getTime() - ((trail.length - 1 - index) * 10000)
-              : Date.now() - ((trail.length - 1 - index) * 10000);
+            // Estimate timestamp working backwards from latest
+            timestamp = latestTimestamp - ((trail.length - 1 - index) * 10000);
           } else {
             // New format: {lat, lon, timestamp, ...}
             lat = point.lat;
             lon = point.lon;
-            timestamp = point.timestamp 
-              ? (typeof point.timestamp === 'string' ? new Date(point.timestamp).getTime() : point.timestamp)
-              : Date.now() - ((trail.length - 1 - index) * 10000);
+        
+            if (point.timestamp) {
+              // Try to parse the timestamp
+              const parsed = typeof point.timestamp === 'string' 
+                ? new Date(point.timestamp).getTime() 
+                : point.timestamp;
+          
+              // Validate the parsed timestamp
+              if (!isNaN(parsed) && parsed > 0) {
+                timestamp = parsed;
+              } else {
+                // Fallback to estimated timestamp
+                console.warn(`⚠️ Invalid timestamp for point ${index}, using estimate`);
+                timestamp = latestTimestamp - ((trail.length - 1 - index) * 10000);
+              }
+            } else {
+              // No timestamp, estimate it
+              timestamp = latestTimestamp - ((trail.length - 1 - index) * 10000);
+            }
+          }
+      
+          // Final validation
+          if (isNaN(timestamp) || timestamp <= 0) {
+            console.error(`❌ Failed to get valid timestamp for device ${deviceId}, point ${index}`);
+            timestamp = Date.now() - ((trail.length - 1 - index) * 10000);
           }
       
           playbackState.allPoints.push({
@@ -4411,6 +4439,12 @@
       playbackState.endTime = playbackState.allPoints[playbackState.allPoints.length - 1].timestamp;
       playbackState.currentIndex = 0;
 
+      console.log(`✅ Playback initialized:`);
+      console.log(`  - Total points: ${playbackState.allPoints.length}`);
+      console.log(`  - Start time: ${new Date(playbackState.startTime).toISOString()}`);
+      console.log(`  - End time: ${new Date(playbackState.endTime).toISOString()}`);
+      console.log(`  - Duration: ${formatDuration(playbackState.endTime - playbackState.startTime)}`);
+        
       // Save current state before clearing
       playbackState.savedCenter = map.getCenter();
       playbackState.savedZoom = map.getZoom();
@@ -4423,9 +4457,6 @@
       // Update UI
       updatePlaybackUI();
   
-      console.log(`✅ Loaded ${playbackState.allPoints.length} points for playback`);
-      console.log(`Duration: ${formatDuration(playbackState.endTime - playbackState.startTime)}`);
-      
       // Make playback control draggable
       makeDraggable(document.getElementById('playback-control'));
         
@@ -4475,7 +4506,21 @@
         }
     
         const point = playbackState.allPoints[playbackState.currentIndex];
-    
+
+        // Validate timestamp before using it
+        let isoTimestamp;
+        if (!isNaN(point.timestamp) && point.timestamp > 0) {
+          try {
+            isoTimestamp = new Date(point.timestamp).toISOString();
+          } catch (e) {
+            console.error('❌ Error converting timestamp:', e);
+            isoTimestamp = new Date().toISOString();
+          }
+        } else {
+          console.error('❌ Invalid timestamp in point:', point.timestamp);
+          isoTimestamp = new Date().toISOString();
+        }
+          
         // Add point to map
         const packet = {
           device_id: point.deviceId,
@@ -4494,7 +4539,7 @@
         gpsTrails[point.deviceId].push({
           lat: point.lat,
           lon: point.lon,
-          timestamp: new Date(point.timestamp).toISOString(),
+          timestamp: isoTimestamp,
           distanceFromPrev: 0,
           speedFromPrev: 0,
           totalDistance: 0
@@ -4548,14 +4593,27 @@
   
       for (let i = 0; i < playbackState.currentIndex; i++) {
         const point = playbackState.allPoints[i];
+        
+        // Validate timestamp
+        let isoTimestamp;
+        if (!isNaN(point.timestamp) && point.timestamp > 0) {
+          try {
+            isoTimestamp = new Date(point.timestamp).toISOString();
+          } catch (e) {
+            console.error('❌ Error converting timestamp:', e);
+            isoTimestamp = new Date().toISOString();
+          }
+        } else {
+          isoTimestamp = new Date().toISOString();
+        }
+    
         if (!gpsTrails[point.deviceId]) {
           gpsTrails[point.deviceId] = [];
         }
-        // FIX: Store as object, not array
         gpsTrails[point.deviceId].push({
           lat: point.lat,
           lon: point.lon,
-          timestamp: new Date(point.timestamp).toISOString(),
+          timestamp: isoTimestamp,
           distanceFromPrev: 0,
           speedFromPrev: 0,
           totalDistance: 0
@@ -4589,7 +4647,14 @@
   
       const currentPoint = playbackState.allPoints[playbackState.currentIndex];
       const currentTime = currentPoint ? currentPoint.timestamp : playbackState.startTime;
-  
+
+      // Validate timestamps
+      if (isNaN(currentTime) || isNaN(playbackState.startTime) || isNaN(playbackState.endTime)) {
+        console.error('❌ Invalid timestamps in playback UI');
+        document.getElementById('playback-time').textContent = 'Invalid timestamps';
+        return;
+      }
+        
       const elapsed = currentTime - playbackState.startTime;
       const total = playbackState.endTime - playbackState.startTime;
   
@@ -5398,6 +5463,7 @@
   </script>
 </body>
 </html>
+
 
 
 
