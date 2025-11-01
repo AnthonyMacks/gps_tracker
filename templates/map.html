@@ -1457,6 +1457,7 @@
       min-width: 250px;
       max-height: 500px;
       overflow-y: auto;
+      left: 0; /* Default: align with button left edge */
     }
 
     .ui-dropdown.active .ui-dropdown-content {
@@ -1535,12 +1536,18 @@
     }
 
     #data-plotting-dropdown {
-      top: 10px;
-      right: 10px;
+      top: 60px;
+      left: 10px;
     }
 
+    /* Data & Plotting needs to be wider for tables */
+    #data-plotting-dropdown .ui-dropdown-content {
+      min-width: 720px;
+      max-width: 90vw;
+    }
+    
     #tools-dropdown {
-      top: 60px;
+      top: 10px;
       right: 10px;
     }
 
@@ -1565,6 +1572,12 @@
       top: 0;
     }
 
+    /* Tools dropdown content should appear to the left since it's on the right edge */
+    #tools-dropdown .ui-dropdown-content {
+      left: auto;
+      right: 0;
+    }
+
     /* Mobile responsive */
     @media (max-width: 768px) {
       .ui-dropdown-btn {
@@ -1579,22 +1592,27 @@
       }
   
       #data-plotting-dropdown {
-        top: 10px;
-        right: 10px;
-        left: auto;
+        top: 60px;
+        left: 10px;
       }
 
       #tools-dropdown {
-        top: 110px;
+        top: 10px;
         right: 10px;
       }
   
       #map-controls-dropdown {
         top: 10px;
         left: 10px;
-      }  
-    }
+      }
 
+      /* All dropdowns align content to left on mobile */
+      .ui-dropdown-content {
+        left: 0;
+        right: auto;
+      }
+        
+    }
     
     .lower-right-image {
         width: 100px; /* adjust as needed */
@@ -5955,6 +5973,7 @@
   </script>
 </body>
 </html>
+
 
 
 
