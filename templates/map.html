@@ -2952,7 +2952,7 @@
 
       function dragMouseDown(e) {
         // Allow dragging for the playback-toggle button itself
-        if (element.id === 'playback-toggle') {
+        if (element.id === 'playback-toggle' || element.id === 'coord-plotter-btn') {
           e.preventDefault();
           pos3 = e.clientX;
           pos4 = e.clientY;
@@ -3036,7 +3036,7 @@
         document.ontouchmove = null;
 
         // If we actually dragged (moved more than a few pixels), prevent the click
-        if (wasDragging && element.id === 'playback-toggle' && (Math.abs(pos1) > 5 || Math.abs(pos2) > 5)) {
+        if (wasDragging && element.id === 'playback-toggle'  || element.id === 'coord-plotter-btn') && (Math.abs(pos1) > 5 || Math.abs(pos2) > 5)) {
           setTimeout(() => {
             element.addEventListener('click', function preventClick(e) {
               e.stopImmediatePropagation();
@@ -5501,6 +5501,7 @@
   </script>
 </body>
 </html>
+
 
 
 
