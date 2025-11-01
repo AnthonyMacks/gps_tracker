@@ -2860,6 +2860,11 @@
 
     function toggleGridLines() {
       gridLinesVisible = !gridLinesVisible;
+      const checkbox = document.getElementById('grid-toggle-consolidated');
+      if (checkbox) {
+        gridLinesVisible = checkbox.checked;
+      }
+  
       if (gridLinesVisible) {
         drawGridLines();
       } else {
@@ -2870,11 +2875,18 @@
     }
 
     function toggle100mGrid() {
-      grid100mVisible = !grid100mVisible;
+      const checkbox = document.getElementById('grid-100m-toggle-consolidated');
+      if (checkbox) {
+        grid100mVisible = checkbox.checked;
+      } else {
+        grid100mVisible = !grid100mVisible;
+      }
+  
       if (grid100mVisible) {
         if (!gridLinesVisible) {
           gridLinesVisible = true;
-          document.getElementById('grid-toggle').checked = true;
+          const mainCheckbox = document.getElementById('grid-toggle-consolidated');
+          if (mainCheckbox) mainCheckbox.checked = true;
           drawGridLines();
         } else {
           draw100mGrid();
@@ -2885,11 +2897,18 @@
     }
 
     function toggle10mGrid() {
-      grid10mVisible = !grid10mVisible;
+      const checkbox = document.getElementById('grid-10m-toggle-consolidated');
+      if (checkbox) {
+        grid10mVisible = checkbox.checked;
+      } else {
+        grid10mVisible = !grid10mVisible;
+      }
+  
       if (grid10mVisible) {
         if (!gridLinesVisible) {
           gridLinesVisible = true;
-          document.getElementById('grid-toggle').checked = true;
+          const mainCheckbox = document.getElementById('grid-toggle-consolidated');
+          if (mainCheckbox) mainCheckbox.checked = true;
           drawGridLines();
         } else {
           draw10mGrid();
@@ -2898,7 +2917,6 @@
         clearGrid10m();
       }
     }
-
     const deviceStartPoints = {};
     const MAX_DISTANCE_KM = 150;
     let rejectedPointsCount = 0;
@@ -4713,8 +4731,8 @@
         }
     
         initializePlayback();
-        control.classList.add('active');
-        toggleBtn.textContent = '🔴 Exit Playback';
+        if (control) control.classList.add('active');
+        if (toggleBtn) toggleBtn.textContent = '🔴 Exit Playback';
         playbackState.isActive = true;
       } else {
         // Exit playback mode
@@ -5839,6 +5857,11 @@
 
     function toggleUIDropdown(dropdownId) {
       const dropdown = document.getElementById(dropdownId);
+      if (!dropdown) {
+        console.warn(`⚠️ Dropdown not found: ${dropdownId}`);
+        return;
+      }
+        
       const isActive = dropdown.classList.contains('active');
   
       // Close all other dropdowns
@@ -5868,11 +5891,20 @@
     function updateOpacity(value) {
       const opacity = parseFloat(value);
       currentBaseLayer.setOpacity(opacity);
-      document.getElementById('opacity-value-consolidated').textContent = Math.round(opacity * 100) + '%';
+      const opacityValueSpan = document.getElementById('opacity-value-consolidated');
+      if (opacityValueSpan) {
+        opacityValueSpan.textContent = Math.round(opacity * 100) + '%';
+      }
     }
 
     function exportSelectedDevice() {
       const selector = document.getElementById('device-selector');
+
+      if (!selector) {
+        alert('⚠️ Device selector not found');
+        return;
+      }
+        
       const deviceId = selector.value;
       if (deviceId) {
         exportKML(deviceId);
@@ -5923,6 +5955,7 @@
   </script>
 </body>
 </html>
+
 
 
 
