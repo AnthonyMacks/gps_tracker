@@ -2067,6 +2067,14 @@
     const n100kLetters = "ABCDEFGHJKLMNPQRSTUV";
     let useGDA94 = true;
 
+    // ========== INITIALIZE COORDINATE PLOTTER VARIABLES EARLY ==========
+    let plottedCoordinates = [];
+    let coordMarkerCounter = 1;
+    let selectedCoordMarkers = [];
+    let distanceLine = null;
+    let cuoMarker = null;
+    // ===================================================================
+    
     function getUTMZone(lon) {
       if (lon >= 144 && lon < 150) return 55;
       if (lon >= 150 && lon < 156) return 56;
@@ -3811,12 +3819,6 @@
     const deviceVisibility = {};
     let selectedDevice = null;
     let hasInitialData = false;
-
-    // Coordinate plotter variables (moved here to avoid initialization errors)
-    let plottedCoordinates = [];
-    let coordMarkerCounter = 1;
-    let selectedCoordMarkers = [];
-    let distanceLine = null;
 
     function toggleDeviceVisibility(deviceId) {
       if (selectedDevice === deviceId) {
@@ -5785,17 +5787,6 @@
         container.appendChild(item);
       });
     }
-
-    // Connect button with drag-aware click handling
-    const coordPlotterBtn = document.getElementById('coord-plotter-btn');
-    if (coordPlotterBtn) {
-      coordPlotterBtn.addEventListener('click', function(e) {
-        // Only open if we didn't just finish dragging
-        if (!this.classList.contains('just-dragged')) {
-          openCoordPlotter();
-        }
-      });
-    }
     
     // Allow closing modal by clicking outside
     document.getElementById('coord-plotter-modal').addEventListener('click', function(e) {
@@ -5894,6 +5885,7 @@
   </script>
 </body>
 </html>
+
 
 
 
