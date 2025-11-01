@@ -2951,33 +2951,36 @@
     function makeDraggable(element) {
       let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
       let isDragging = false;
+      let startX = 0, startY = 0;
 
       element.onmousedown = dragMouseDown;
       element.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
-        // Allow dragging for the playback-toggle button itself
+        // Allow dragging for these buttons themselves
         if (element.id === 'playback-toggle' || element.id === 'coord-plotter-btn') {
           e.preventDefault();
+          startX = e.clientX;
+          startY = e.clientY;
           pos3 = e.clientX;
           pos4 = e.clientY;
-          isDragging = true;
-          element.classList.add('dragging');
+          isDragging = false; // Don't set to true yet, wait for actual movement
           document.onmouseup = closeDragElement;
           document.onmousemove = elementDrag;
           return;
         }
-          
+      
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
             e.target.closest('table') || e.target.closest('button')) {
           return;
         }
-        
+    
         e.preventDefault();
+        startX = e.clientX;
+        startY = e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
-        isDragging = true;
-        element.classList.add('dragging');
+        isDragging = false;
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
       }
@@ -2987,27 +2990,40 @@
             e.target.closest('table') || e.target.closest('button')) {
           return;
         }
-        
+    
         const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
         pos3 = touch.clientX;
         pos4 = touch.clientY;
-        isDragging = true;
-        element.classList.add('dragging');
+        isDragging = false;
         document.ontouchend = closeDragElement;
         document.ontouchmove = elementDragTouch;
       }
 
       function elementDrag(e) {
-        if (!isDragging) return;
         e.preventDefault();
+    
+        // Calculate movement distance
+        const moveX = Math.abs(e.clientX - startX);
+        const moveY = Math.abs(e.clientY - startY);
+    
+        // Only start dragging if moved more than 5 pixels
+        if (moveX > 5 || moveY > 5) {
+          isDragging = true;
+          element.classList.add('dragging');
+        }
+    
+        if (!isDragging) return;
+    
         pos1 = pos3 - e.clientX;
         pos2 = pos4 - e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
-        
+    
         const newTop = element.offsetTop - pos2;
         const newLeft = element.offsetLeft - pos1;
-        
+    
         element.style.top = newTop + "px";
         element.style.left = newLeft + "px";
         element.style.right = "auto";
@@ -3015,52 +3031,57 @@
       }
 
       function elementDragTouch(e) {
-        if (!isDragging) return;
         const touch = e.touches[0];
+    
+        const moveX = Math.abs(touch.clientX - startX);
+        const moveY = Math.abs(touch.clientY - startY);
+    
+        if (moveX > 5 || moveY > 5) {
+          isDragging = true;
+          element.classList.add('dragging');
+        }
+    
+        if (!isDragging) return;
+    
         pos1 = pos3 - touch.clientX;
         pos2 = pos4 - touch.clientY;
         pos3 = touch.clientX;
         pos4 = touch.clientY;
-        
+    
         const newTop = element.offsetTop - pos2;
         const newLeft = element.offsetLeft - pos1;
-        
+    
         element.style.top = newTop + "px";
         element.style.left = newLeft + "px";
         element.style.right = "auto";
         element.style.bottom = "auto";
       }
 
-      function closeDragElement() {
+      function closeDragElement(e) {
         const wasDragging = isDragging;
-        isDragging = false;
+    
         element.classList.remove('dragging');
         document.onmouseup = null;
         document.onmousemove = null;
         document.ontouchend = null;
         document.ontouchmove = null;
 
-        // If we actually dragged (moved more than a few pixels), prevent the click
-
-        const isSpecialButton = element.id === 'playback-toggle' || element.id === 'coord-plotter-btn';
-        const didMove = Math.abs(pos1) > 5 || Math.abs(pos2) > 5;
-    
-        if (wasDragging && isSpecialButton && didMove) {
-          // Mark as just dragged to prevent click handler
-          element.classList.add('just-dragged');
-    
-          setTimeout(() => {
-            element.classList.remove('just-dragged');
-          }, 100);
-    
-          // Also prevent immediate click event  
-          setTimeout(() => {
-            element.addEventListener('click', function preventClick(e) {
-              e.stopImmediatePropagation();
-              element.removeEventListener('click', preventClick);
-            }, true);
-          }, 0);
+        // Handle button clicks
+        if (element.id === 'coord-plotter-btn') {
+          if (!wasDragging) {
+            // This was a click, not a drag
+            openCoordPlotter();
+          }
+        } else if (element.id === 'playback-toggle') {
+          if (!wasDragging) {
+            togglePlaybackMode();
+          }
         }
+    
+        // Reset dragging state
+        isDragging = false;
+        startX = 0;
+        startY = 0;
       }
     }
 
@@ -5526,6 +5547,7 @@
   </script>
 </body>
 </html>
+
 
 
 
