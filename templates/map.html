@@ -4117,9 +4117,9 @@
               </IconStyle>
             </Style>`;
           
-           let kmlFooter = `
-      </Document>
-    </kml>`;
+        let kmlFooter = `
+          </Document>
+        </kml>`;
     
         let placemarks = '';
         let deviceCount = 0;
@@ -4157,17 +4157,17 @@
               : new Date(Date.now() - (trail.length * 10000)).toISOString();
         
             placemarks += `
-        <Placemark>
-          <name>Device ${id} - Start Point</name>
-          <description>Starting location for device ${id}</description>
-          <TimeStamp>
-            <when>${startTime}</when>
-          </TimeStamp>
-          <styleUrl>#startPoint</styleUrl>
-          <Point>
-            <coordinates>${start.lon},${start.lat},0</coordinates>
-          </Point>
-        </Placemark>`;
+            <Placemark>
+              <name>Device ${id} - Start Point</name>
+              <description>Starting location for device ${id}</description>
+              <TimeStamp>
+                <when>${startTime}</when>
+              </TimeStamp>
+              <styleUrl>#startPoint</styleUrl>
+              <Point>
+                <coordinates>${start.lon},${start.lat},0</coordinates>
+              </Point>
+            </Placemark>`;
           }
       
           // Current position (if exists)
@@ -4179,24 +4179,24 @@
             const gridRef = latLonToGridReference(lat, lon);
         
             placemarks += `
-        <Placemark>
-          <name>Device ${id} - Current Position</name>
-          <description>
-            Grid Reference: ${gridRef}
-            Latitude: ${lat.toFixed(6)}
-            Longitude: ${lon.toFixed(6)}
-            Timestamp: ${latest.timestamp}
-            Satellites: ${latest.sats || 'N/A'}
-            Packet Count: ${packetCounts[id] || 0}
-          </description>
-          <TimeStamp>
-            <when>${latest.timestamp}</when>
-          </TimeStamp>
-          <styleUrl>#currentPoint</styleUrl>
-          <Point>
-            <coordinates>${lon},${lat},0</coordinates>
-          </Point>
-        </Placemark>`;
+            <Placemark>
+              <name>Device ${id} - Current Position</name>
+              <description>
+                Grid Reference: ${gridRef}
+                Latitude: ${lat.toFixed(6)}
+                Longitude: ${lon.toFixed(6)}
+                Timestamp: ${latest.timestamp}
+                Satellites: ${latest.sats || 'N/A'}
+                Packet Count: ${packetCounts[id] || 0}
+              </description>
+              <TimeStamp>
+                <when>${latest.timestamp}</when>
+              </TimeStamp>
+              <styleUrl>#currentPoint</styleUrl>
+              <Point>
+                <coordinates>${lon},${lat},0</coordinates>
+              </Point>
+            </Placemark>`;
           }
       
           // Animated trail using gx:Track
@@ -4212,49 +4212,100 @@
             let coordElements = '';
         
             trail.forEach((point, index) => {
-              const pointTime = new Date(baseTime - ((trail.length - 1 - index) * 10000)).toISOString();
+              // FIX: Handle both array and object formats
+              let lat, lon, timestamp;
+          
+              if (Array.isArray(point)) {
+                // Old format: [lat, lon]
+                lat = point[0];
+                lon = point[1];
+                timestamp = baseTime - ((trail.length - 1 - index) * 10000);
+              } else {
+                // New format: {lat, lon, timestamp, ...}
+                lat = point.lat;
+                lon = point.lon;
+            
+                // Use stored timestamp if available, otherwise estimate
+                if (point.timestamp) {
+                  const parsed = typeof point.timestamp === 'string' 
+                    ? new Date(point.timestamp).getTime()
+                    : point.timestamp;
+                  timestamp = !isNaN(parsed) && parsed > 0 ? parsed : baseTime - ((trail.length - 1 - index) * 10000);
+                } else {
+                  timestamp = baseTime - ((trail.length - 1 - index) * 10000);
+                }
+              }
+          
+              // Validate coordinates
+              if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                console.warn(`⚠️ Invalid coordinates at point ${index}: lat=${lat}, lon=${lon}`);
+                return; // Skip this point
+              }
+          
+              const pointTime = new Date(timestamp).toISOString();
               whenElements += `        <when>${pointTime}</when>\n`;
-              coordElements += `        <gx:coord>${point[1]} ${point[0]} 0</gx:coord>\n`;
+              // KML format is: longitude latitude altitude
+              coordElements += `        <gx:coord>${lon.toFixed(6)} ${lat.toFixed(6)} 0</gx:coord>\n`;
             });
 
             placemarks += `
-        <Placemark>
-          <name>Device ${id} - Animated Trail</name>
-          <description>GPS trail for device ${id} (${trail.length} points). Use Google Earth's time slider to animate.</description>
-          <Style>
-            <LineStyle>
-              <color>${kmlColor}</color>
-              <width>4</width>
-            </LineStyle>
-            <IconStyle>
-              <Icon>
-                <href>http://earth.google.com/images/kml-icons/track-directional/track-0.png</href>
-              </Icon>
-            </IconStyle>
-          </Style>
-          <gx:Track>
-            <altitudeMode>clampToGround</altitudeMode>
-    ${whenElements}${coordElements}      </gx:Track>
-        </Placemark>`;
+            <Placemark>
+              <name>Device ${id} - Animated Trail</name>
+              <description>GPS trail for device ${id} (${trail.length} points). Use Google Earth's time slider to animate.</description>
+              <Style>
+                <LineStyle>
+                  <color>${kmlColor}</color>
+                  <width>4</width>
+                </LineStyle>
+                <IconStyle>
+                  <Icon>
+                    <href>http://earth.google.com/images/kml-icons/track-directional/track-0.png</href>
+                  </Icon>
+                </IconStyle>
+              </Style>
+              <gx:Track>
+                <altitudeMode>clampToGround</altitudeMode>
+        ${whenElements}${coordElements}      </gx:Track>
+            </Placemark>`;
 
             // Also add static line for devices without time support
-            const coordList = trail.map(point => `${point[1]},${point[0]},0`).join(' ');
-            placemarks += `
-        <Placemark>
-          <name>Device ${id} - Static Trail</name>
-          <description>Static GPS trail for device ${id}</description>
-          <visibility>0</visibility>
-          <Style>
-            <LineStyle>
-              <color>${kmlColor}</color>
-              <width>3</width>
-            </LineStyle>
-          </Style>
-          <LineString>
-            <tessellate>1</tessellate>
-            <coordinates>${coordList}</coordinates>
-          </LineString>
-        </Placemark>`;
+            const coordList = trail.map(point => {
+              let lat, lon;
+              if (Array.isArray(point)) {
+                lat = point[0];
+                lon = point[1];
+              } else {
+                lat = point.lat;
+                lon = point.lon;
+              }
+          
+              // Validate before adding
+              if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                return null;
+              }
+          
+              // KML format: longitude,latitude,altitude
+              return `${lon.toFixed(6)},${lat.toFixed(6)},0`;
+            }).filter(coord => coord !== null).join(' ');
+        
+            if (coordList.length > 0) {
+              placemarks += `
+            <Placemark>
+              <name>Device ${id} - Static Trail</name>
+              <description>Static GPS trail for device ${id}</description>
+              <visibility>0</visibility>
+              <Style>
+                <LineStyle>
+                  <color>${kmlColor}</color>
+                  <width>3</width>
+                </LineStyle>
+              </Style>
+              <LineString>
+                <tessellate>1</tessellate>
+                <coordinates>${coordList}</coordinates>
+              </LineString>
+            </Placemark>`;
+            }
           }
 
           if (hasData) deviceCount++;
@@ -4288,23 +4339,8 @@
 
       } catch (error) {
         console.error('❌ KML Export Error:', error);
-        console.error('Error type:', typeof error);
-        console.error('Error details:', {
-          message: error?.message,
-          name: error?.name,
-          stack: error?.stack
-        });
-
-        let errorMsg = 'Unknown error occurred';
-        if (error?.message) {
-          errorMsg = error.message;
-        } else if (typeof error === 'string') {
-          errorMsg = error;
-        } else if (error?.toString) {
-          errorMsg = error.toString();
-        }
-
-        alert(`❌ Export failed: ${errorMsg}\n\nCheck browser console (F12) for details.`);
+        console.error('Error stack:', error.stack);
+        alert(`❌ Export failed: ${error.message}\n\nCheck browser console (F12) for details.`);
       }
     }
     
@@ -5463,6 +5499,7 @@
   </script>
 </body>
 </html>
+
 
 
 
