@@ -5899,6 +5899,10 @@
       });
   
       console.log(`✅ Added ${plottedCoordinates.length} items to container`);
+      console.log('Container HTML:', container.innerHTML);
+      console.log('Container children count:', container.children.length);
+      console.log('Container display style:', window.getComputedStyle(container).display);
+      console.log('Container visibility:', window.getComputedStyle(container).visibility);
     }
     
     // Allow closing modal by clicking outside
@@ -6019,10 +6023,29 @@
         countSpan.textContent = plottedCoordinates.length;
       }
     }
-                            
+
+    function testCoordContainer() {
+      const container = document.getElementById('coord-markers-container');
+      console.log('=== CONTAINER TEST ===');
+      console.log('Container exists:', !!container);
+      console.log('Container parent:', container?.parentElement);
+      console.log('Container innerHTML:', container?.innerHTML);
+      console.log('Container children:', container?.children.length);
+      console.log('Plotted coordinates:', plottedCoordinates.length);
+  
+      if (container && plottedCoordinates.length > 0) {
+        console.log('Manually adding test div...');
+        const testDiv = document.createElement('div');
+        testDiv.style.cssText = 'background: red; color: white; padding: 10px; margin: 5px;';
+        testDiv.textContent = 'TEST ITEM - If you see this, the container works!';
+        container.appendChild(testDiv);
+      }
+    }
+    
   </script>
 </body>
 </html>
+
 
 
 
