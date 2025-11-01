@@ -1537,7 +1537,7 @@
 
     #data-plotting-dropdown {
       top: 100px;
-      left: 250px;
+      left: 400px;
     }
 
     /* Data & Plotting needs to be wider for tables */
@@ -5828,6 +5828,11 @@
         console.warn('⚠️ coord-markers-container not found');
         return;
       }
+      
+      console.log(`📍 Updating coord markers list: ${plottedCoordinates.length} points`);
+  
+      // Update the count
+      updateCoordCount();
   
       if (plottedCoordinates.length === 0) {
         container.innerHTML = '<p style="color: #7F8C8D; font-size: 11px; margin: 5px 0;">No coordinates plotted</p>';
@@ -5837,28 +5842,40 @@
   
       container.innerHTML = '';
   
-      plottedCoordinates.forEach(coord => {
+      plottedCoordinates.forEach((coord, index) => {
+        console.log(`  Creating item ${index + 1}: ${coord.label} (${coord.id})`);
+    
         const item = document.createElement('div');
         item.className = 'coord-marker-item';
+        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 5px; margin-bottom: 5px; background: #ECF0F1; border-radius: 4px;';
     
         const nameSpan = document.createElement('span');
         nameSpan.className = 'coord-marker-name';
+        nameSpan.style.cssText = 'font-weight: bold; color: #2C3E50; flex: 1; cursor: pointer; font-size: 11px;';
         nameSpan.textContent = coord.label;
         nameSpan.title = `${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)}`;
         nameSpan.onclick = () => {
+          console.log(`Clicked on marker: ${coord.label}`);
           map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 15));
           coord.marker.openPopup();
         };
     
         const removeBtn = document.createElement('button');
         removeBtn.className = 'coord-marker-remove';
+        removeBtn.style.cssText = 'background: #E74C3C; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;';
         removeBtn.textContent = '✕';
-        removeBtn.onclick = () => removeCoordMarker(coord.id);
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          console.log(`Removing marker: ${coord.label}`);
+          removeCoordMarker(coord.id);
+        };
     
         item.appendChild(nameSpan);
         item.appendChild(removeBtn);
         container.appendChild(item);
       });
+  
+      console.log(`✅ Added ${plottedCoordinates.length} items to container`);
     }
     
     // Allow closing modal by clicking outside
@@ -5975,6 +5992,7 @@
   </script>
 </body>
 </html>
+
 
 
 
