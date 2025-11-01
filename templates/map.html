@@ -1621,8 +1621,7 @@
 
     /* Hide old UI elements */
     #info, #info2, #opacity-control, #grid-control, 
-    #coord-plotter-btn, #export-control, #playback-toggle,
-    #coord-markers-list {
+    #coord-plotter-btn, #export-control, #playback-toggle {
       display: none !important;
     }
     
@@ -1918,8 +1917,9 @@
       <h4>🧭 Coordinate Tools</h4>
       <button class="secondary" onclick="openCoordPlotter()">📍 Plot New Coordinate</button>
       <button class="secondary" onclick="resetNavexPoint()">🎯 Reset NAVEX Start Point</button>
-      <div id="coord-markers-summary" style="margin-top: 10px; font-size: 11px; color: #7F8C8D;">
-        <strong>Plotted Points:</strong> <span id="coord-count">0</span>
+      <div style="margin-top: 10px; max-height: 200px; overflow-y: auto;">
+        <h4 style="font-size: 12px; margin: 10px 0 5px 0; color: #2C3E50;">Plotted NAV Points (<span id="coord-count">0</span>)</h4>
+        <div id="coord-markers-container" style="max-height: 180px; overflow-y: auto;"></div>
       </div>
     </div>
   </div>
@@ -5823,15 +5823,17 @@
 
     function updateCoordMarkersList() {
       const container = document.getElementById('coord-markers-container');
-      const listDiv = document.getElementById('coord-markers-list');
   
-      if (plottedCoordinates.length === 0) {
-        listDiv.classList.remove('active');
-        container.innerHTML = '<p style="color: #7F8C8D; font-size: 11px; margin: 0;">No coordinates plotted</p>';
+      if (!container) {
+        console.warn('⚠️ coord-markers-container not found');
         return;
       }
   
-      listDiv.classList.add('active');
+      if (plottedCoordinates.length === 0) {
+        container.innerHTML = '<p style="color: #7F8C8D; font-size: 11px; margin: 5px 0;">No coordinates plotted</p>';
+        updateCoordCount();
+        return;
+      }
   
       container.innerHTML = '';
   
@@ -5973,6 +5975,7 @@
   </script>
 </body>
 </html>
+
 
 
 
