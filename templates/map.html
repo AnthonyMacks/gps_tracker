@@ -229,7 +229,7 @@
       opacity: 0;
       max-height: 0;
       margin-top: 0;
-`     margin-bottom: 0;
+      margin-bottom: 0;
     }
     
     #grid-control label {
@@ -1166,11 +1166,16 @@
       padding: 10px 15px;
       border: none;
       border-radius: 6px;
-      cursor: pointer;
+      cursor: move;
       font-size: 12px;
       font-weight: bold;
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       z-index: 1001;
+    }
+
+    #coord-plotter-btn.dragging {
+      opacity: 0.8;
+      cursor: grabbing;
     }
 
     #coord-plotter-btn:hover {
@@ -5501,6 +5506,7 @@
   </script>
 </body>
 </html>
+
 
 
 
