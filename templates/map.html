@@ -1540,8 +1540,8 @@
     }
 
     #tools-dropdown {
-      bottom: 20px;
-      right: 20px;
+      top: 60px;
+      right: 10px;
     }
 
     /* Compact table styles for dropdown */
@@ -1583,6 +1583,16 @@
         right: 10px;
         left: auto;
       }
+
+      #tools-dropdown {
+        top: 110px;
+        right: 10px;
+      }
+  
+      #map-controls-dropdown {
+        top: 10px;
+        left: 10px;
+      }  
     }
 
     
@@ -5400,6 +5410,9 @@
         const gridControl = document.getElementById('grid-control');
         const playbackToggle = document.getElementById('playback-toggle');
         const coordPlotterBtn = document.getElementById('coord-plotter-btn');
+        const toolsDropdown = document.getElementById('tools-dropdown');
+        const mapControlsDropdown = document.getElementById('map-controls-dropdown');
+        const dataPlottingDropdown = document.getElementById('data-plotting-dropdown');
     
         if (info) makeDraggable(info);
         if (info2) makeDraggable(info2);
@@ -5407,6 +5420,9 @@
         if (gridControl) makeDraggable(gridControl);
         if (playbackToggle) makeDraggable(playbackToggle);
         if (coordPlotterBtn) makeDraggable(coordPlotterBtn);
+        if (toolsDropdown) makeDraggable(toolsDropdown);
+        if (mapControlsDropdown) makeDraggable(mapControlsDropdown);
+        if (dataPlottingDropdown) makeDraggable(dataPlottingDropdown);
     
         console.log('✅ Draggable elements initialized');
       } catch (error) {
@@ -5907,6 +5923,7 @@
   </script>
 </body>
 </html>
+
 
 
 
