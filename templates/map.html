@@ -3046,6 +3046,14 @@
         const didMove = Math.abs(pos1) > 5 || Math.abs(pos2) > 5;
     
         if (wasDragging && isSpecialButton && didMove) {
+          // Mark as just dragged to prevent click handler
+          element.classList.add('just-dragged');
+    
+          setTimeout(() => {
+            element.classList.remove('just-dragged');
+          }, 100);
+    
+          // Also prevent immediate click event  
           setTimeout(() => {
             element.addEventListener('click', function preventClick(e) {
               e.stopImmediatePropagation();
@@ -5495,9 +5503,17 @@
       });
     }
 
-    // Connect button
-    document.getElementById('coord-plotter-btn').addEventListener('click', openCoordPlotter);
-
+    // Connect button with drag-aware click handling
+    const coordPlotterBtn = document.getElementById('coord-plotter-btn');
+    if (coordPlotterBtn) {
+      coordPlotterBtn.addEventListener('click', function(e) {
+        // Only open if we didn't just finish dragging
+        if (!this.classList.contains('just-dragged')) {
+          openCoordPlotter();
+        }
+      });
+    }
+    
     // Allow closing modal by clicking outside
     document.getElementById('coord-plotter-modal').addEventListener('click', function(e) {
       if (e.target === this) {
@@ -5510,6 +5526,7 @@
   </script>
 </body>
 </html>
+
 
 
 
