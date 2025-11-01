@@ -1838,6 +1838,21 @@
 <!-- Scrolling Banner (hidden initially) -->
 <div id="company-banner">
   <div class="banner-content" id="banner-text"></div>
+  <button id="change-company-btn" style="
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    z-index: 2001;
+  " onclick="changeCompany()">Change COY</button>
 </div>
 
 <img alt="SCU Crest" class="lower-right-image" src="https://raw.githubusercontent.com/AnthonyMacks/gps_tracker/main/templates/scucrest.png"/>
@@ -5297,6 +5312,13 @@
       }
     }
 
+    function changeCompany() {
+      if (confirm('⚠️ Change company selection?\n\nThis will reload the page.')) {
+        localStorage.removeItem('selected_company');
+        location.reload();
+      }
+    }
+
     // Initialize on page load
     initCompanySelection();
     
@@ -5898,21 +5920,29 @@
         console.warn(`⚠️ Dropdown not found: ${dropdownId}`);
         return;
       }
-        
+    
       const isActive = dropdown.classList.contains('active');
-  
+
       // Close all other dropdowns
       document.querySelectorAll('.ui-dropdown').forEach(d => {
         if (d.id !== dropdownId) {
           d.classList.remove('active');
         }
       });
-  
+
       // Toggle this dropdown
       if (isActive) {
         dropdown.classList.remove('active');
       } else {
         dropdown.classList.add('active');
+    
+        // Update content when opening Data & Plotting dropdown
+        if (dropdownId === 'data-plotting-dropdown') {
+          console.log('🔄 Refreshing Data & Plotting dropdown content...');
+          updateTable();
+          updateCoordMarkersList();
+          updateDeviceSelector();
+        }
       }
     }
 
@@ -5992,6 +6022,7 @@
   </script>
 </body>
 </html>
+
 
 
 
