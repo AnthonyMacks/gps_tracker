@@ -5078,12 +5078,14 @@
         const opacityControl = document.getElementById('opacity-control');
         const gridControl = document.getElementById('grid-control');
         const playbackToggle = document.getElementById('playback-toggle');
+        const coordPlotterBtn = document.getElementById('coord-plotter-btn');
     
         if (info) makeDraggable(info);
         if (info2) makeDraggable(info2);
         if (opacityControl) makeDraggable(opacityControl);
         if (gridControl) makeDraggable(gridControl);
         if (playbackToggle) makeDraggable(playbackToggle);
+        if (coordPlotterBtn) makeDraggable(coordPlotterBtn);
     
         console.log('✅ Draggable elements initialized');
       } catch (error) {
@@ -5499,6 +5501,7 @@
   </script>
 </body>
 </html>
+
 
 
 
