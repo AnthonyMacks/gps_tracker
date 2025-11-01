@@ -3548,9 +3548,14 @@
     }
 
     // Handle NAVEX confirmation
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
       const navexConfirm = document.getElementById('navex-confirm');
-  
+
+      if (!navexConfirm) {
+        console.warn('⚠️ navex-confirm button not found');
+        return;
+      }
+        
       navexConfirm.addEventListener('click', function() {
         const formatLatlon = document.getElementById('navex-format-latlon').classList.contains('active');
         let lat, lon;
@@ -5883,6 +5888,7 @@
   </script>
 </body>
 </html>
+
 
 
 
