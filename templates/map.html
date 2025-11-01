@@ -3840,7 +3840,16 @@
       }
       trailLayers[device_id] = [];
 
-      const polyline = L.polyline(trail, {
+      // FIX: Convert trail to [lat, lon] array format for Leaflet
+      const trailCoords = trail.map(point => {
+        if (Array.isArray(point)) {
+          return point; // Already [lat, lon]
+        } else {
+          return [point.lat, point.lon]; // Convert {lat, lon} to [lat, lon]
+        }
+      });
+
+      const polyline = L.polyline(trailCoords, {
         color: color,
         weight: 4,
         opacity: 0.8,
@@ -4361,15 +4370,29 @@
         if (!trail || trail.length === 0) return;
     
         trail.forEach((point, index) => {
-          // Estimate timestamp if not available
-          const timestamp = latestPackets[deviceId]?.timestamp 
-            ? new Date(latestPackets[deviceId].timestamp).getTime() - ((trail.length - 1 - index) * 10000)
-            : Date.now() - ((trail.length - 1 - index) * 10000);
+          // FIX: Handle both array format [lat, lon] and object format {lat, lon, ...}
+          let lat, lon, timestamp;
+      
+          if (Array.isArray(point)) {
+            // Old format: [lat, lon]
+            lat = point[0];
+            lon = point[1];
+            timestamp = latestPackets[deviceId]?.timestamp 
+              ? new Date(latestPackets[deviceId].timestamp).getTime() - ((trail.length - 1 - index) * 10000)
+              : Date.now() - ((trail.length - 1 - index) * 10000);
+          } else {
+            // New format: {lat, lon, timestamp, ...}
+            lat = point.lat;
+            lon = point.lon;
+            timestamp = point.timestamp 
+              ? (typeof point.timestamp === 'string' ? new Date(point.timestamp).getTime() : point.timestamp)
+              : Date.now() - ((trail.length - 1 - index) * 10000);
+          }
       
           playbackState.allPoints.push({
             deviceId: deviceId,
-            lat: point[0],
-            lon: point[1],
+            lat: lat,
+            lon: lon,
             timestamp: timestamp,
             sats: latestPackets[deviceId]?.sats
           });
@@ -4463,12 +4486,20 @@
         };
     
         addDataPoint(packet, true);
-    
-        // Update trail
+
+        // Update trail - FIX: Store as object
         if (!gpsTrails[point.deviceId]) {
           gpsTrails[point.deviceId] = [];
         }
-        gpsTrails[point.deviceId].push([point.lat, point.lon]);
+        gpsTrails[point.deviceId].push({
+          lat: point.lat,
+          lon: point.lon,
+          timestamp: new Date(point.timestamp).toISOString(),
+          distanceFromPrev: 0,
+          speedFromPrev: 0,
+          totalDistance: 0
+        });
+        
         drawTrail(point.deviceId);
     
         playbackState.currentIndex++;
@@ -4520,7 +4551,15 @@
         if (!gpsTrails[point.deviceId]) {
           gpsTrails[point.deviceId] = [];
         }
-        gpsTrails[point.deviceId].push([point.lat, point.lon]);
+        // FIX: Store as object, not array
+        gpsTrails[point.deviceId].push({
+          lat: point.lat,
+          lon: point.lon,
+          timestamp: new Date(point.timestamp).toISOString(),
+          distanceFromPrev: 0,
+          speedFromPrev: 0,
+          totalDistance: 0
+        });
       }
   
       Object.keys(gpsTrails).forEach(deviceId => {
@@ -4528,9 +4567,9 @@
           const lastPoint = gpsTrails[deviceId][gpsTrails[deviceId].length - 1];
           const packet = {
             device_id: deviceId,
-            latitude: lastPoint[0],
-            longitude: lastPoint[1],
-            timestamp: new Date().toISOString(),
+            latitude: lastPoint.lat,
+            longitude: lastPoint.lon,
+            timestamp: lastPoint.timestamp,
             sats: latestPackets[deviceId]?.sats
           };
           addDataPoint(packet, true);
@@ -4618,12 +4657,26 @@
             // Draw all points
             trail.forEach((point, index) => {
               const isLast = index === trail.length - 1;
+              
+              // FIX: Handle both array and object formats
+              let lat, lon;
+              if (Array.isArray(point)) {
+                lat = point[0];
+                lon = point[1];
+              } else {
+                lat = point.lat;
+                lon = point.lon;
+              }
+          
               const packet = {
                 device_id: deviceId,
-                latitude: point[0],
-                longitude: point[1],
-                timestamp: latestPackets[deviceId]?.timestamp || new Date().toISOString(),
-                sats: latestPackets[deviceId]?.sats
+                latitude: lat,
+                longitude: lon,
+                timestamp: point.timestamp || latestPackets[deviceId]?.timestamp || new Date().toISOString(),
+                sats: latestPackets[deviceId]?.sats,
+                distanceFromPrev: point.distanceFromPrev || 0,
+                speedFromPrev: point.speedFromPrev || 0,
+                totalDistance: point.totalDistance || 0
               };
               addDataPoint(packet, isLast);
             });
@@ -5345,6 +5398,7 @@
   </script>
 </body>
 </html>
+
 
 
 
