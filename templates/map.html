@@ -5843,13 +5843,13 @@
     
         const item = document.createElement('div');
         item.className = 'coord-marker-item';
-        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; margin-bottom: 5px; background: #ECF0F1; border-radius: 4px; gap: 8px;';
+        item.style.cssText = 'display: flex; flex-direction: column; padding: 6px; background: #ECF0F1; border-radius: 4px; font-size: 10px; position: relative;';
     
         const nameSpan = document.createElement('span');
         nameSpan.className = 'coord-marker-name';
-        nameSpan.style.cssText = 'font-weight: bold; color: #2C3E50; flex: 1; cursor: pointer; font-size: 11px;';
+        nameSpan.style.cssText = 'font-weight: bold; color: #2C3E50; cursor: pointer; word-break: break-word; padding-right: 20px;';
         nameSpan.textContent = coord.label;
-        nameSpan.title = `${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)}`;
+        nameSpan.title = `${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)}\nClick to view on map`;
         nameSpan.onclick = () => {
           console.log(`Clicked on marker: ${coord.label}`);
           map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 15));
@@ -5858,8 +5858,9 @@
     
         const removeBtn = document.createElement('button');
         removeBtn.className = 'coord-marker-remove';
-        removeBtn.style.cssText = 'background: #E74C3C; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; flex-shrink: 0; min-width: 24px;';
+        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; background: #E74C3C; color: white; border: none; padding: 2px 5px; border-radius: 3px; cursor: pointer; font-size: 9px; line-height: 1;';
         removeBtn.textContent = '✕';
+        removeBtn.title = 'Remove this point';
         removeBtn.onclick = (e) => {
           e.stopPropagation();
           console.log(`Removing marker: ${coord.label}`);
@@ -5871,11 +5872,7 @@
         container.appendChild(item);
       });
   
-      console.log(`✅ Added ${plottedCoordinates.length} items to container`);
-      console.log('Container HTML:', container.innerHTML);
-      console.log('Container children count:', container.children.length);
-      console.log('Container display style:', window.getComputedStyle(container).display);
-      console.log('Container visibility:', window.getComputedStyle(container).visibility);
+      console.log(`✅ Added ${plottedCoordinates.length} items to container in 3-column grid`);
     }
     
     // Allow closing modal by clicking outside
@@ -6018,6 +6015,7 @@
   </script>
 </body>
 </html>
+
 
 
 
