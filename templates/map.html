@@ -5838,7 +5838,7 @@
         console.warn('⚠️ coord-markers-container not found');
         return;
       }
-      
+  
       console.log(`📍 Updating coord markers list: ${plottedCoordinates.length} points`);
   
       // Update the count
@@ -5846,10 +5846,11 @@
   
       if (plottedCoordinates.length === 0) {
         container.innerHTML = '<p style="color: #7F8C8D; font-size: 11px; margin: 5px 0;">No coordinates plotted</p>';
-        updateCoordCount();
         return;
       }
   
+      // CRITICAL: Set container to use CSS Grid with 3 columns
+      container.style.cssText = 'display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; max-height: 300px; overflow-y: auto; padding: 5px;';
       container.innerHTML = '';
   
       plottedCoordinates.forEach((coord, index) => {
@@ -5857,8 +5858,8 @@
     
         const item = document.createElement('div');
         item.className = 'coord-marker-item';
-        item.style.cssText = 'background: #ECF0F1; border-radius: 4px; position: relative; padding: 8px 8px 8px 8px; min-height: 40px; cursor: pointer;';
-  
+        item.style.cssText = 'background: #ECF0F1; border-radius: 4px; position: relative; padding: 8px; min-height: 40px; cursor: pointer; grid-column: span 1;';
+    
         const nameSpan = document.createElement('span');
         nameSpan.className = 'coord-marker-name';
         nameSpan.style.cssText = 'font-weight: bold; color: #2C3E50; display: block; word-break: break-word; font-size: 11px; line-height: 1.4; padding-right: 25px;';
@@ -5867,10 +5868,10 @@
     
         const removeBtn = document.createElement('button');
         removeBtn.className = 'coord-marker-remove';
-        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; background: #E74C3C; color: white; border: none; padding: 2px 5px; border-radius: 3px; cursor: pointer; font-size: 9px; line-height: 1;';
+        removeBtn.style.cssText = 'position: absolute; top: 4px; right: 4px; background: #E74C3C; color: white; border: none; padding: 4px 7px; border-radius: 3px; cursor: pointer; font-size: 10px; line-height: 1; font-weight: bold; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;';
         removeBtn.textContent = '✕';
         removeBtn.title = 'Remove this point';
-
+    
         // Click handler for the item (zoom to location)
         item.onclick = (e) => {
           // Don't zoom if clicking the remove button
@@ -5879,7 +5880,7 @@
           map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 15));
           coord.marker.openPopup();
         };
-  
+    
         // Click handler for remove button
         removeBtn.onclick = (e) => {
           e.stopPropagation();
@@ -6035,6 +6036,7 @@
   </script>
 </body>
 </html>
+
 
 
 
