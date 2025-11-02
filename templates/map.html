@@ -5877,8 +5877,23 @@
           // Don't zoom if clicking the remove button
           if (e.target === removeBtn) return;
           console.log(`Clicked on marker: ${coord.label}`);
-          map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 15));
-          coord.marker.openPopup();
+  
+          // Close the dropdown
+          const dropdown = document.getElementById('data-plotting-dropdown');
+          if (dropdown) {
+            dropdown.classList.remove('active');
+          }
+  
+          // Center map on the marker with smooth animation
+          map.setView([coord.lat, coord.lon], Math.max(map.getZoom(), 16), {
+            animate: true,
+            duration: 0.5
+          });
+  
+          // Open the marker popup after a short delay
+          setTimeout(() => {
+            coord.marker.openPopup();
+          }, 600);
         };
     
         // Click handler for remove button
@@ -6036,6 +6051,7 @@
   </script>
 </body>
 </html>
+
 
 
 
