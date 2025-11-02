@@ -3662,8 +3662,16 @@
 
     map.on('baselayerchange', function(e) {
       currentBaseLayer = e.layer;
-      const opacity = parseFloat(opacitySlider.value);
-      currentBaseLayer.setOpacity(opacity);
+        
+      // Get opacity from consolidated slider
+      const opacitySlider = document.getElementById('opacity-slider-consolidated');
+      if (opacitySlider) {
+        const opacity = parseFloat(opacitySlider.value);
+        currentBaseLayer.setOpacity(opacity);
+      } else {
+        // Fallback to full opacity if slider not found
+        currentBaseLayer.setOpacity(1);
+      }
     });
 
     const deviceColors = {
@@ -5835,7 +5843,7 @@
     
         const item = document.createElement('div');
         item.className = 'coord-marker-item';
-        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 5px; margin-bottom: 5px; background: #ECF0F1; border-radius: 4px;';
+        item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; margin-bottom: 5px; background: #ECF0F1; border-radius: 4px; gap: 8px;';
     
         const nameSpan = document.createElement('span');
         nameSpan.className = 'coord-marker-name';
@@ -5850,7 +5858,7 @@
     
         const removeBtn = document.createElement('button');
         removeBtn.className = 'coord-marker-remove';
-        removeBtn.style.cssText = 'background: #E74C3C; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;';
+        removeBtn.style.cssText = 'background: #E74C3C; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; flex-shrink: 0; min-width: 24px;';
         removeBtn.textContent = '✕';
         removeBtn.onclick = (e) => {
           e.stopPropagation();
@@ -6010,6 +6018,7 @@
   </script>
 </body>
 </html>
+
 
 
 
