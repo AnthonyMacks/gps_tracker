@@ -3282,39 +3282,20 @@
       dragHandle.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
-        // Special handling for dropdown buttons
-        if (element.classList.contains('ui-dropdown')) {
-          e.preventDefault(); // Prevent text selection
-          startX = e.clientX;
-          startY = e.clientY;
-          pos3 = e.clientX;
-          pos4 = e.clientY;
-          isDragging = false;
-          document.onmouseup = closeDragElement;
-          document.onmousemove = elementDrag;
-          return;
+        // DON'T prevent default for dropdowns - let the click through if it's not a drag
+        if (!element.classList.contains('ui-dropdown')) {
+          // For other elements (buttons, panels), prevent default
+          if (element.id === 'playback-toggle' || element.id === 'coord-plotter-btn') {
+            e.preventDefault();
+          } else if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' ||
+              e.target.tagName === 'SELECT' || e.target.closest('select') ||
+              e.target.closest('table') || e.target.closest('button')) {
+            return;
+          } else {
+            e.preventDefault();
+          }
         }
-          
-        // Allow dragging for these buttons themselves
-        if (element.id === 'playback-toggle' || element.id === 'coord-plotter-btn') {
-          e.preventDefault();
-          startX = e.clientX;
-          startY = e.clientY;
-          pos3 = e.clientX;
-          pos4 = e.clientY;
-          isDragging = false; // Don't set to true yet, wait for actual movement
-          document.onmouseup = closeDragElement;
-          document.onmousemove = elementDrag;
-          return;
-        }
-      
-        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' ||
-            e.target.tagName === 'SELECT' || e.target.closest('select') ||
-            e.target.closest('table') || e.target.closest('button')) {
-          return;
-        }
-    
-        e.preventDefault();
+
         startX = e.clientX;
         startY = e.clientY;
         pos3 = e.clientX;
@@ -3330,7 +3311,7 @@
             e.target.closest('table') || e.target.closest('button')) {
           return;
         }
-    
+
         const touch = e.touches[0];
         startX = touch.clientX;
         startY = touch.clientY;
@@ -3343,27 +3324,27 @@
 
       function elementDrag(e) {
         e.preventDefault();
-    
+
         // Calculate movement distance
         const moveX = Math.abs(e.clientX - startX);
         const moveY = Math.abs(e.clientY - startY);
-    
+
         // Only start dragging if moved more than 5 pixels
         if (moveX > 5 || moveY > 5) {
           isDragging = true;
           element.classList.add('dragging');
         }
-    
+
         if (!isDragging) return;
-    
+
         pos1 = pos3 - e.clientX;
         pos2 = pos4 - e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
-    
+
         const newTop = element.offsetTop - pos2;
         const newLeft = element.offsetLeft - pos1;
-    
+
         element.style.top = newTop + "px";
         element.style.left = newLeft + "px";
         element.style.right = "auto";
@@ -3372,25 +3353,25 @@
 
       function elementDragTouch(e) {
         const touch = e.touches[0];
-    
+
         const moveX = Math.abs(touch.clientX - startX);
         const moveY = Math.abs(touch.clientY - startY);
-    
+
         if (moveX > 5 || moveY > 5) {
           isDragging = true;
           element.classList.add('dragging');
         }
-    
+
         if (!isDragging) return;
-    
+
         pos1 = pos3 - touch.clientX;
         pos2 = pos4 - touch.clientY;
         pos3 = touch.clientX;
         pos4 = touch.clientY;
-    
+
         const newTop = element.offsetTop - pos2;
         const newLeft = element.offsetLeft - pos1;
-    
+
         element.style.top = newTop + "px";
         element.style.left = newLeft + "px";
         element.style.right = "auto";
@@ -3399,7 +3380,7 @@
 
       function closeDragElement(e) {
         const wasDragging = isDragging;
-    
+
         element.classList.remove('dragging');
         document.onmouseup = null;
         document.onmousemove = null;
@@ -3420,14 +3401,21 @@
           if (!wasDragging) {
             togglePlaybackMode();
           }
+        } else if (element.classList.contains('ui-dropdown')) {
+          // For dropdowns, toggle if it wasn't a drag
+          if (!wasDragging) {
+            console.log(`📂 Toggling dropdown ${element.id}`);
+            toggleUIDropdown(element.id);
+          } else {
+            console.log(`🚫 Not toggling dropdown (was dragging)`);
+          }
         }
-  
+
         // Reset dragging state
         isDragging = false;
         startX = 0;
         startY = 0;
       }
-          
     }
 
     const map = L.map("map", {
@@ -6093,6 +6081,7 @@
   </script>
 </body>
 </html>
+
 
 
 
