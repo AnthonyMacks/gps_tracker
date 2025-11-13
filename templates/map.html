@@ -1395,7 +1395,7 @@
       padding: 10px 15px;
       border: none;
       border-radius: 6px;
-      cursor: pointer;
+      cursor: move;
       font-size: 13px;
       font-weight: bold;
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -1824,7 +1824,7 @@
 
 <!-- ==================== CONSOLIDATED UI: MAP CONTROLS ==================== -->
 <div id="map-controls-dropdown" class="ui-dropdown">
-  <button class="ui-dropdown-btn" onclick="toggleUIDropdown('map-controls-dropdown')">
+  <button class="ui-dropdown-btn">
     🗺️ Map Controls <span style="font-size: 10px;">▼</span>
   </button>
   <div class="ui-dropdown-content">
@@ -1857,7 +1857,7 @@
 
 <!-- ==================== CONSOLIDATED UI: DATA & PLOTTING ==================== -->
 <div id="data-plotting-dropdown" class="ui-dropdown">
-  <button class="ui-dropdown-btn" onclick="toggleUIDropdown('data-plotting-dropdown')">
+  <button class="ui-dropdown-btn">
     📍 Data & Plotting <span style="font-size: 10px;">▼</span>
   </button>
   <div class="ui-dropdown-content" style="min-width: 700px;">
@@ -1908,7 +1908,7 @@
 
 <!-- ==================== CONSOLIDATED UI: TOOLS ==================== -->
 <div id="tools-dropdown" class="ui-dropdown">
-  <button class="ui-dropdown-btn" onclick="toggleUIDropdown('tools-dropdown')">
+  <button class="ui-dropdown-btn">
     🔧 Tools <span style="font-size: 10px;">▼</span>
   </button>
   <div class="ui-dropdown-content">
@@ -3268,10 +3268,33 @@
       let isDragging = false;
       let startX = 0, startY = 0;
 
-      element.onmousedown = dragMouseDown;
-      element.ontouchstart = dragTouchStart;
+      // For UI dropdowns, only make the button draggable
+      let dragHandle = element;
+      if (element.classList.contains('ui-dropdown')) {
+        dragHandle = element.querySelector('.ui-dropdown-btn');
+        if (!dragHandle) {
+          console.warn('No drag handle found for', element.id);
+          return;
+        }
+      }
+
+      dragHandle.onmousedown = dragMouseDown;
+      dragHandle.ontouchstart = dragTouchStart;
 
       function dragMouseDown(e) {
+        // Special handling for dropdown buttons
+        if (element.classList.contains('ui-dropdown')) {
+          e.preventDefault(); // Prevent text selection
+          startX = e.clientX;
+          startY = e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          isDragging = false;
+          document.onmouseup = closeDragElement;
+          document.onmousemove = elementDrag;
+          return;
+        }
+          
         // Allow dragging for these buttons themselves
         if (element.id === 'playback-toggle' || element.id === 'coord-plotter-btn') {
           e.preventDefault();
@@ -6070,6 +6093,7 @@
   </script>
 </body>
 </html>
+
 
 
 
