@@ -3074,20 +3074,39 @@
           localStorage.removeItem(STORAGE_KEYS.LATEST_PACKETS);
           localStorage.removeItem(STORAGE_KEYS.DEVICE_START_POINTS);
           localStorage.removeItem(STORAGE_KEYS.REJECTED_COUNT);
-          
+
+          // Remove all markers and trails from map FIRST
+          Object.keys(allMarkers).forEach(deviceId => {
+            hideDeviceMarkers(deviceId);
+          });
+      
+          // Clear all trail layers from map
+          Object.keys(trailLayers).forEach(deviceId => {
+            if (trailLayers[deviceId]) {
+              trailLayers[deviceId].forEach(layer => {
+                if (map.hasLayer(layer)) {
+                  map.removeLayer(layer);
+                }
+              });
+            }
+          });
+      
+          // Clear data structures
           Object.keys(gpsTrails).forEach(key => delete gpsTrails[key]);
           Object.keys(packetCounts).forEach(key => delete packetCounts[key]);
           Object.keys(latestPackets).forEach(key => delete latestPackets[key]);
           Object.keys(deviceStartPoints).forEach(key => delete deviceStartPoints[key]);
-          rejectedPointsCount = 0;
-          totalPoints = 0;
-          
-          Object.keys(allMarkers).forEach(deviceId => {
-            hideDeviceMarkers(deviceId);
-          });
           Object.keys(allMarkers).forEach(key => delete allMarkers[key]);
           Object.keys(trailLayers).forEach(key => delete trailLayers[key]);
-          
+          Object.keys(deviceDistances).forEach(key => delete deviceDistances[key]);
+          Object.keys(lastPointData).forEach(key => delete lastPointData[key]);
+          Object.keys(deviceVisibility).forEach(key => delete deviceVisibility[key]);
+      
+          // Reset counters
+          rejectedPointsCount = 0;
+          totalPoints = 0;
+
+          // Update UI
           updateTable();
           updateDebugInfo();
           updateStoredCount();
@@ -6051,6 +6070,7 @@
   </script>
 </body>
 </html>
+
 
 
 
