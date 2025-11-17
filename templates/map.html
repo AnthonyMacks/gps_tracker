@@ -1866,6 +1866,7 @@
       <table id="device-table-consolidated">
         <thead>
           <tr>
+            <th style="width: 30px;">Show</th>
             <th>ID</th>
             <th>Grid Ref</th>
             <th>Count</th>
@@ -1881,6 +1882,7 @@
       <table id="device-table2-consolidated">
         <thead>
           <tr>
+            <th style="width: 30px;">Show</th>
             <th>ID</th>
             <th>Grid Ref</th>
             <th>Count</th>
@@ -4182,6 +4184,9 @@
         const lon    = parseFloat(packet.longitude);
         const gridRef = latLonToGridReference(lat, lon);
         const displayLabel = deviceLabels[id] || id;
+
+        // Check if device is visible (default to true if not set)
+        const isVisible = deviceVisibility[id] !== false;
     
         const row = document.createElement("tr");
         row.className = getRowClass(packet.timestamp, packet.sats);
@@ -4194,25 +4199,78 @@
         `;
 
         row.style.cursor = "pointer";
-        row.addEventListener("click", () => {
-          toggleDeviceVisibility(id);
-          updateTable();
+
+        // Click on row (but not checkbox) to zoom to device
+        row.addEventListener("click", (e) => {
+          if (e.target.type !== 'checkbox') {
+            zoomToDevice(id);
+          }
         });
 
-        if (selectedDevice === id) {
-          row.style.border = "2px solid #3498DB";
+        // Visual indicator if device is hidden
+        if (!isVisible) {
+          row.style.opacity = '0.5';
+          row.style.fontStyle = 'italic';
         }
-
+    
         if (firstTableDevices.includes(id) && tbody1Consol) {
           tbody1Consol.appendChild(row);
         } else if (secondTableDevices.includes(id) && tbody2Consol) {
           tbody2Consol.appendChild(row);
         }
       }
-  
+    
       // Update device selector and coordinate count
       updateDeviceSelector();
       updateCoordCount();
+    }
+
+    function toggleDeviceCheckbox(deviceId) {
+      const checkbox = document.getElementById(`device-vis-${deviceId}`);
+      
+      if (checkbox && checkbox.checked) {
+        // Show device
+        deviceVisibility[deviceId] = true;
+        showDeviceMarkers(deviceId);
+        console.log(`✅ Device ${deviceId} enabled`);
+      } else {
+        // Hide device
+        deviceVisibility[deviceId] = false;
+        hideDeviceMarkers(deviceId);
+        console.log(`❌ Device ${deviceId} disabled`);
+      }
+      
+      // Update the table to reflect visibility changes
+      updateTable();
+    }
+    
+    function zoomToDevice(deviceId) {
+      // Close the dropdown
+      const dropdown = document.getElementById('data-plotting-dropdown');
+      if (dropdown) {
+        dropdown.classList.remove('active');
+      }
+    
+      // Get the device's current position
+      if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+        const marker = allMarkers[deviceId].current.circle;
+        const position = marker.getLatLng();
+        
+        // Zoom to device with smooth animation
+        map.setView(position, Math.max(map.getZoom(), 16), {
+          animate: true,
+          duration: 0.5
+        });
+        
+        // Open the marker popup after a short delay
+        setTimeout(() => {
+          marker.openPopup();
+        }, 600);
+        
+        console.log(`🎯 Zoomed to device ${deviceId}`);
+      } else {
+        console.warn(`⚠️ Device ${deviceId} has no current position`);
+      }
     }
     
     function updateDebugInfo() {
@@ -6081,6 +6139,7 @@
   </script>
 </body>
 </html>
+
 
 
 
