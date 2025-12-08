@@ -1359,9 +1359,13 @@
       }
     
       /* --- SCU Crest --- */
-      .lower-right-image {
-        max-width: 80px;
-      }
+        .lower-right-image {
+          max-width: 70px;  /* Reduced from 120px desktop */
+          border: 3px solid #003366;  /* Thinner border */
+          border-radius: 6px;
+          bottom: 15px;
+          right: 15px;
+        }
     
       /* --- Playback Controls --- */
       #playback-control {
@@ -1651,9 +1655,13 @@
       }
     
       /* --- SCU Crest --- */
-      .lower-right-image {
-        max-width: 80px;
-      }
+        .lower-right-image {
+          max-width: 50px;  /* Even smaller for small phones */
+          border: 2px solid #003366;
+          border-radius: 4px;
+          bottom: 10px;
+          right: 10px;
+        }
     
       /* --- Playback Speed Buttons --- */
       .playback-speed-btn {
@@ -1806,10 +1814,19 @@
         font-size: 11px;
       }
 
+      /* --- SCU Crest --- */
+        .lower-right-image {
+          max-width: 60px;  /* Smaller in landscape to save vertical space */
+          border: 2px solid #003366;
+          border-radius: 5px;
+          bottom: 10px;
+          right: 10px;
+        }
+
       /* --- Plot Coordinates Button --- */
         #coord-plotter-btn {
-          bottom: 160px;  /* Above the crest (crest is ~120px tall + 20px from bottom) */
-          right: 10px;
+          top: 60px;  /* Above the crest (crest is ~120px tall + 20px from bottom) */
+          right: 100px;
           font-size: 10px;
           padding: 6px 10px;
           z-index: 1001;
@@ -6424,6 +6441,7 @@
   </script>
 </body>
 </html>
+
 
 
 
