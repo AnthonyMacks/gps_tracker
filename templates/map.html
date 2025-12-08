@@ -3420,14 +3420,88 @@
 
     const map = L.map("map", {
       maxZoom: 22
-    }).setView([-33.8411, 151.2058], 15);
+    }).setView([-33.8411, 151.2058], 15); // Default fallback position (SHORE School)
 
-    // Add this after map creation:
+    // Try to get user's current location and center map there
+    function centerMapOnUserLocation() {
+      if ("geolocation" in navigator) {
+        console.log('🌍 Requesting user location...');
+    
+        navigator.geolocation.getCurrentPosition(
+          // Success callback
+          function(position) {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+        
+            console.log(`✅ User location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
+        
+            // Center map on user's location
+            map.setView([userLat, userLon], 15, {
+              animate: true,
+              duration: 1
+            });
+        
+            // Optional: Add a marker showing user's location
+            const userMarker = L.circleMarker([userLat, userLon], {
+              radius: 8,
+              color: '#4A90E2',
+              fillColor: '#4A90E2',
+              fillOpacity: 0.4,
+              weight: 2
+            }).addTo(map);
+        
+            userMarker.bindPopup(`
+              <strong>📍 Your Location</strong><br>
+              <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
+              <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
+              <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m
+            `);
+        
+            // Auto-remove marker after 10 seconds
+            setTimeout(() => {
+              map.removeLayer(userMarker);
+            }, 10000);
+          },
+          // Error callback
+          function(error) {
+            console.warn('⚠️ Geolocation error:', error.message);
+        
+            switch(error.code) {
+              case error.PERMISSION_DENIED:
+                console.log('User denied geolocation. Using default location.');
+                break;
+              case error.POSITION_UNAVAILABLE:
+                console.log('Location unavailable. Using default location.');
+                break;
+              case error.TIMEOUT:
+                console.log('Geolocation timeout. Using default location.');
+                break;
+            }
+        
+            // Map stays at default SHORE location
+          },
+          // Options
+          {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          }
+        );
+      } else {
+        console.warn('⚠️ Geolocation not supported by this browser. Using default location.');
+      }
+    }
+
+    // Call this function when map is ready
     map.whenReady(function() {
       console.log('🗺️ Map is ready');
       setTimeout(() => {
         map.invalidateSize();
         console.log('🗺️ Map size invalidated');
+    
+        // Get user's current location
+        centerMapOnUserLocation();
     
         // Check if NAVEX start point is already set
         const savedNavexPoint = localStorage.getItem('navex_start_point');
@@ -6081,6 +6155,7 @@
   </script>
 </body>
 </html>
+
 
 
 
