@@ -1941,36 +1941,6 @@
   </div>
 </div>
 
-<!-- Keep these existing elements -->
-<div id="playback-control">
-  <!-- Existing playback control content stays the same -->
-  <div class="playback-header">
-    <span class="playback-title">📹 Trail Playback <span style="margin-left: 10px; cursor: move; font-size: 16px; opacity: 0.6;">☰</span></span>
-    <button class="playback-close" onclick="closePlayback()">✕ Close</button>
-  </div>
-  
-  <div class="playback-controls">
-    <button class="playback-btn" id="play-btn" onclick="togglePlayback()">▶️ Play</button>
-    <button class="playback-btn" onclick="restartPlayback()">⏮️ Restart</button>
-    
-    <div style="display: flex; gap: 5px;">
-      <button class="playback-speed-btn" onclick="setPlaybackSpeed(0.25)" id="speed-025">0.25x</button>
-      <button class="playback-speed-btn" onclick="setPlaybackSpeed(0.5)" id="speed-05">0.5x</button>
-      <button class="playback-speed-btn active-speed" onclick="setPlaybackSpeed(1)" id="speed-1">1x</button>
-      <button class="playback-speed-btn" onclick="setPlaybackSpeed(2)" id="speed-2">2x</button>
-      <button class="playback-speed-btn" onclick="setPlaybackSpeed(5)" id="speed-5">5x</button>
-      <button class="playback-speed-btn" onclick="setPlaybackSpeed(10)" id="speed-10">10x</button>  
-    </div>
-    
-    <span class="playback-time" id="playback-time">00:00:00 / 00:00:00</span>
-  </div>
-  
-  <div class="playback-slider-container">
-    <input type="range" class="playback-slider" id="playback-slider" 
-           min="0" max="100" value="0" oninput="seekPlayback(this.value)">
-  </div>
-</div>
-
 <!-- Coordinate Plotter Modal - Keep existing -->
 <div id="coord-plotter-modal" class="hidden">
   <!-- Keep existing modal content -->
@@ -1993,8 +1963,6 @@
   🚀 Last Render Build: <span id="build-time">loading...</span>
 </footer>
 
-<button id="playback-toggle">▶️ Playback Mode</button>
-
 <div id="playback-control">
   <div class="playback-header">
     <span class="playback-title">📹 Trail Playback <span style="margin-left: 10px; cursor: move; font-size: 16px; opacity: 0.6;">☰</span></span>
@@ -2023,47 +1991,7 @@
   </div>
 </div>
     
-<div id="export-control">
-  <div class="export-dropdown">
-    <button class="export-btn">📥 Export to Google Earth</button>
-    <div class="export-dropdown-content">
-      <div class="export-option all-devices" onclick="exportKML('all')">📦 Export All Devices</div>
-      <div class="export-section-header">Individual Devices</div>
-      <div class="export-option" onclick="exportKML('I')">PLT 1-1</div>
-      <div class="export-option" onclick="exportKML('II')">PLT 1-2</div>
-      <div class="export-option" onclick="exportKML('III')">PLT 1-3</div>
-      <div class="export-option" onclick="exportKML('IV')">PLT 2-1</div>
-      <div class="export-option" onclick="exportKML('V')">PLT 2-2</div>
-      <div class="export-option" onclick="exportKML('VI')">PLT 2-3</div>
-      <div class="export-option" onclick="exportKML('VII')">PLT 3-1</div>
-      <div class="export-option" onclick="exportKML('VIII')">PLT 3-2</div>
-      <div class="export-option" onclick="exportKML('IX')">PLT 3-3</div>
-      <div class="export-option" onclick="exportKML('X')">PLT 4-1</div>
-      <div class="export-option" onclick="exportKML('XI')">PLT 4-2</div>
-      <div class="export-option" onclick="exportKML('XII')">PLT 4-3</div>
-      <div class="export-option" onclick="exportKML('XIII')">E COY 1-1</div>
-      <div class="export-option" onclick="exportKML('XIV')">E COY 1-2</div>
-      <div class="export-option" onclick="exportKML('XV')">E COY 1-3</div>
-      <div class="export-option" onclick="exportKML('XVI')">E COY 2-1</div>
-      <div class="export-option" onclick="exportKML('XVII')">E COY 2-2</div>
-      <div class="export-option" onclick="exportKML('XVIII')">E COY 2-3</div>
-      <div class="export-option" onclick="exportKML('XIX')">E COY 3-1</div>
-      <div class="export-option" onclick="exportKML('XX')">E COY 3-2</div>
-      <div class="export-option" onclick="exportKML('XXI')">E COY 3-3</div>
-      <div class="export-option" onclick="exportKML('XXII')">E COY 4-1</div>
-      <div class="export-option" onclick="exportKML('XXIII')">E COY 4-2</div>
-      <div class="export-option" onclick="exportKML('XXIV')">E COY 4-3</div>
-      <div class="export-option" onclick="exportKML('XXV')">IND REC PLT-1</div>
-      <div class="export-option" onclick="exportKML('XXVI')">IND REC PLT-2</div>
-      <div class="export-option" onclick="exportKML('XXVII')">IND REC PLT-3</div>
-      <div class="export-option" onclick="exportKML('XXVIII')">SPARE1</div>
-      <div class="export-option" onclick="exportKML('XXIX')">SPARE2</div>
-      <div class="export-option" onclick="exportKML('XXX')">SPARE3</div>
-      <div class="export-section-header">Data Management</div>
-      <div class="export-option clear-data" onclick="clearStoredData()">🗑️ Clear All Stored Data</div>
-    </div>
-  </div>
-</div>
+
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
@@ -6228,6 +6156,7 @@
   </script>
 </body>
 </html>
+
 
 
 
