@@ -499,292 +499,6 @@
       font-weight: bold;
     }
 
-    /* Mobile Device adjustments */
-    @media (max-width: 768px) {
-      #info {
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
-        font-size: 11px;
-        padding: 6px;
-      }
-
-      #info2 {
-        max-width: none;
-        width: calc(45% - 10px);
-        max-height: 35%;
-        font-size: 11px;
-        padding: 6px;
-      }
-
-      #info strong, #info2 strong {
-        font-size: 12px;
-      }
-
-      table {
-        font-size: 10px;
-      }
-
-      th, td {
-        padding: 4px 2px;
-      }
-
-      #toggle-button, #toggle-button2 {
-        font-size: 12px;
-        padding: 6px 12px;
-      }
-
-      #opacity-control {
-        left: 10px;
-        transform: none;
-        bottom: 45px;
-        font-size: 10px;
-        padding: 4px 6px;
-        max-width: 140px;
-        min-width: 120px;
-      }
-
-      #opacity-control.collapsed {
-        padding: 4px 6px;
-      }
-      
-      #opacity-control input[type="range"] {
-        width: 100px;
-      }
-
-      #grid-control {
-        left: 10px;
-        transform: none;
-        bottom: 10px;
-        font-size: 10px;
-        padding: 4px 6px;
-        max-width: 140px;
-        min-width: 120px;
-      }
-
-      #grid-control.collapsed {
-        padding: 4px 6px;
-      }
-
-      #debug {
-        bottom: 80px;
-        left: 10px;
-        font-size: 9px;
-        padding: 4px 6px;
-        max-width: 200px;
-      }
-
-      #debug.collapsed {
-        height: 22px;
-        padding: 4px 6px;
-      }
-
-      #debug .debug-title {
-        font-size: 9px;
-      }
-
-      #debug.collapsed .debug-title {
-        font-size: 8px;
-      }
-
-      footer {
-        display: none; /* Hide footer on Mobile to save space */
-      }
-
-      #export-control {
-        bottom: 45px;
-        right: 10px;
-      }
-
-      .export-btn {
-        padding: 8px 12px;
-        font-size: 11px;
-      }
-
-      .export-dropdown-content {
-        min-width: 180px;
-        max-height: 300px;
-      }
-
-      .export-option {
-        padding: 8px 12px;
-        font-size: 11px;
-      }
-    }
-
-    @media (max-width: 480px) and (orientation: portrait) {
-      #info {
-        max-height: 30%;
-        font-size: 10px;
-        width: calc(48% - 10px);
-      }
-
-      #info2 {
-        max-height: 30%;
-        font-size: 10px;
-        width: calc(48% - 10px);
-      }
-
-      table {
-        font-size: 9px;
-      }
-
-      th, td {
-        padding: 3px 1px;
-      }
-
-      #toggle-button, #toggle-button2 {
-        font-size: 11px;
-        padding: 5px 10px;
-      }
-
-      #opacity-control {
-        bottom: 45px;  /* Stack vertically on very small screens */
-        left: 10px;
-        font-size: 9px;
-        padding: 3px 5px;
-        max-width: 130px;
-        min-width: 110px;
-      }
-
-      #grid-control {
-        bottom: 10px;
-        left: 10px;
-        font-size: 9px;
-        padding: 3px 5px;
-        max-width: 130px;
-        min-width: 110px;
-      }
-
-      #grid-control button {
-        font-size: 7px;
-        padding: 1px 3px;
-      }
-
-      #debug {
-        bottom: 80px;  /* Move higher to avoid stacked controls */
-        left: 10px;
-        font-size: 8px;
-        padding: 3px 4px;
-        max-width: 150px;
-      }
-
-      #debug.collapsed {
-        height: 18px;
-        padding: 3px 4px;
-      }
-
-      #debug .debug-title {
-        font-size: 8px;
-      }
-
-      #debug.collapsed .debug-title {
-        font-size: 7px;
-      }
-
-      footer {
-        font-size: 9px;
-      }
-
-      #export-control {
-        bottom: 40px;
-        right: 10px;
-      }
-
-      .export-btn {
-        padding: 6px 10px;
-        font-size: 10px;
-      }
-
-      .export-dropdown-content {
-        min-width: 160px;
-        max-height: 250px;
-      }
-
-      .export-option {
-        padding: 7px 10px;
-        font-size: 10px;
-      }
-
-      .lower-right-image {
-        max-width: 80px;
-      }
-
-      .playback-speed-btn {
-        padding: 5px 10px;
-        font-size: 10px;
-        min-width: 45px;
-      }
-        
-    }
-
-    @media (max-width: 768px) and (orientation: landscape) {
-      #info {
-        width: 220px;
-        max-width: 220px;
-        max-height: 40%;
-      }
-
-      #info2 {
-        width: 220px;
-        max-width: 220px;
-        max-height: 40%;
-      }
-
-      #opacity-control {
-        left: 50%;
-        transform: translateX(-150px);
-        bottom: 10px;
-        font-size: 10px;
-        max-width: 140px;
-      }
-
-      #grid-control {
-        left: 50%;
-        transform: translateX(50px);
-        bottom: 10px;
-        font-size: 10px;
-        max-width: 140px;
-      }
-
-      #debug {
-        bottom: 35px;
-        left: 10px;
-        font-size: 9px;
-        max-width: 180px;
-      }
-
-      #debug.collapsed {
-        height: 20px;
-        padding: 4px 6px;
-      }
-
-      #debug .debug-title {
-        font-size: 9px;
-      }
-
-      #debug.collapsed .debug-title {
-        font-size: 8px;
-      }
-
-      footer {
-        display: block;
-        font-size: 10px;
-        bottom: 10px;
-        left: 320px;  /* To the right of grid control in landscape */
-      }
-
-      #export-control {
-        bottom: 10px;
-        right: 150px;
-      }
-
-      .export-btn {
-        padding: 7px 11px;
-        font-size: 11px;
-      }
-    }
-
     #playback-control {
       position: absolute;
       bottom: 80px;
@@ -972,22 +686,6 @@
       cursor: grabbing;
     }
 
-    @media (max-width: 768px) {
-       #playback-control {
-        min-width: 90%;
-        left: 5%;
-        transform: none;
-        bottom: 60px;
-      }
-
-      #playback-toggle {
-        bottom: 150px;
-        left: 10px;
-        font-size: 10px;
-        padding: 8px 12px;
-      }
-    }
-
     /* Company Selection Modal */
     #company-modal {
       position: fixed;
@@ -1117,27 +815,6 @@
     body.has-banner #info,
     body.has-banner #info2 {
       top: 60px;
-    }
-
-    @media (max-width: 768px) {
-      #company-banner {
-        height: 40px;
-      }
-  
-      .banner-content {
-        line-height: 40px;
-        font-size: 18px;
-      }
-  
-      body.has-banner #map {
-        height: calc(100% - 40px);
-        margin-top: 40px;
-      }
-  
-      body.has-banner #info,
-      body.has-banner #info2 {
-        top: 50px;
-      }
     }
 
     /* NAVEX Start Point Modal */
@@ -1347,28 +1024,6 @@
     .coord-marker-remove:hover {
       background: #C0392B;
     }
-
-    @media (max-width: 768px) {
-      #coord-plotter-btn {
-        bottom: 280px;
-        right: 10px;
-        font-size: 10px;
-        padding: 8px 12px;
-      }
-
-      .coord-markers-list {
-        bottom: 180px;
-        max-width: 200px;
-      }
-
-      .coord-plotter-content {
-        padding: 20px;
-      }
-
-      .coord-plotter-content h2 {
-        font-size: 18px;
-      }
-    }
     
     .shadow-box {
         position: absolute;
@@ -1551,51 +1206,528 @@
       right: 0;
     }
 
-    /* Mobile responsive */
+    /* ========================================================================
+       CONSOLIDATED MOBILE RESPONSIVE CSS
+       All media queries organized by breakpoint for easy maintenance
+       ======================================================================== */
+
+    /* ==================== TABLET & MOBILE (768px and below) ==================== */
     @media (max-width: 768px) {
-      .ui-dropdown-btn {
+      /* --- Info Panels --- */
+      #info {
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info2 {
+        max-width: none;
+        width: calc(45% - 10px);
+        max-height: 35%;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      #info strong, #info2 strong {
+        font-size: 12px;
+      }
+
+      /* --- Tables --- */
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 4px 2px;
+      }
+
+      /* --- Buttons --- */
+      #toggle-button, #toggle-button2 {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      /* --- Opacity Control --- */
+      #opacity-control {
+        left: 10px;
+        transform: none;
+        bottom: 45px;
+        font-size: 10px;
+        padding: 4px 6px;
+        max-width: 140px;
+        min-width: 120px;
+      }
+
+      #opacity-control.collapsed {
+        padding: 4px 6px;
+      }
+  
+      #opacity-control input[type="range"] {
+        width: 100px;
+      }
+
+      /* --- Grid Control --- */
+      #grid-control {
+        left: 10px;
+        transform: none;
+        bottom: 10px;
+        font-size: 10px;
+        padding: 4px 6px;
+        max-width: 140px;
+        min-width: 120px;
+      }
+
+      #grid-control.collapsed {
+        padding: 4px 6px;
+      }
+
+      /* --- Debug Panel --- */
+      #debug {
+        bottom: 80px;
+        left: 10px;
+        font-size: 9px;
+        padding: 4px 6px;
+        max-width: 200px;
+      }
+
+      #debug.collapsed {
+        height: 22px;
+        padding: 4px 6px;
+      }
+
+      #debug .debug-title {
+        font-size: 9px;
+      }
+    
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
+    
+      /* --- Footer --- */
+      footer {
+        display: none; /* Hide footer on mobile to save space */
+      }
+    
+      /* --- Export Control --- */
+      #export-control {
+        bottom: 45px;
+        right: 10px;
+      }
+    
+      .export-btn {
         padding: 8px 12px;
         font-size: 11px;
       }
-  
+    
+      .export-dropdown-content {
+        min-width: 180px;
+        max-height: 300px;
+      }
+    
+      .export-option {
+        padding: 8px 12px;
+        font-size: 11px;
+      }
+    
+      /* --- SCU Crest --- */
+      .lower-right-image {
+        max-width: 80px;
+      }
+    
+      /* --- Playback Controls --- */
+      #playback-control {
+        min-width: 90%;
+        left: 5%;
+        transform: none;
+        bottom: 60px;
+      }
+    
+      #playback-toggle {
+        bottom: 150px;
+        left: 10px;
+        font-size: 10px;
+        padding: 8px 12px;
+      }
+    
+      .playback-speed-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+        min-width: 45px;
+      }
+    
+      /* --- Coordinate Plotter --- */
+      #coord-plotter-btn {
+        bottom: 280px;
+        right: 10px;
+        font-size: 10px;
+        padding: 8px 12px;
+      }
+    
+      .coord-markers-list {
+        bottom: 180px;
+        max-width: 200px;
+      }
+    
+      .coord-plotter-content {
+        padding: 20px;
+      }
+    
+      .coord-plotter-content h2 {
+        font-size: 18px;
+      }
+    
+      /* --- Company Banner --- */
+      #company-banner {
+        height: 40px;
+      }
+    
+      .banner-content {
+        line-height: 40px;
+        font-size: 18px;
+      }
+    
+      body.has-banner #map {
+        height: calc(100% - 40px);
+        margin-top: 40px;
+      }
+    
+      body.has-banner #info,
+      body.has-banner #info2 {
+        top: 50px;
+      }
+    
+      /* --- UI Dropdowns --- */
+      .ui-dropdown-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+        gap: 4px;
+      }
+      
       .ui-dropdown-content {
         min-width: 200px;
         max-width: 90vw;
         max-height: 60vh;
+        font-size: 11px;
       }
-  
-      #data-plotting-dropdown {
-        top: 60px;
+    
+      .ui-dropdown-content table {
+        font-size: 10px;
+      }
+    
+      .ui-dropdown-content table th,
+      .ui-dropdown-content table td {
+        padding: 4px 2px;
+      }
+      
+      /* Stack on left side with proper spacing */
+      #map-controls-dropdown {
+        top: 60px;  /* Below banner + spacing */
         left: 10px;
       }
-
+    
+      #data-plotting-dropdown {
+        top: 110px;  /* Below Map Controls */
+        left: 10px;
+      }
+    
+      /* Reduce width for Data & Plotting on mobile */
+      #data-plotting-dropdown .ui-dropdown-content {
+        min-width: 90vw;
+        max-width: 90vw;
+      }
+    
+      /* Tools stays top right */
       #tools-dropdown {
-        top: 10px;
+        top: 60px;
         right: 10px;
       }
-  
-      #map-controls-dropdown {
-        top: 10px;
-        left: 10px;
+    
+      /* Adjust for when company banner is present */
+      body.has-banner #map-controls-dropdown {
+        top: 60px;  /* 40px banner + 20px spacing */
       }
-
+    
+      body.has-banner #data-plotting-dropdown {
+        top: 110px;
+      }
+    
+      body.has-banner #tools-dropdown {
+        top: 60px;
+      }
+    
       /* All dropdowns align content to left on mobile */
       .ui-dropdown-content {
         left: 0;
         right: auto;
       }
-        
+    
+      /* Tools dropdown content should still go left from button */
+      #tools-dropdown .ui-dropdown-content {
+        left: auto;
+        right: 0;
+      }
     }
     
-    .lower-right-image {
-        width: 100px; /* adjust as needed */
-        height: auto;
+    /* ==================== SMALL PHONES - PORTRAIT (480px and below) ==================== */
+    @media (max-width: 480px) and (orientation: portrait) {
+      /* --- Info Panels --- */
+      #info {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+    
+      #info2 {
+        max-height: 30%;
+        font-size: 10px;
+        width: calc(48% - 10px);
+      }
+    
+      /* --- Tables --- */
+      table {
+        font-size: 9px;
+      }
+    
+      th, td {
+        padding: 3px 1px;
+      }
+    
+      /* --- Buttons --- */
+      #toggle-button, #toggle-button2 {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+    
+      /* --- Opacity Control --- */
+      #opacity-control {
+        bottom: 45px;
+        left: 10px;
+        font-size: 9px;
+        padding: 3px 5px;
+        max-width: 130px;
+        min-width: 110px;
+      }
+    
+      /* --- Grid Control --- */
+      #grid-control {
+        bottom: 10px;
+        left: 10px;
+        font-size: 9px;
+        padding: 3px 5px;
+        max-width: 130px;
+        min-width: 110px;
+      }
+    
+      #grid-control button {
+        font-size: 7px;
+        padding: 1px 3px;
+      }
+    
+      /* --- Debug Panel --- */
+      #debug {
+        bottom: 80px;
+        left: 10px;
+        font-size: 8px;
+        padding: 3px 4px;
+        max-width: 150px;
+      }
+    
+      #debug.collapsed {
+        height: 18px;
+        padding: 3px 4px;
+      }
+    
+      #debug .debug-title {
+        font-size: 8px;
+      }
+    
+      #debug.collapsed .debug-title {
+        font-size: 7px;
+      }
+    
+      /* --- Footer --- */
+      footer {
+        font-size: 9px;
+      }
+    
+      /* --- Export Control --- */
+      #export-control {
+        bottom: 40px;
+        right: 10px;
+      }
+    
+      .export-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+    
+      .export-dropdown-content {
+        min-width: 160px;
+        max-height: 250px;
+      }
+    
+      .export-option {
+        padding: 7px 10px;
+        font-size: 10px;
+      }
+    
+      /* --- SCU Crest --- */
+      .lower-right-image {
+        max-width: 80px;
+      }
+    
+      /* --- Playback Speed Buttons --- */
+      .playback-speed-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+        min-width: 45px;
+      }
+    
+      /* --- UI Dropdowns --- */
+      .ui-dropdown-btn {
+        padding: 5px 8px;
+        font-size: 9px;
+      }
+    
+      .ui-dropdown-content table {
+        font-size: 9px;
+      }
+    
+      .ui-dropdown-content table th,
+      .ui-dropdown-content table td {
+        padding: 3px 1px;
+      }
+    
+      /* Very small screens - tighter spacing */
+      #map-controls-dropdown {
+        top: 55px;
+        left: 5px;
+      }
+    
+      #data-plotting-dropdown {
+        top: 100px;
+        left: 5px;
+      }
+    
+      #tools-dropdown {
+        top: 55px;
+        right: 5px;
+      }
+    
+      body.has-banner #map-controls-dropdown {
+        top: 50px;  /* 40px banner + 10px spacing */
+      }
+    
+      body.has-banner #data-plotting-dropdown {
+        top: 95px;
+      }
+    
+      body.has-banner #tools-dropdown {
+        top: 50px;
+      }
     }
-
-    /* Hide old UI elements */
-    #info, #info2, #opacity-control, #grid-control, 
-    #coord-plotter-btn, #export-control, #playback-toggle {
-      display: none !important;
+    
+    /* ==================== LANDSCAPE MODE (768px and below) ==================== */
+    @media (max-width: 768px) and (orientation: landscape) {
+      /* --- Info Panels --- */
+      #info {
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+    
+      #info2 {
+        width: 220px;
+        max-width: 220px;
+        max-height: 40%;
+      }
+    
+      /* --- Opacity Control --- */
+      #opacity-control {
+        left: 50%;
+        transform: translateX(-150px);
+        bottom: 10px;
+        font-size: 10px;
+        max-width: 140px;
+      }
+    
+      /* --- Grid Control --- */
+      #grid-control {
+        left: 50%;
+        transform: translateX(50px);
+        bottom: 10px;
+        font-size: 10px;
+        max-width: 140px;
+      }
+    
+      /* --- Debug Panel --- */
+      #debug {
+        bottom: 35px;
+        left: 10px;
+        font-size: 9px;
+        max-width: 180px;
+      }
+    
+      #debug.collapsed {
+        height: 20px;
+        padding: 4px 6px;
+      }
+    
+      #debug .debug-title {
+        font-size: 9px;
+      }
+    
+      #debug.collapsed .debug-title {
+        font-size: 8px;
+      }
+    
+      /* --- Footer --- */
+      footer {
+        display: block;
+        font-size: 10px;
+        bottom: 10px;
+        left: 320px;  /* To the right of grid control */
+      }
+    
+      /* --- Export Control --- */
+      #export-control {
+        bottom: 10px;
+        right: 150px;
+      }
+    
+      .export-btn {
+        padding: 7px 11px;
+        font-size: 11px;
+      }
+    
+      /* --- UI Dropdowns - Spread horizontally --- */
+      #map-controls-dropdown {
+        top: 60px;
+        left: 10px;
+      }
+    
+      #data-plotting-dropdown {
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);  /* Center it */
+      }
+    
+      #tools-dropdown {
+        top: 60px;
+        right: 10px;
+      }
+    
+      body.has-banner #map-controls-dropdown,
+      body.has-banner #data-plotting-dropdown,
+      body.has-banner #tools-dropdown {
+        top: 50px;  /* 40px banner + 10px spacing */
+      }
+    
+      .ui-dropdown-content {
+        max-height: 70vh;  /* More height available in landscape */
+      }
     }
     
   </style>
@@ -6156,6 +6288,7 @@
   </script>
 </body>
 </html>
+
 
 
 
