@@ -1154,17 +1154,20 @@
       background: #2980B9;
     }
 
-    /* Positioning for the three main dropdowns */
-    /* Map Controls - moved down to avoid covering zoom controls */
+    /* ========== DESKTOP Positioning for the three main dropdowns ========== */
+    /* All three spread horizontally at the top in a row */
+    
+    /* Map Controls - underneath banner - left side */
     #map-controls-dropdown {
-      top: 120px;
+      top: 10px;
       left: 10px;
     }
 
-    /* Data & Plotting - stacked below Map Controls */
+    /* Data & Plotting - Centre */
     #data-plotting-dropdown {
-      top: 180px;
-      left: 10px;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     /* Data & Plotting needs to be wider for tables */
@@ -1173,12 +1176,19 @@
       max-width: 90vw;
     }
 
-    /* Tools - top right */
+    /* Tools - right side */
     #tools-dropdown {
       top: 10px;
       right: 10px;
     }
 
+    /* When banner is present, move all three down */
+    body.has-banner #map-controls-dropdown,
+    body.has-banner #data-plotting-dropdown,
+    body.has-banner #tools-dropdown {
+      top: 60px;  /* 50px banner + 10px spacing */
+    }
+    
     /* Compact table styles for dropdown */
     .ui-dropdown-content table {
       width: 100%;
@@ -6288,6 +6298,7 @@
   </script>
 </body>
 </html>
+
 
 
 
