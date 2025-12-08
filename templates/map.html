@@ -3855,12 +3855,81 @@
       if (selectedDevice === deviceId) {
         selectedDevice = null;
         showAllDevices();
+        // Optionally: fit bounds to show all devices
+        if (Object.keys(gpsTrails).length > 0) {
+          const allBounds = L.latLngBounds();
+          Object.keys(gpsTrails).forEach(id => {
+            gpsTrails[id].forEach(point => {
+              if (Array.isArray(point) && point.length >= 2) {
+                allBounds.extend([point[0], point[1]]);
+              } else if (point.lat && point.lon) {
+                allBounds.extend([point.lat, point.lon]);
+              }
+            });
+          });
+          if (allBounds.isValid()) {
+            map.fitBounds(allBounds, { padding: [30, 30], maxZoom: 16 });
+          }
+        }
       } else {
         selectedDevice = deviceId;
         hideAllDevicesExcept(deviceId);
+        
+        // Center map on selected device
+        centerOnDevice(deviceId);
       }
     }
 
+    function centerOnDevice(deviceId, fitTrail = false) {
+      const latestPacket = latestPackets[deviceId];
+  
+      if (!latestPacket) {
+        console.warn(`⚠️ No position data available for device ${deviceId}`);
+        return;
+      }
+  
+      if (fitTrail && gpsTrails[deviceId] && gpsTrails[deviceId].length > 1) {
+        // Fit the entire trail in view
+        const trailBounds = L.latLngBounds();
+        gpsTrails[deviceId].forEach(point => {
+          if (Array.isArray(point) && point.length >= 2) {
+            trailBounds.extend([point[0], point[1]]);
+          } else if (point.lat && point.lon) {
+            trailBounds.extend([point.lat, point.lon]);
+          }
+        });
+    
+        if (trailBounds.isValid()) {
+          map.fitBounds(trailBounds, { 
+            padding: [50, 50], 
+            maxZoom: 16,
+            animate: true,
+            duration: 0.5
+          });
+          console.log(`📍 Fitted map to trail of device ${deviceId}`);
+        }
+      } else {
+        // Center on latest position
+        const lat = parseFloat(latestPacket.latitude);
+        const lon = parseFloat(latestPacket.longitude);
+    
+        if (!isNaN(lat) && !isNaN(lon)) {
+          map.setView([lat, lon], Math.max(map.getZoom(), 15), {
+            animate: true,
+            duration: 0.5
+          });
+          console.log(`📍 Centered map on device ${deviceId} at ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+        }
+      }
+  
+      // Open the device's popup after animation
+      setTimeout(() => {
+        if (allMarkers[deviceId] && allMarkers[deviceId].current) {
+          allMarkers[deviceId].current.circle.openPopup();
+        }
+      }, 600);
+    }
+    
     function showAllDevices() {
       Object.keys(allMarkers).forEach(deviceId => {
         deviceVisibility[deviceId] = true;
@@ -6155,6 +6224,7 @@
   </script>
 </body>
 </html>
+
 
 
 
