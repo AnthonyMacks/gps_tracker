@@ -1825,9 +1825,13 @@
 
       /* --- Plot Coordinates Button --- */
         #coord-plotter-btn {
-          top: 60px;  /* Above the crest (crest is ~120px tall + 20px from bottom) */
-          right: 100px;
+          bottom: 10px; /* Bottom-left corner to avoid crest at bottom-right */
+          left: 10px;
+          top: auto;
+          right: auto;
           font-size: 10px;
+          min-width: auto;
+          white-space: nowrap;
           padding: 6px 10px;
           z-index: 1001;
         }
@@ -6441,6 +6445,7 @@
   </script>
 </body>
 </html>
+
 
 
 
