@@ -1630,12 +1630,12 @@
       /* Very small screens - tighter spacing */
       #map-controls-dropdown {
         top: 55px;
-        left: 5px;
+        left: 25px;
       }
     
       #data-plotting-dropdown {
-        top: 100px;
-        left: 5px;
+        top: 55px;
+        left: 50px;
       }
     
       #tools-dropdown {
@@ -3532,24 +3532,46 @@
               animate: true,
               duration: 1
             });
-        
-            // Optional: Add a flsahing marker showing user's location
-            const userMarker = L.circleMarker([userLat, userLon], {
-              radius: 8,
-              color: '#4A90E2',
-              fillColor: '#4A90E2',
-              fillOpacity: 0.8,
-              weight: 3,
-              className: 'user-location-marker' 
+
+            // Add a FLASHING marker showing user's location
+            const userMarker = L.marker([userLat, userLon], {
+              icon: L.divIcon({
+                html: `<div style="
+                  width: 30px;
+                  height: 30px;
+                  background-color: #4A90E2;
+                  border: 4px solid white;
+                  border-radius: 50%;
+                  box-shadow: 0 0 20px rgba(74, 144, 226, 0.8);
+                  animation: flashBright 0.5s ease-in-out infinite;
+                "></div>
+                <style>
+                  @keyframes flashBright {
+                    0%, 100% { 
+                      opacity: 1;
+                      box-shadow: 0 0 30px rgba(74, 144, 226, 1), 0 0 60px rgba(74, 144, 226, 0.6);
+                    }
+                    50% { 
+                      opacity: 0.3;
+                      box-shadow: 0 0 10px rgba(74, 144, 226, 0.4);
+                    }
+                  }
+                </style>`,
+                className: 'user-location-flash-marker',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+              }),
+              interactive: true
             }).addTo(map);
-        
+            
             userMarker.bindPopup(`
               <strong>📍 Your Location</strong><br>
               <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
               <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
               <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m
             `);
-        
+            
             // Auto-remove marker after 10 seconds
             setTimeout(() => {
               map.removeLayer(userMarker);
@@ -6316,6 +6338,7 @@
   </script>
 </body>
 </html>
+
 
 
 
