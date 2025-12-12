@@ -3725,19 +3725,22 @@
       setTimeout(() => {
         map.invalidateSize();
         console.log('🗺️ Map size invalidated');
-    
-        // Get user's current location
+        
+        // Get user's current location FIRST
         centerMapOnUserLocation();
-    
-        // Check if NAVEX start point is already set
-        const savedNavexPoint = localStorage.getItem('navex_start_point');
-        if (savedNavexPoint) {
-          const coords = JSON.parse(savedNavexPoint);
-          createCUOMarker(coords.lat, coords.lon);
-        } else {
-          // Show NAVEX modal if not set
-          document.getElementById('navex-modal').style.display = 'flex';
-        }
+        
+        // Wait for geolocation, THEN create NAVEX marker (to avoid centering conflict)
+        setTimeout(() => {
+          const savedNavexPoint = localStorage.getItem('navex_start_point');
+          if (savedNavexPoint) {
+            const coords = JSON.parse(savedNavexPoint);
+            createCUOMarker(coords.lat, coords.lon);
+            console.log('📍 NAVEX marker created (not centering on it)');
+          } else {
+            // Show NAVEX modal if not set
+            document.getElementById('navex-modal').style.display = 'flex';
+          }
+        }, 2000); // Wait 2 seconds for geolocation to complete
       }, 100);
     });
 
@@ -6457,6 +6460,7 @@
   </script>
 </body>
 </html>
+
 
 
 
