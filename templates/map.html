@@ -2282,6 +2282,7 @@
     // Track whether we should center on user location
     let shouldCenterOnUserLocation = true;
     let userLocationAcquired = false;
+    let geolocationWatchId = null;
     // ===================================================================
     
     function getUTMZone(lon) {
@@ -3630,44 +3631,46 @@
     // Try to get user's current location and center map there
     function centerMapOnUserLocation() {
       if ("geolocation" in navigator) {
-        console.log('🌍 Requesting user location...');
-    
-        navigator.geolocation.getCurrentPosition(
-          // Success callback
+        console.log('🌍 Starting continuous location tracking...');
+        
+        // Stop any existing watch
+        if (geolocationWatchId !== null) {
+          navigator.geolocation.clearWatch(geolocationWatchId);
+        }
+        
+        // Start continuous position tracking
+        geolocationWatchId = navigator.geolocation.watchPosition(
+          // Success callback - fires every time position updates
           function(position) {
             const userLat = position.coords.latitude;
             const userLon = position.coords.longitude;
             const accuracy = position.coords.accuracy;
-        
-            console.log(`✅ User location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
-
+            const timestamp = new Date(position.timestamp).toLocaleTimeString();
+            
+            console.log(`📍 Location updated: ${userLat.toFixed(6)}, ${userLon.toFixed(6)} (±${accuracy.toFixed(0)}m) at ${timestamp}`);
+    
             // Mark that we have user location
-            userLocationAcquired = true;
-              
-            // Remove any existing user location marker
+            if (!userLocationAcquired) {
+              userLocationAcquired = true;
+              console.log('✅ First location acquired');
+            }
+    
+            // Remove old marker if it exists
             if (userLocationMarker) {
-              console.log('🗑️ Removing old location marker');
               map.removeLayer(userLocationMarker);
               userLocationMarker = null;
             }
               
             // Center map on user's location ONLY if allowed
             if (shouldCenterOnUserLocation) {
-              console.log(`🎯 Centering map on user location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)}`);
+              console.log(`🎯 Re-centering map on updated location`);
               map.setView([userLat, userLon], Math.max(map.getZoom(), 15), {
                 animate: true,
-                duration: 1
+                duration: 0.5 // Faster animation for continuous updates
               });
-              
-              // Prevent other code from overriding this
-              setTimeout(() => {
-                map.setView([userLat, userLon], Math.max(map.getZoom(), 15));
-              }, 500);
-            } else {
-              console.log('⏭️ Skipping user location centering (NAVEX point set or manual override)');
             }
-
-            // Add a FLASHING marker showing user's location
+    
+            // Create updated flashing marker
             userLocationMarker = L.marker([userLat, userLon], {
               icon: L.divIcon({
                 html: `<div style="
@@ -3688,32 +3691,26 @@
             }).addTo(map);
             
             userLocationMarker.bindPopup(`
-              <strong>📍 Your Location</strong><br>
+              <strong>📍 Your Location (LIVE)</strong><br>
               <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
               <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
               <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
-              <small style="color: #7F8C8D;">Updated: ${new Date().toLocaleTimeString()}</small>
+              <small style="color: #7F8C8D;">Updated: ${timestamp}</small><br>
+              <div style="margin-top: 8px;">
+                <button onclick="toggleAutoCenter()" style="background: ${shouldCenterOnUserLocation ? '#E74C3C' : '#27AE60'}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                  ${shouldCenterOnUserLocation ? '🔓 Unlock Map' : '🔒 Lock to Me'}
+                </button>
+              </div>
             `);
             
-            // Open popup to show the location
-            userLocationMarker.openPopup();
-  
-            // Auto-remove marker after 10 seconds
-            setTimeout(() => {
-              if (userLocationMarker) {
-              console.log('⏱️ Auto-removing location marker after 10 seconds');
-              map.removeLayer(userLocationMarker);
-              userLocationMarker = null;
-            }
-          }, 10000);
+            // Don't auto-remove this marker - it stays until you set NAVEX point
+            console.log('💫 Live tracking marker updated');
+          },
           
-          console.log('💫 Flashing location marker displayed');
-        },
-        
           // Error callback
           function(error) {
             console.warn('⚠️ Geolocation error:', error.message);
-        
+            
             switch(error.code) {
               case error.PERMISSION_DENIED:
                 console.log('User denied geolocation. Using default location.');
@@ -3725,21 +3722,41 @@
                 console.log('Geolocation timeout. Using default location.');
                 break;
             }
-        
-            // Map stays at default SHORE location
           },
+          
           // Options
           {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
+            enableHighAccuracy: true,  // Use GPS on phone
+            timeout: 10000,            // 10 second timeout
+            maximumAge: 0              // Always get fresh position
           }
         );
+        
+        console.log('✅ Continuous location tracking started (watchPosition active)');
       } else {
         console.warn('⚠️ Geolocation not supported by this browser. Using default location.');
       }
     }
 
+    // Toggle auto-centering on/off
+    function toggleAutoCenter() {
+      shouldCenterOnUserLocation = !shouldCenterOnUserLocation;
+      
+      if (shouldCenterOnUserLocation) {
+        console.log('🔒 Auto-centering ENABLED - map will follow you');
+      } else {
+        console.log('🔓 Auto-centering DISABLED - you can pan the map freely');
+      }
+      
+      // Close popup and update it
+      map.closePopup();
+      
+      // Force update marker popup if it exists
+      if (userLocationMarker) {
+        // Will update on next position change
+      }
+    }
+    
     // Call this function when map is ready
     map.whenReady(function() {
       console.log('🗺️ Map is ready');
@@ -3769,7 +3786,14 @@
       // Disable auto-centering on user location once NAVEX is manually set
       shouldCenterOnUserLocation = false;
       console.log('🚫 User location auto-centering disabled (NAVEX point manually set)');
-      
+
+      // Stop continuous location tracking to save battery
+      if (geolocationWatchId !== null) {
+        navigator.geolocation.clearWatch(geolocationWatchId);
+        geolocationWatchId = null;
+        console.log('⏹️ Stopped continuous location tracking (NAVEX point set)');
+      }
+        
       // Remove existing marker if present
       if (cuoMarker) {
         map.removeLayer(cuoMarker);
@@ -6485,6 +6509,7 @@
   </script>
 </body>
 </html>
+
 
 
 
