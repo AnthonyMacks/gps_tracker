@@ -3641,7 +3641,7 @@
             }
               
             // Center map on user's location
-            map.setView([userLat, userLon], Math.max(map.getZoom(), 15, {
+            map.setView([userLat, userLon], Math.max(map.getZoom(), 15), {
               animate: true,
               duration: 1
             });
@@ -3670,7 +3670,7 @@
               <strong>📍 Your Location</strong><br>
               <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
               <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
-              <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m
+              <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
               <small style="color: #7F8C8D;">Updated: ${new Date().toLocaleTimeString()}</small>
             `);
             
@@ -6457,6 +6457,7 @@
   </script>
 </body>
 </html>
+
 
 
 
