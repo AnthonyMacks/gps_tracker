@@ -2279,6 +2279,9 @@
     let distanceLine = null;
     let cuoMarker = null;
     let userLocationMarker = null; // Track the flashing location marker
+    // Track whether we should center on user location
+    let shouldCenterOnUserLocation = true;
+    let userLocationAcquired = false;
     // ===================================================================
     
     function getUTMZone(lon) {
@@ -3401,19 +3404,24 @@
         updateDebugInfo();
     
         if (restoredCount > 0 && Object.keys(gpsTrails).length > 0) {
-          const tempBounds = L.latLngBounds();
-      
-          Object.keys(gpsTrails).forEach(deviceId => {
-            gpsTrails[deviceId].forEach(point => {
-              if (Array.isArray(point) && point.length >= 2) {
-                tempBounds.extend([point[0], point[1]]);
-              }
+          // Only fit bounds if we're not waiting for user location
+          if (!shouldCenterOnUserLocation || userLocationAcquired) {
+            const tempBounds = L.latLngBounds();
+            
+            Object.keys(gpsTrails).forEach(deviceId => {
+              gpsTrails[deviceId].forEach(point => {
+                if (Array.isArray(point) && point.length >= 2) {
+                  tempBounds.extend([point[0], point[1]]);
+                }
+              });
             });
-          });
-      
-          if (tempBounds.isValid()) {
-            map.fitBounds(tempBounds, { padding: [30, 30], maxZoom: 16 });
-            hasInitialData = true;
+            
+            if (tempBounds.isValid()) {
+              map.fitBounds(tempBounds, { padding: [30, 30], maxZoom: 16 });
+              hasInitialData = true;
+            }
+          } else {
+            console.log('⏭️ Skipping bounds fitting - waiting for user location');
           }
         }
     
@@ -3633,6 +3641,9 @@
         
             console.log(`✅ User location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)} (±${accuracy.toFixed(0)}m)`);
 
+            // Mark that we have user location
+            userLocationAcquired = true;
+              
             // Remove any existing user location marker
             if (userLocationMarker) {
               console.log('🗑️ Removing old location marker');
@@ -3640,11 +3651,21 @@
               userLocationMarker = null;
             }
               
-            // Center map on user's location
-            map.setView([userLat, userLon], Math.max(map.getZoom(), 15), {
-              animate: true,
-              duration: 1
-            });
+            // Center map on user's location ONLY if allowed
+            if (shouldCenterOnUserLocation) {
+              console.log(`🎯 Centering map on user location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)}`);
+              map.setView([userLat, userLon], Math.max(map.getZoom(), 15), {
+                animate: true,
+                duration: 1
+              });
+              
+              // Prevent other code from overriding this
+              setTimeout(() => {
+                map.setView([userLat, userLon], Math.max(map.getZoom(), 15));
+              }, 500);
+            } else {
+              console.log('⏭️ Skipping user location centering (NAVEX point set or manual override)');
+            }
 
             // Add a FLASHING marker showing user's location
             userLocationMarker = L.marker([userLat, userLon], {
@@ -3745,6 +3766,10 @@
     });
 
     function createCUOMarker(lat, lon) {
+      // Disable auto-centering on user location once NAVEX is manually set
+      shouldCenterOnUserLocation = false;
+      console.log('🚫 User location auto-centering disabled (NAVEX point manually set)');
+      
       // Remove existing marker if present
       if (cuoMarker) {
         map.removeLayer(cuoMarker);
@@ -6460,6 +6485,7 @@
   </script>
 </body>
 </html>
+
 
 
 
