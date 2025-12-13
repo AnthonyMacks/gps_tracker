@@ -11,16 +11,25 @@
 
 <!-- Reposition Eruda button above SCU Crest -->
 <style>
-  /* Position Eruda button above SCU Crest */
+  /* Position Eruda button above SCU Crest - BRIGHT VERSION */
   .eruda-entry-btn {
-    bottom: 150px !important;  /* Desktop: 20px + 120px + 10px gap */
+    bottom: 150px !important;
     right: 20px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+    opacity: 1 !important;
+  }
+  
+  /* Make icon white and visible */
+  .eruda-entry-btn .eruda-icon-tool {
+    color: white !important;
+    filter: brightness(1.5) !important;
   }
   
   /* Mobile positioning */
   @media (max-width: 768px) {
     .eruda-entry-btn {
-      bottom: 80px !important;  /* Mobile: 10px + 60px + 10px gap */
+      bottom: 80px !important;
       right: 10px !important;
     }
   }
@@ -3700,7 +3709,7 @@
                   border: 4px solid white;
                   border-radius: 50%;
                   box-shadow: 0 0 20px rgba(74, 144, 226, 0.8);
-                  animation: flashBright 0.5s ease-in-out infinite;
+                  animation: flashBright 0.5s ease-in-out 20;
                 "></div>`,
                 className: 'user-location-flash-marker',
                 iconSize: [30, 30],
@@ -3792,8 +3801,8 @@
           const savedNavexPoint = localStorage.getItem('navex_start_point');
           if (savedNavexPoint) {
             const coords = JSON.parse(savedNavexPoint);
-            createCUOMarker(coords.lat, coords.lon);
-            console.log('📍 NAVEX marker created (not centering on it)');
+            createCUOMarker(coords.lat, coords.lon, true); // <- Add 'true' flag for isFromStorage
+            console.log('📍 NAVEX marker loaded from storage');
           } else {
             // Show NAVEX modal if not set
             document.getElementById('navex-modal').style.display = 'flex';
@@ -3802,16 +3811,21 @@
       }, 100);
     });
 
-    function createCUOMarker(lat, lon) {
-      // Disable auto-centering on user location once NAVEX is manually set
-      shouldCenterOnUserLocation = false;
-      console.log('🚫 User location auto-centering disabled (NAVEX point manually set)');
-
-      // Stop continuous location tracking to save battery
-      if (geolocationWatchId !== null) {
-        navigator.geolocation.clearWatch(geolocationWatchId);
-        geolocationWatchId = null;
-        console.log('⏹️ Stopped continuous location tracking (NAVEX point set)');
+    function createCUOMarker(lat, lon, isFromStorage = false) {
+      // ONLY disable auto-centering if user manually sets NAVEX point
+      // Don't disable if we're just loading from storage
+      if (!isFromStorage) {
+        shouldCenterOnUserLocation = false;
+        console.log('🚫 User location auto-centering disabled (NAVEX point manually set)');
+    
+        // Stop continuous location tracking to save battery
+        if (geolocationWatchId !== null) {
+          navigator.geolocation.clearWatch(geolocationWatchId);
+          geolocationWatchId = null;
+          console.log('⏹️ Stopped continuous location tracking (NAVEX point set)');
+        }
+      } else {
+        console.log('✅ NAVEX marker loaded from storage - keeping auto-centering enabled');
       }
         
       // Remove existing marker if present
@@ -6529,6 +6543,7 @@
   </script>
 </body>
 </html>
+
 
 
 
