@@ -3780,9 +3780,12 @@
                   <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
                   <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
                   <small style="color: #7F8C8D;">Updated: ${timestamp}</small><br>
-                  <div style="margin-top: 8px;">
+                  <div style="margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
                     <button onclick="toggleAutoCenter()" style="background: ${shouldCenterOnUserLocation ? '#E74C3C' : '#27AE60'}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
                       ${shouldCenterOnUserLocation ? '🔓 Unlock Map' : '🔒 Lock to Me'}
+                    </button>
+                    <button onclick="setCurrentLocationAsNavex()" style="background: #003366; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                      🎯 Set as NAVEX Start
                     </button>
                   </div>
                 `).openPopup();
@@ -3799,9 +3802,12 @@
                   <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
                   <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
                   <small style="color: #7F8C8D;">Updated: ${timestamp}</small><br>
-                  <div style="margin-top: 8px;">
+                  <div style="margin-top: 8px; display: flex; gap: 5px; flex-wrap: wrap;">
                     <button onclick="toggleAutoCenter()" style="background: ${shouldCenterOnUserLocation ? '#E74C3C' : '#27AE60'}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
                       ${shouldCenterOnUserLocation ? '🔓 Unlock Map' : '🔒 Lock to Me'}
+                    </button>
+                    <button onclick="setCurrentLocationAsNavex()" style="background: #003366; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                      🎯 Set as NAVEX Start
                     </button>
                   </div>
                 `);
@@ -3894,6 +3900,37 @@
       }, 100);
     });
 
+    // Add this function around line 2740 (near the other NAVEX functions)
+    function setCurrentLocationAsNavex() {
+      if (!userLocationMarker) {
+        alert('⚠️ Current location not available. Please wait for GPS to acquire position.');
+        return;
+      }
+      
+      const currentPos = userLocationMarker.getLatLng();
+      const lat = currentPos.lat;
+      const lon = currentPos.lng;
+      
+      console.log(`🎯 Setting current location as NAVEX start point: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+      
+      // Save to localStorage
+      localStorage.setItem('navex_start_point', JSON.stringify({
+        lat: lat,
+        lon: lon
+      }));
+      
+      // Create/update NAVEX marker
+      createCUOMarker(lat, lon);
+      
+      // Close the user location popup
+      map.closePopup();
+      
+      // Confirm to user
+      alert(`✅ NAVEX Start Point set to your current location!\n\nLat: ${lat.toFixed(6)}\nLon: ${lon.toFixed(6)}`);
+      
+      console.log('✅ NAVEX start point set from current location');
+    }
+    
     function createCUOMarker(lat, lon, isFromStorage = false) {
       // ONLY disable auto-centering if user manually sets NAVEX point
       // Don't disable if we're just loading from storage
@@ -6626,6 +6663,7 @@
   </script>
 </body>
 </html>
+
 
 
 
