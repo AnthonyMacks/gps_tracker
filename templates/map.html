@@ -10,61 +10,97 @@
 <script>
   eruda.init();
   
-  // Wait for Eruda button to be added to DOM, then style it
-  function styleErudaWhenReady() {
-    console.log('🔍 Waiting for Eruda button to appear...');
-    
-    // Check every 100ms for up to 10 seconds
-    let attempts = 0;
-    const maxAttempts = 100;
-    
-    const checkInterval = setInterval(() => {
-      attempts++;
+  console.log('🎨 Starting Eruda button styling (Shadow DOM mode)...');
+  
+  function styleErudaButton() {
+    try {
+      // Access the Shadow DOM
+      const erudaContainer = document.querySelector('#eruda');
       
-      // Try multiple possible selectors
-      const erudaBtn = document.querySelector('.eruda-entry-btn') || 
-                       document.querySelector('[class*="eruda"]') ||
-                       document.querySelector('div[style*="position"][style*="fixed"]');
-      
-      if (erudaBtn) {
-        clearInterval(checkInterval);
-        console.log('✅ Found Eruda button!', erudaBtn);
-        
-        // FORCE STYLES with !important
-        erudaBtn.style.cssText = `
-          position: fixed !important;
-          bottom: 190px !important;
-          right: 20px !important;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.8) !important;
-          border: 3px solid white !important;
-          width: 50px !important;
-          height: 50px !important;
-          border-radius: 50% !important;
-          z-index: 9999 !important;
-          opacity: 1 !important;
-        `;
-        
-        // Mobile positioning
-        if (window.innerWidth <= 768) {
-          erudaBtn.style.bottom = '120px !important';
-          erudaBtn.style.right = '10px !important';
-        }
-        
-        // Style all child elements white
-        const allChildren = erudaBtn.querySelectorAll('*');
-        allChildren.forEach(child => {
-          child.style.cssText = 'color: white !important; fill: white !important; filter: brightness(2) !important;';
-        });
-        
-        console.log('🎨 Eruda button styled: BRIGHT PURPLE-BLUE');
-        
-      } else if (attempts >= maxAttempts) {
-        clearInterval(checkInterval);
-        console.error('❌ Eruda button not found after 10 seconds');
+      if (!erudaContainer) {
+        console.warn('⚠️ #eruda container not found yet');
+        return false;
       }
-    }, 100);
+      
+      const shadowRoot = erudaContainer.shadowRoot;
+      
+      if (!shadowRoot) {
+        console.warn('⚠️ Shadow root not found yet');
+        return false;
+      }
+      
+      console.log('✅ Found Shadow DOM!');
+      
+      // Find the entry button inside shadow DOM
+      const entryBtn = shadowRoot.querySelector('.eruda-entry-btn') ||
+                       shadowRoot.querySelector('[class*="entry"]') ||
+                       shadowRoot.querySelector('div[style*="position"]');
+      
+      if (!entryBtn) {
+        console.warn('⚠️ Entry button not found in shadow DOM');
+        return false;
+      }
+      
+      console.log('✅ Found Eruda button:', entryBtn);
+      
+      // FORCE BRIGHT PURPLE STYLING
+      entryBtn.style.cssText = `
+        position: fixed !important;
+        bottom: 190px !important;
+        right: 20px !important;
+        width: 50px !important;
+        height: 50px !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: 3px solid white !important;
+        border-radius: 50% !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.8) !important;
+        z-index: 10000 !important;
+        opacity: 1 !important;
+        cursor: pointer !important;
+      `;
+      
+      // Mobile positioning
+      if (window.innerWidth <= 768) {
+        entryBtn.style.bottom = '120px !important';
+        entryBtn.style.right = '10px !important';
+      }
+      
+      // Style all children white
+      entryBtn.querySelectorAll('*').forEach(child => {
+        child.style.cssText = 'color: white !important; fill: white !important; filter: brightness(2) !important;';
+      });
+      
+      console.log('🎨 ✅ Eruda button styled: BRIGHT PURPLE-BLUE GRADIENT');
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Error styling Eruda button:', error);
+      return false;
+    }
   }
+  
+  // Try styling multiple times
+  let attempts = 0;
+  const maxAttempts = 50;
+  
+  const styleInterval = setInterval(() => {
+    attempts++;
+    
+    if (styleErudaButton()) {
+      clearInterval(styleInterval);
+      console.log('🎉 Eruda button successfully styled!');
+    } else if (attempts >= maxAttempts) {
+      clearInterval(styleInterval);
+      console.error('❌ Failed to style Eruda button after 50 attempts');
+    }
+  }, 200);
+  
+  // Also try on window load
+  window.addEventListener('load', styleErudaButton);
+  
+  // Re-style on resize
+  window.addEventListener('resize', styleErudaButton);
+</script>
   
   // Start checking after a short delay
   setTimeout(styleErudaWhenReady, 500);
@@ -6597,6 +6633,7 @@
   </script>
 </body>
 </html>
+
 
 
 
