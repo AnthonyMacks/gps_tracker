@@ -7,33 +7,44 @@
     
 <!-- Mobile Console for Debugging (Remove after testing) -->
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
-<!-- Reposition Eruda button above SCU Crest -->
-<style>
-  /* Position Eruda button above SCU Crest - BRIGHT VERSION */
-  .eruda-entry-btn {
-    bottom: 150px !important;
-    right: 20px !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
-    opacity: 1 !important;
-  }
+<script>
+  eruda.init();
   
-  /* Make icon white and visible */
-  .eruda-entry-btn .eruda-icon-tool {
-    color: white !important;
-    filter: brightness(1.5) !important;
-  }
-  
-  /* Mobile positioning */
-  @media (max-width: 768px) {
-    .eruda-entry-btn {
-      bottom: 80px !important;
-      right: 10px !important;
+  // Style Eruda button after it's created (wait for DOM)
+  setTimeout(function() {
+    const erudaBtn = document.querySelector('.eruda-entry-btn');
+    if (erudaBtn) {
+      erudaBtn.style.cssText = `
+        bottom: 150px !important;
+        right: 20px !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6) !important;
+        opacity: 1 !important;
+        border: 2px solid white !important;
+      `;
+      
+      // Make icon bright white
+      const icon = erudaBtn.querySelector('.eruda-icon');
+      if (icon) {
+        icon.style.cssText = 'color: white !important; filter: brightness(2) !important;';
+      }
+      
+      console.log('✅ Eruda button styled: bright purple-blue');
     }
+  }, 1000);
+  
+  // Also add media query handling for mobile
+  if (window.innerWidth <= 768) {
+    setTimeout(function() {
+      const erudaBtn = document.querySelector('.eruda-entry-btn');
+      if (erudaBtn) {
+        erudaBtn.style.bottom = '80px';
+        erudaBtn.style.right = '10px';
+        console.log('📱 Mobile: Eruda button repositioned');
+      }
+    }, 1000);
   }
-</style>
+</script>
  
 <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
 <style>
@@ -3669,72 +3680,88 @@
         
         // Start continuous position tracking
         geolocationWatchId = navigator.geolocation.watchPosition(
-          // Success callback - fires every time position updates
-          function(position) {
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-            const timestamp = new Date(position.timestamp).toLocaleTimeString();
-            
-            console.log(`📍 Location updated: ${userLat.toFixed(6)}, ${userLon.toFixed(6)} (±${accuracy.toFixed(0)}m) at ${timestamp}`);
-    
-            // Mark that we have user location
-            if (!userLocationAcquired) {
-              userLocationAcquired = true;
-              console.log('✅ First location acquired');
-            }
-    
-            // Remove old marker if it exists
-            if (userLocationMarker) {
-              map.removeLayer(userLocationMarker);
-              userLocationMarker = null;
-            }
+            // Success callback - fires on each position update
+            function(position) {
+              const userLat = position.coords.latitude;
+              const userLon = position.coords.longitude;
+              const accuracy = position.coords.accuracy;
+              const timestamp = new Date(position.timestamp).toLocaleTimeString();
               
-            // Center map on user's location ONLY if allowed
-            if (shouldCenterOnUserLocation) {
-              console.log(`🎯 Re-centering map on updated location`);
-              map.setView([userLat, userLon], Math.max(map.getZoom(), 15), {
-                animate: true,
-                duration: 0.5 // Faster animation for continuous updates
-              });
-            }
-    
-            // Create updated flashing marker
-            userLocationMarker = L.marker([userLat, userLon], {
-              icon: L.divIcon({
-                html: `<div style="
-                  width: 30px;
-                  height: 30px;
-                  background-color: #4A90E2;
-                  border: 4px solid white;
-                  border-radius: 50%;
-                  box-shadow: 0 0 20px rgba(74, 144, 226, 0.8);
-                  animation: flashBright 0.5s ease-in-out 20;
-                "></div>`,
-                className: 'user-location-flash-marker',
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
-              }),
-              interactive: true
-            }).addTo(map);
+              console.log(`📍 Location updated: ${userLat.toFixed(6)}, ${userLon.toFixed(6)} (±${accuracy.toFixed(0)}m) at ${timestamp}`);
             
-            userLocationMarker.bindPopup(`
-              <strong>📍 Your Location (LIVE)</strong><br>
-              <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
-              <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
-              <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
-              <small style="color: #7F8C8D;">Updated: ${timestamp}</small><br>
-              <div style="margin-top: 8px;">
-                <button onclick="toggleAutoCenter()" style="background: ${shouldCenterOnUserLocation ? '#E74C3C' : '#27AE60'}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
-                  ${shouldCenterOnUserLocation ? '🔓 Unlock Map' : '🔒 Lock to Me'}
-                </button>
-              </div>
-            `).openPopup();
+              // Mark that we have user location
+              if (!userLocationAcquired) {
+                userLocationAcquired = true;
+                console.log('✅ First location acquired');
+              }
             
-            // Don't auto-remove this marker - it stays until you set NAVEX point
-            console.log('💫 Live tracking marker updated');
-          },
+              // CREATE marker only if it doesn't exist yet
+              if (!userLocationMarker) {
+                console.log('🆕 Creating NEW user location marker (will flash for 10 seconds)');
+                
+                userLocationMarker = L.marker([userLat, userLon], {
+                  icon: L.divIcon({
+                    html: `<div style="
+                      width: 30px;
+                      height: 30px;
+                      background-color: #4A90E2;
+                      border: 4px solid white;
+                      border-radius: 50%;
+                      box-shadow: 0 0 20px rgba(74, 144, 226, 0.8);
+                      animation: flashBright 0.5s ease-in-out 20;
+                    "></div>`,
+                    className: 'user-location-flash-marker',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15],
+                    popupAnchor: [0, -15]
+                  }),
+                  interactive: true
+                }).addTo(map);
+                
+                userLocationMarker.bindPopup(`
+                  <strong>📍 Your Location (LIVE)</strong><br>
+                  <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
+                  <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
+                  <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
+                  <small style="color: #7F8C8D;">Updated: ${timestamp}</small><br>
+                  <div style="margin-top: 8px;">
+                    <button onclick="toggleAutoCenter()" style="background: ${shouldCenterOnUserLocation ? '#E74C3C' : '#27AE60'}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                      ${shouldCenterOnUserLocation ? '🔓 Unlock Map' : '🔒 Lock to Me'}
+                    </button>
+                  </div>
+                `).openPopup();
+                
+              } else {
+                // UPDATE existing marker position (don't recreate - preserves animation state)
+                console.log('🔄 Updating existing marker position (animation continues)');
+                userLocationMarker.setLatLng([userLat, userLon]);
+                
+                // Update popup content only
+                userLocationMarker.setPopupContent(`
+                  <strong>📍 Your Location (LIVE)</strong><br>
+                  <strong>Grid Reference:</strong> ${latLonToGridReference(userLat, userLon)}<br>
+                  <strong>Lat/Lon:</strong> ${userLat.toFixed(6)}, ${userLon.toFixed(6)}<br>
+                  <strong>Accuracy:</strong> ±${accuracy.toFixed(0)}m<br>
+                  <small style="color: #7F8C8D;">Updated: ${timestamp}</small><br>
+                  <div style="margin-top: 8px;">
+                    <button onclick="toggleAutoCenter()" style="background: ${shouldCenterOnUserLocation ? '#E74C3C' : '#27AE60'}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;">
+                      ${shouldCenterOnUserLocation ? '🔓 Unlock Map' : '🔒 Lock to Me'}
+                    </button>
+                  </div>
+                `);
+              }
+              
+              // Center map on user's location ONLY if allowed
+              if (shouldCenterOnUserLocation) {
+                console.log(`🎯 Re-centering map on updated location`);
+                map.setView([userLat, userLon], Math.max(map.getZoom(), 15), {
+                  animate: true,
+                  duration: 0.5
+                });
+              }
+              
+              console.log('💫 Live tracking marker updated');
+            },
           
           // Error callback
           function(error) {
@@ -6543,6 +6570,7 @@
   </script>
 </body>
 </html>
+
 
 
 
