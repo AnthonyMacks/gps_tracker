@@ -10,40 +10,63 @@
 <script>
   eruda.init();
   
-  // Style Eruda button after it's created (wait for DOM)
-  setTimeout(function() {
+  // Wait for Eruda to fully load, then style it
+  function styleErudaButton() {
     const erudaBtn = document.querySelector('.eruda-entry-btn');
+    
     if (erudaBtn) {
-      erudaBtn.style.cssText = `
-        bottom: 150px !important;
-        right: 20px !important;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.6) !important;
-        opacity: 1 !important;
-        border: 2px solid white !important;
-      `;
+      console.log('✅ Found Eruda button, applying styles...');
       
-      // Make icon bright white
-      const icon = erudaBtn.querySelector('.eruda-icon');
-      if (icon) {
-        icon.style.cssText = 'color: white !important; filter: brightness(2) !important;';
+      // Desktop positioning (40px higher than before)
+      let bottomPos = '190px';  // Was 150px, now 190px (40px higher)
+      let rightPos = '20px';
+      
+      // Mobile positioning (40px higher than before)
+      if (window.innerWidth <= 768) {
+        bottomPos = '120px';  // Was 80px, now 120px (40px higher)
+        rightPos = '10px';
       }
       
-      console.log('✅ Eruda button styled: bright purple-blue');
+      erudaBtn.style.setProperty('bottom', bottomPos, 'important');
+      erudaBtn.style.setProperty('right', rightPos, 'important');
+      erudaBtn.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+      erudaBtn.style.setProperty('box-shadow', '0 4px 15px rgba(102, 126, 234, 0.8)', 'important');
+      erudaBtn.style.setProperty('opacity', '1', 'important');
+      erudaBtn.style.setProperty('border', '3px solid white', 'important');
+      erudaBtn.style.setProperty('width', '50px', 'important');
+      erudaBtn.style.setProperty('height', '50px', 'important');
+      
+      console.log(`📍 Eruda positioned at bottom: ${bottomPos}, right: ${rightPos}`);
+      
+      // Try to style the icon inside
+      const iconContainer = erudaBtn.querySelector('div');
+      if (iconContainer) {
+        iconContainer.style.setProperty('color', 'white', 'important');
+        iconContainer.style.setProperty('filter', 'brightness(2) drop-shadow(0 0 3px white)', 'important');
+      }
+      
+      // Try all possible icon selectors
+      const possibleIcons = erudaBtn.querySelectorAll('svg, .eruda-icon, [class*="icon"]');
+      possibleIcons.forEach(icon => {
+        icon.style.setProperty('color', 'white', 'important');
+        icon.style.setProperty('fill', 'white', 'important');
+        icon.style.setProperty('filter', 'brightness(2)', 'important');
+      });
+      
+      console.log('✨ Eruda button styled: BRIGHT purple-blue');
+    } else {
+      console.warn('⚠️ Eruda button not found yet, retrying...');
+      setTimeout(styleErudaButton, 500);
     }
-  }, 1000);
-  
-  // Also add media query handling for mobile
-  if (window.innerWidth <= 768) {
-    setTimeout(function() {
-      const erudaBtn = document.querySelector('.eruda-entry-btn');
-      if (erudaBtn) {
-        erudaBtn.style.bottom = '80px';
-        erudaBtn.style.right = '10px';
-        console.log('📱 Mobile: Eruda button repositioned');
-      }
-    }, 1000);
   }
+  
+  // Try multiple times to ensure it works
+  setTimeout(styleErudaButton, 500);
+  setTimeout(styleErudaButton, 1000);
+  setTimeout(styleErudaButton, 2000);
+  
+  // Also re-style on window resize
+  window.addEventListener('resize', styleErudaButton);
 </script>
  
 <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
@@ -6570,6 +6593,7 @@
   </script>
 </body>
 </html>
+
 
 
 
